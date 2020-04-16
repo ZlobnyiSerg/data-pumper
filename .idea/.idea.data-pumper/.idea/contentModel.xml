@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\Projects\data-pumper" t="IncludeFlat">
+      <e p="data-pumper.sln" t="IncludeFlat" />
+      <e p="packages" t="ExcludeRecursive" />
+      <e p="src\DataPumper.Core" t="IncludeRecursive">
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="DataPumper.Core.csproj" t="IncludeRecursive" />
+        <e p="DataPumper.cs" t="Include" />
+        <e p="FieldDefinition.cs" t="Include" />
+        <e p="IDataPumperProvider.cs" t="Include" />
+        <e p="IDataPumperSource.cs" t="Include" />
+        <e p="IDataPumperTarget.cs" t="Include" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp3.0" t="Include">
+              <e p="DataPumper.Core.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="ProgressEventArgs.cs" t="Include" />
+        <e p="TableDefinition.cs" t="Include" />
+        <e p="TableRow.cs" t="Include" />
+      </e>
+      <e p="src\DataPumper.Sql" t="IncludeRecursive">
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="DataPumper.Sql.csproj" t="IncludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp3.0" t="Include">
+              <e p="DataPumper.Sql.AssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="SqlDataPumperSourceTarget.cs" t="Include" />
+      </e>
+      <e p="src\DataPumper.Web" t="IncludeRecursive">
+        <e p="_Imports.razor" t="Include" />
+        <e p="App.razor" t="Include" />
+        <e p="appsettings.Development.json" t="Include" />
+        <e p="appsettings.json" t="Include" />
+        <e p="bin" t="ExcludeRecursive" />
+        <e p="Data" t="Include">
+          <e p="WeatherForecast.cs" t="Include" />
+          <e p="WeatherForecastService.cs" t="Include" />
+        </e>
+        <e p="DataPumper.Web.csproj" t="IncludeRecursive" />
+        <e p="obj" t="ExcludeRecursive">
+          <e p="Debug" t="Include">
+            <e p="netcoreapp3.1" t="Include">
+              <e p="DataPumper.Web.AssemblyInfo.cs" t="Include" />
+              <e p="DataPumper.Web.RazorAssemblyInfo.cs" t="Include" />
+            </e>
+          </e>
+        </e>
+        <e p="Pages" t="Include">
+          <e p="_Host.cshtml" t="Include" />
+          <e p="Components" t="Include" />
+          <e p="Counter.razor" t="Include" />
+          <e p="Error.razor" t="Include" />
+          <e p="FetchData.razor" t="Include" />
+          <e p="Index.razor" t="Include" />
+          <e p="Pump.razor" t="Include" />
+        </e>
+        <e p="Program.cs" t="Include" />
+        <e p="Properties" t="Include">
+          <e p="launchSettings.json" t="Include" />
+        </e>
+        <e p="Services" t="Include">
+          <e p="DataPumpService.cs" t="Include" />
+        </e>
+        <e p="Shared" t="Include">
+          <e p="MainLayout.razor" t="Include" />
+          <e p="NavMenu.razor" t="Include" />
+          <e p="SurveyPrompt.razor" t="Include" />
+        </e>
+        <e p="Startup.cs" t="Include" />
+        <e p="wwwroot" t="Include">
+          <e p="css" t="Include">
+            <e p="bootstrap" t="Include">
+              <e p="bootstrap.min.css" t="Include" />
+              <e p="bootstrap.min.css.map" t="Include" />
+            </e>
+            <e p="open-iconic" t="Include">
+              <e p="font" t="Include">
+                <e p="css" t="Include">
+                  <e p="open-iconic-bootstrap.min.css" t="Include" />
+                </e>
+                <e p="fonts" t="Include">
+                  <e p="open-iconic.eot" t="Include" />
+                  <e p="open-iconic.otf" t="Include" />
+                  <e p="open-iconic.svg" t="Include" />
+                  <e p="open-iconic.ttf" t="Include" />
+                  <e p="open-iconic.woff" t="Include" />
+                </e>
+              </e>
+              <e p="FONT-LICENSE" t="Include" />
+              <e p="ICON-LICENSE" t="Include" />
+              <e p="README.md" t="Include" />
+            </e>
+            <e p="site.css" t="Include" />
+          </e>
+          <e p="favicon.ico" t="Include" />
+        </e>
+      </e>
+    </e>
+    <e p="C:\Users\szhiz\.Rider2019.3\config\scratches" t="IncludeRecursive" />
+    <e p="C:\Users\szhiz\.Rider2019.3\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\szhiz\.Rider2019.3\system\resharper-host\local\Transient\ReSharperHost\v193\SolutionCaches\_data-pumper.-1606346677.00" t="ExcludeRecursive" />
+  </component>
+</project>

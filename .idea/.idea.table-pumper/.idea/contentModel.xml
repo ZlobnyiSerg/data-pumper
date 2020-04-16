@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ContentModelStore">
+    <e p="C:\Projects\table-pumper" t="IncludeFlat">
+      <e p="table-pumper.sln" t="IncludeFlat" />
+    </e>
+    <e p="C:\Users\szhiz\.Rider2019.3\config\scratches" t="IncludeRecursive" />
+    <e p="C:\Users\szhiz\.Rider2019.3\system\extResources" t="IncludeRecursive" />
+    <e p="C:\Users\szhiz\.Rider2019.3\system\resharper-host\local\Transient\ReSharperHost\v193\SolutionCaches\_table-pumper.267087827.00" t="ExcludeRecursive" />
+  </component>
+</project>

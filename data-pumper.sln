@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{A7BA213C-A547-42B6-B498-4DCB90132178}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Sql", "src\DataPumper.Sql\DataPumper.Sql.csproj", "{CF063525-3EB2-4A38-A613-46A9EBEDA07C}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{B4C95943-F5AB-4E11-A826-532EC0549B0B}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A7BA213C-A547-42B6-B498-4DCB90132178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A7BA213C-A547-42B6-B498-4DCB90132178}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A7BA213C-A547-42B6-B498-4DCB90132178}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A7BA213C-A547-42B6-B498-4DCB90132178}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

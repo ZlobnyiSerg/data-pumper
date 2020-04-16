@@ -1,0 +1,9 @@
+C:\Projects\data-pumper\src\DataPumper.Core\bin\Release\netcoreapp3.0\DataPumper.Core.deps.json
+C:\Projects\data-pumper\src\DataPumper.Core\bin\Release\netcoreapp3.0\DataPumper.Core.dll
+C:\Projects\data-pumper\src\DataPumper.Core\bin\Release\netcoreapp3.0\DataPumper.Core.pdb
+C:\Projects\data-pumper\src\DataPumper.Core\obj\Release\netcoreapp3.0\DataPumper.Core.csprojAssemblyReference.cache
+C:\Projects\data-pumper\src\DataPumper.Core\obj\Release\netcoreapp3.0\DataPumper.Core.AssemblyInfoInputs.cache
+C:\Projects\data-pumper\src\DataPumper.Core\obj\Release\netcoreapp3.0\DataPumper.Core.AssemblyInfo.cs
+C:\Projects\data-pumper\src\DataPumper.Core\obj\Release\netcoreapp3.0\DataPumper.Core.csproj.CoreCompileInputs.cache
+C:\Projects\data-pumper\src\DataPumper.Core\obj\Release\netcoreapp3.0\DataPumper.Core.dll
+C:\Projects\data-pumper\src\DataPumper.Core\obj\Release\netcoreapp3.0\DataPumper.Core.pdb

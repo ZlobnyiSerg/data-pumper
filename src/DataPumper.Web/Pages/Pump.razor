@@ -1,0 +1,60 @@
+@page "/pump"
+@using DataPumper.Web.Services
+@using ProgressEventArgs = DataPumper.Core.ProgressEventArgs
+@inject DataPumpService PumpService
+
+<h1>Pump Data</h1>
+
+<button class="btn btn-primary" disabled="@inProgress" @onclick="PumpData">Start pumping</button>
+
+<hr />
+
+@if (progress != null)
+{
+    <div class="alert alert-success" role="alert">
+        <p>Processing. Records processed: @progress?.Processed, elapsed: @progress?.Elapsed</p>
+        @if (!string.IsNullOrEmpty(progress?.Message))
+        {
+            <p>@progress.Message</p>
+        }
+    </div>
+}
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <p>@errorMessage</p>
+    </div>
+}
+
+@code {
+    private ProgressEventArgs progress;
+    private bool inProgress;
+    private string errorMessage;
+
+    private async Task PumpData()
+    {
+        try
+        {
+            inProgress = true;
+            PumpService.Progress += (sender, args) =>
+            {
+                progress = args;
+                InvokeAsync(StateHasChanged);
+            };
+            try
+            {
+                await PumpService.Process();
+            }
+            catch (Exception ex)
+            {
+                errorMessage = ex.Message;
+            }
+        }
+        finally
+        {
+            inProgress = false;
+        }
+    }
+
+}

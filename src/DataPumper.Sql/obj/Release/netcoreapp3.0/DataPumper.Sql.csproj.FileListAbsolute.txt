@@ -1,0 +1,12 @@
+C:\Projects\data-pumper\src\DataPumper.Sql\bin\Release\netcoreapp3.0\DataPumper.Sql.deps.json
+C:\Projects\data-pumper\src\DataPumper.Sql\bin\Release\netcoreapp3.0\DataPumper.Sql.dll
+C:\Projects\data-pumper\src\DataPumper.Sql\bin\Release\netcoreapp3.0\DataPumper.Sql.pdb
+C:\Projects\data-pumper\src\DataPumper.Sql\bin\Release\netcoreapp3.0\DataPumper.Core.dll
+C:\Projects\data-pumper\src\DataPumper.Sql\bin\Release\netcoreapp3.0\DataPumper.Core.pdb
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.csprojAssemblyReference.cache
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.AssemblyInfoInputs.cache
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.AssemblyInfo.cs
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.csproj.CoreCompileInputs.cache
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.csproj.CopyComplete
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.dll
+C:\Projects\data-pumper\src\DataPumper.Sql\obj\Release\netcoreapp3.0\DataPumper.Sql.pdb

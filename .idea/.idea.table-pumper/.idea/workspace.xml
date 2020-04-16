@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="e61a1ea5-6f5f-49e0-9236-984a921b9cf9" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="IdeDocumentHistory">
+    <option name="CHANGED_PATHS">
+      <list>
+        <option value="$PROJECT_DIR$/table-pumper-core/Class1.cs" />
+      </list>
+    </option>
+  </component>
+  <component name="ProjectId" id="1acqR2Mxsu8xyB9Kzp2I1OLZzyw" />
+  <component name="ProjectViewState">
+    <option name="autoscrollToSource" value="true" />
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showExcludedFiles" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="Rider.SolutionExplorerActivator" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
+    <property name="nodejs_interpreter_path.stuck_in_default_project" value="undefined stuck path" />
+    <property name="nodejs_npm_path_reset_for_default_project" value="true" />
+  </component>
+  <component name="RunManager" selected=".NET Launch Settings Profile.table-pumper">
+    <configuration name="table-pumper" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/table-pumper.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value=".NETCoreApp,Version=v3.0" />
+      <option name="LAUNCH_PROFILE_NAME" value="table-pumper" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
+      <option name="USE_MONO" value="0" />
+      <option name="RUNTIME_ARGUMENTS" value="" />
+      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+      <option name="SEND_DEBUG_REQUEST" value="1" />
+      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+      <method v="2">
+        <option name="Build" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="table-pumper: IIS Express" type="LaunchSettings" factoryName=".NET Launch Settings Profile">
+      <option name="LAUNCH_PROFILE_PROJECT_FILE_PATH" value="$PROJECT_DIR$/table-pumper.csproj" />
+      <option name="LAUNCH_PROFILE_TFM" value=".NETCoreApp,Version=v3.0" />
+      <option name="LAUNCH_PROFILE_NAME" value="IIS Express" />
+      <option name="USE_EXTERNAL_CONSOLE" value="0" />
+      <option name="USE_MONO" value="0" />
+      <option name="RUNTIME_ARGUMENTS" value="" />
+      <option name="GENERATE_APPLICATIONHOST_CONFIG" value="1" />
+      <option name="SHOW_IIS_EXPRESS_OUTPUT" value="0" />
+      <option name="SEND_DEBUG_REQUEST" value="1" />
+      <option name="ADDITIONAL_IIS_EXPRESS_ARGUMENTS" value="" />
+      <method v="2">
+        <option name="Build" enabled="true" />
+      </method>
+    </configuration>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="e61a1ea5-6f5f-49e0-9236-984a921b9cf9" name="Default Changelist" comment="" />
+      <created>1587045217197</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1587045217197</updated>
+      <workItem from="1587045218652" duration="484000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="1" />
+  </component>
+  <component name="UnityProjectConfiguration" hasMinimizedUI="null" />
+  <component name="UnityUnitTestConfiguration" currentTestLauncher="NUnit" />
+  <component name="WindowStateProjectService">
+    <state width="1380" height="298" key="GridCell.Tab.0.bottom" timestamp="1587045702781">
+      <screen x="0" y="0" width="2498" height="1440" />
+    </state>
+    <state width="1380" height="298" key="GridCell.Tab.0.bottom/0.0.2498.1440/-1200.-349.1200.1880@0.0.2498.1440" timestamp="1587045702781" />
+    <state width="1380" height="298" key="GridCell.Tab.0.center" timestamp="1587045702781">
+      <screen x="0" y="0" width="2498" height="1440" />
+    </state>
+    <state width="1380" height="298" key="GridCell.Tab.0.center/0.0.2498.1440/-1200.-349.1200.1880@0.0.2498.1440" timestamp="1587045702781" />
+    <state width="1380" height="298" key="GridCell.Tab.0.left" timestamp="1587045702781">
+      <screen x="0" y="0" width="2498" height="1440" />
+    </state>
+    <state width="1380" height="298" key="GridCell.Tab.0.left/0.0.2498.1440/-1200.-349.1200.1880@0.0.2498.1440" timestamp="1587045702781" />
+    <state width="1380" height="298" key="GridCell.Tab.0.right" timestamp="1587045702781">
+      <screen x="0" y="0" width="2498" height="1440" />
+    </state>
+    <state width="1380" height="298" key="GridCell.Tab.0.right/0.0.2498.1440/-1200.-349.1200.1880@0.0.2498.1440" timestamp="1587045702781" />
+    <state x="546" y="339" key="Rider.ProjectTemplateDialog.Size" timestamp="1587045696673">
+      <screen x="0" y="0" width="2498" height="1440" />
+    </state>
+    <state x="546" y="339" key="Rider.ProjectTemplateDialog.Size/0.0.2498.1440/-1200.-349.1200.1880@0.0.2498.1440" timestamp="1587045696673" />
+  </component>
+</project>
