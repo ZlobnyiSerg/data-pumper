@@ -15,7 +15,7 @@ namespace DataPumper.Sql
     {
         private readonly ILogger<SqlDataPumperSourceTarget> _logger;
         private SqlConnection _connection;
-        private int _timeout = 60 * 10;
+        private int _timeout = 60 * 60 * 3; // 3 hours
 
         public SqlDataPumperSourceTarget(ILogger<SqlDataPumperSourceTarget> logger)
         {
