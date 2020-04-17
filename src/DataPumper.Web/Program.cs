@@ -20,6 +20,13 @@ namespace DataPumper.Web
 
         public static IHostBuilder CreateHostBuilder(string[] args) =>
             Host.CreateDefaultBuilder(args)
+                .ConfigureAppConfiguration((ctx, e) =>
+                {
+                    e.AddJsonFile("appsettings.json")
+                        .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true)
+                        .AddJsonFile("appsettings.local.json", true)
+                        .AddEnvironmentVariables();
+                })
                 .ConfigureLogging(logging =>
                 {
                     logging.ClearProviders();

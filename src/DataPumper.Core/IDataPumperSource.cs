@@ -7,6 +7,7 @@ namespace DataPumper.Core
 {
     public interface IDataPumperSource : IDataPumperProvider
     {
+        Task<DateTime?> GetCurrentDate(TableName tableName, string fieldName);
         Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan);
     }
 }

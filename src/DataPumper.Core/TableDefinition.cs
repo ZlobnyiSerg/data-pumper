@@ -1,3 +1,5 @@
+using System.Linq;
+
 namespace DataPumper.Core
 {
     public class TableDefinition
@@ -26,10 +28,24 @@ namespace DataPumper.Core
             Schema = schema.TrimStart('[').TrimEnd(']');
             Name = name.TrimStart('[').TrimEnd(']');
         }
+        
+        public TableName(string fullName)
+        {
+            var parts = fullName.Split('.');
+            if (parts.Length == 1)
+                Name = parts.First();
+            else
+            {
+                Schema = parts[0].TrimStart('[').TrimEnd(']');
+                Name = parts[1].TrimStart('[').TrimEnd(']');
+            }
+        }
 
         public override string ToString()
         {
-            return $"[{Schema}].[{Name}]";
+            if (!string.IsNullOrEmpty(Schema))
+                return $"[{Schema}].[{Name}]";
+            return $"[{Name}]";
         }
     }
 }

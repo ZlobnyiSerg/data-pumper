@@ -22,9 +22,11 @@ namespace DataPumper.Sql
             _logger = logger;
         }
 
+        public const string Name = "Microsoft SQL Server"; 
+
         public string GetName()
         {
-            return "Microsoft SQL Server";
+            return Name;
         }
 
         public async Task Initialize(string connectionString)
@@ -43,6 +45,11 @@ namespace DataPumper.Sql
             }
         }
 
+        public Task<DateTime?> GetCurrentDate(TableName tableName, string fieldName)
+        {
+            return _connection.ExecuteScalarAsync<DateTime?>($"SELECT Min({fieldName}) FROM {tableName}", commandTimeout: _timeout);
+        }
+
         public async Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan)
         {
             var handler = Progress;
@@ -58,21 +65,18 @@ namespace DataPumper.Sql
             return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName}", commandTimeout: _timeout);
         }
 
-        public async Task CleanupTable(TableName tableName, string fieldName, DateTime? notOlderThan)
+        public Task CleanupTable(TableName tableName, string fieldName, DateTime? notOlderThan)
         {
             var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table...", null));
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table..."));
             if (notOlderThan == null)
             {
-                await _connection.ExecuteAsync($"TRUNCATE TABLE {tableName}", commandTimeout: _timeout);
+                return _connection.ExecuteAsync($"TRUNCATE TABLE {tableName}", commandTimeout: _timeout);
             }
-            else
+            return _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE {fieldName} >= @NotOlderThan", new
             {
-                await _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE {fieldName} >= @NotOlderThan", new
-                {
-                    NotOlderThan = notOlderThan
-                }, commandTimeout: _timeout);
-            }
+                NotOlderThan = notOlderThan
+            }, commandTimeout: _timeout);
         }
 
         public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
@@ -84,7 +88,7 @@ namespace DataPumper.Sql
             {
                 BatchSize = 1000000,
                 BulkCopyTimeout = _timeout,
-                NotifyAfter = 5000,
+                NotifyAfter = 10000,
                 DestinationTableName = tableName.ToString()
             };
 

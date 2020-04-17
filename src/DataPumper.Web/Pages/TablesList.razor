@@ -1,0 +1,60 @@
+@page "/"
+@using DataPumper.Web.DataLayer
+@using DataPumper.Web.Services
+@using Microsoft.EntityFrameworkCore
+@inject DataPumperContext Context
+@inject DataPumpService Service
+
+<h1>Synchronization Tasks</h1>
+
+<SettingsEdit />
+
+@if (jobs != null)
+{
+    <p>
+        <button class="btn btn-danger" @onclick="Run">Run all</button>
+    </p>
+    <table class="table">
+        <thead>
+        <td>Id</td>
+        <td>Source provider</td>
+        <td>Source table</td>
+        <td>Target provider</td>
+        <td>Target table</td>
+        <td>Date</td>
+        </thead>
+        <tbody>
+        @foreach (var job in jobs)
+        {
+            <tr>
+                <td><NavLink href="@("table/"+job.Id)">@job.Id</NavLink></td>
+                <td><NavLink href="@("table/"+job.Id)">@job.SourceProvider</NavLink></td>
+                <td>@job.SourceTableName</td>
+                <td>@job.TargetProvider</td>
+                <td>@job.TargetTableName</td>
+                <td>@job.Date</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+
+    <NavLink href="table-create">
+        <button class="btn btn-primary">Add new job</button>
+    </NavLink>
+}
+
+
+@code {
+    private List<TableSyncJob> jobs;
+
+    protected override async Task OnInitializedAsync()
+    {
+        jobs = await Context.TableSyncJobs.ToListAsync();
+        await base.OnInitializedAsync();
+    }
+
+    protected async Task Run()
+    {
+        await Service.Process();
+    }
+}

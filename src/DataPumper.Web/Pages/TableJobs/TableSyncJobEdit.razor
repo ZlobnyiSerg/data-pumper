@@ -1,0 +1,104 @@
+@page "/table-create/"
+@page "/table-edit/{Id:int}"
+@using DataPumper.Web.DataLayer
+@using DataPumper.Web.Services
+@inject DataPumperContext Context
+@inject DataPumpService Service
+@inject NavigationManager NavigationManager
+
+@if (Id == null)
+{
+    <h2>New table job</h2>
+}
+else
+{
+    <h2>Edit table job</h2>
+}
+
+<EditForm Model="@Job">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+
+
+    <div class="form-group">
+        <label>Source provider</label>
+
+        <select class="form-control form-control-lg" @bind="Job.SourceProvider">
+            <option></option>
+            @foreach (var item in Service.Sources)
+            {
+                <option value="@item.GetName()">@item.GetName()</option>
+            }
+        </select>
+    </div>
+    <div class="form-group">
+        <label>Source connection string</label>
+        <InputText class="form-control" id="source" @bind-Value="Job.SourceConnectionString"></InputText>
+        <small class="form-text text-muted">
+            <a href="https://www.connectionstrings.com/" target="_blank">Connection string examples</a>
+        </small>
+    </div>
+
+    <div class="form-group">
+        <label>Source table</label>
+        <InputText class="form-control" @bind-Value="Job.SourceTableName"></InputText>
+    </div>
+
+    <hr/>
+
+    <div class="form-group">
+        <label>Target provider</label>
+
+        <select class="form-control form-control-lg" @bind="Job.TargetProvider">
+            <option></option>
+            @foreach (var item in Service.Targets)
+            {
+                <option value="@item.GetName()">@item.GetName()</option>
+            }
+        </select>
+    </div>
+
+    <div class="form-group">
+        <label>Target connection string</label>
+        <InputText class="form-control" @bind-Value="Job.TargetConnectionString"></InputText>
+    </div>
+
+    <div class="form-group">
+        <label>Target table</label>
+        <InputText class="form-control" @bind-Value="Job.TargetTableName"></InputText>
+    </div>
+
+    <button type="submit" class="btn btn-primary" @onclick="Save">Save</button>
+</EditForm>
+
+
+@code {
+
+    [Parameter]
+    public int? Id { get; set; }
+
+    TableSyncJob Job { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (Id != null)
+        {
+            Job = await Context.TableSyncJobs.FindAsync(new object[] {Id});
+        }
+        else
+        {
+            Job = new TableSyncJob();
+        }
+    }
+
+    protected async Task Save()
+    {
+        if (Id == null)
+        {
+            Context.TableSyncJobs.Add(Job);
+        }
+        await Context.SaveChangesAsync();
+        NavigationManager.NavigateTo("/");
+    }
+
+}

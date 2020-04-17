@@ -1,0 +1,100 @@
+@page "/table/{Id:int}"
+@using DataPumper.Web.DataLayer
+@using DataPumper.Web.Services
+@using Microsoft.EntityFrameworkCore
+@inject DataPumperContext Context
+@inject DataPumpService Service
+@inject NavigationManager NavigationManager
+<h2>Table sync job</h2>
+
+<div class="row">
+    <div class="col-12">
+        <p>
+            <NavLink href="@("/table-edit/" + Id)">
+                <button class="btn btn-primary">Edit</button>
+            </NavLink>
+        </p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-6">
+        <div class="card">
+            <div class="card-body">
+                <h4>Source</h4>
+                <h5 class="card-title">@Job.SourceTableName</h5>
+                <h6 class="card-subtitle mb-2 text-muted">@Job.SourceProvider</h6>
+                <p class="card-text">@Job.SourceConnectionString</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-6">
+        <div class="card">
+            <div class="card-body">
+                <h2>Target</h2>
+                <h5 class="card-title">@Job.TargetTableName</h5>
+                <h6 class="card-subtitle mb-2 text-muted">@Job.TargetProvider</h6>
+                <p class="card-text">@Job.TargetConnectionString</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h4>Run history</h4>
+        @if (Logs == null || !Logs.Any())
+        {
+            <div class="alert alert-info">This job has never run</div>
+        }
+        else
+        {
+            <table class="table">
+                <thead>
+                <td>Start date</td>
+                <td>End date</td>
+                <td>Message</td>
+                <td>Elapsed</td>
+                <td>Status</td>
+                <td>Records processed</td>
+                </thead>
+                <tbody>
+                @foreach (var log in Logs)
+                {
+                    <tr>
+                        <td>@log.StartDate</td>
+                        <td>@log.EndDate</td>
+                        <td>@log.Message</td>
+                        <td>@log.Elapsed</td>
+                        <td>@log.Status</td>
+                        <td class="text-right">@log.RecordsProcessed</td>
+                    </tr>
+                }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+
+@code {
+
+    [Parameter]
+    public int Id { get; set; }
+
+    TableSyncJob Job { get; set; }
+    SyncJobLog[] Logs { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        Job = await Context.TableSyncJobs.FindAsync(new object[] {Id});
+        Logs = await Context.Logs.Where(l => l.TableSyncJobId == Id).OrderByDescending(s=>s.StartDate).Take(100).ToArrayAsync();
+    }
+
+    protected async Task Refresh()
+    {
+        Logs = await Context.Logs.Where(l => l.TableSyncJobId == Id).OrderByDescending(s=>s.StartDate).Take(100).ToArrayAsync();
+        await InvokeAsync(StateHasChanged);
+    }
+
+}

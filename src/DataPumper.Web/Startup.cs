@@ -4,15 +4,16 @@ using System.Linq;
 using System.Threading.Tasks;
 using DataPumper.Core;
 using DataPumper.Sql;
+using DataPumper.Web.DataLayer;
 using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Hosting;
-using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using DataPumper.Web.Data;
 using DataPumper.Web.Services;
+using Hangfire;
+using Hangfire.MemoryStorage;
+using Microsoft.EntityFrameworkCore;
 
 namespace DataPumper.Web
 {
@@ -31,17 +32,21 @@ namespace DataPumper.Web
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
-            services.AddSingleton<WeatherForecastService>();
+
+            services.AddDbContext<DataPumperContext>(opts => { opts.UseSqlite(@"Data Source=DataPumper.db;"); });
 
             services.AddTransient<IDataPumperSource, SqlDataPumperSourceTarget>();
             services.AddTransient<IDataPumperTarget, SqlDataPumperSourceTarget>();
             
             services.AddTransient<Core.DataPumper>();
-            services.AddSingleton<DataPumpService>();
+            services.AddTransient<DataPumpService>();
+            
+            services.AddHangfire(x => x.UseMemoryStorage());
+            services.AddHangfireServer();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IWebHostEnvironment env)
+        public void Configure(IApplicationBuilder app, IWebHostEnvironment env, DataPumperContext context)
         {
             if (env.IsDevelopment())
             {
@@ -59,11 +64,18 @@ namespace DataPumper.Web
 
             app.UseRouting();
 
+            app.UseHangfireDashboard("/jobs");
             app.UseEndpoints(endpoints =>
             {
+                endpoints.MapControllerRoute(
+                    name: "default",
+                    pattern: "{controller=Home}/{action=Index}/{id?}");
                 endpoints.MapBlazorHub();
                 endpoints.MapFallbackToPage("/_Host");
             });
+
+            context.Database.EnsureCreated();
+            context.Seed();
         }
     }
 }

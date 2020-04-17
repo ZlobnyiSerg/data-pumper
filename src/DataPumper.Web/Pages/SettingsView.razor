@@ -1,0 +1,75 @@
+@page "/settings"
+@using DataPumper.Web.DataLayer
+@using DataPumper.Web.Domain
+@using DataPumper.Web.Services
+@inject DataPumperContext Context
+@inject DataPumpService Service
+@inject NavigationManager NavigationManager
+
+
+<h2>Settings</h2>
+
+<EditForm Model="@Settings">
+    <DataAnnotationsValidator/>
+    <ValidationSummary/>
+    
+    @if (Message != null)
+    {
+        <div class="alert alert-info">@Message</div>
+    }
+
+    <div class="form-group">
+        <label>Current date table name</label>
+        <InputText class="form-control" @bind-Value="Settings.CurrentDateTable"></InputText>
+    </div>
+
+    <div class="form-group">
+        <label>Current date table field name</label>
+        <InputText class="form-control" @bind-Value="Settings.CurrentDateField"></InputText>
+    </div>
+
+    <button type="submit" class="btn btn-primary" @onclick="Save">Save</button>
+</EditForm>
+
+
+@code {
+    SettingsModel Settings { get; set; }
+    private Setting _currentDateTableSetting;
+    private Setting _currentDateFieldSetting;
+    protected string Message { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        _currentDateTableSetting = Context.Settings.FirstOrDefault(s => s.Key == Setting.CurrentDateTable);
+        _currentDateFieldSetting = Context.Settings.FirstOrDefault(s => s.Key == Setting.CurrentDateField);
+        Settings = new SettingsModel
+        {
+            CurrentDateTable = _currentDateTableSetting?.Value,
+            CurrentDateField = _currentDateFieldSetting?.Value
+        };
+    }
+
+    protected async Task Save()
+    {
+        if (_currentDateTableSetting == null)
+        {
+            _currentDateTableSetting = new Setting
+            {
+                Key = Setting.CurrentDateTable
+            };
+            Context.Settings.Add(_currentDateTableSetting);
+        }
+        if (_currentDateFieldSetting == null)
+        {
+            _currentDateFieldSetting = new Setting
+            {
+                Key = Setting.CurrentDateField
+            };
+            Context.Settings.Add(_currentDateFieldSetting);
+        }
+        _currentDateTableSetting.Value = Settings.CurrentDateTable;
+        _currentDateFieldSetting.Value = Settings.CurrentDateField;
+        await Context.SaveChangesAsync();
+        Message = "Changes were saved successfully";
+    }
+}
