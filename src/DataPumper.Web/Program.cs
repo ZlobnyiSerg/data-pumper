@@ -8,6 +8,7 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Topshelf;
 
 namespace DataPumper.Web
 {
@@ -15,23 +16,12 @@ namespace DataPumper.Web
     {
         public static void Main(string[] args)
         {
-            CreateHostBuilder(args).Build().Run();
+            HostFactory.Run(c =>
+            {
+                c.Service<MainService>();
+                c.SetServiceName("DataPumper");
+                c.SetDisplayName("Data Pumper");
+            });
         }
-
-        public static IHostBuilder CreateHostBuilder(string[] args) =>
-            Host.CreateDefaultBuilder(args)
-                .ConfigureAppConfiguration((ctx, e) =>
-                {
-                    e.AddJsonFile("appsettings.json")
-                        .AddJsonFile($"appsettings.{ctx.HostingEnvironment.EnvironmentName}.json", true)
-                        .AddJsonFile("appsettings.local.json", true)
-                        .AddEnvironmentVariables();
-                })
-                .ConfigureLogging(logging =>
-                {
-                    logging.ClearProviders();
-                    logging.AddConsole();
-                })
-                .ConfigureWebHostDefaults(webBuilder => { webBuilder.UseStartup<Startup>(); });
     }
 }

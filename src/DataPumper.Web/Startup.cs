@@ -76,6 +76,9 @@ namespace DataPumper.Web
 
             context.Database.EnsureCreated();
             context.Seed();
+            
+            var cron = context.Settings.FirstOrDefault(s => s.Key == Setting.Cron)?.Value ?? "0 30 3 ? * *";
+            RecurringJob.AddOrUpdate<DataPumpService>(MainService.JobId, s => s.Process(), cron);
         }
     }
 }

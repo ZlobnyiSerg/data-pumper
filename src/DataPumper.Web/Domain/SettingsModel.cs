@@ -5,5 +5,7 @@ namespace DataPumper.Web.Domain
         public string CurrentDateTable { get; set; }
         
         public string CurrentDateField { get; set; }
+        
+        public string Cron { get; set; }
     }
 }

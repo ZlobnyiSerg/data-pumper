@@ -12,6 +12,10 @@ namespace DataPumper.Web.DataLayer
         public DbSet<Setting> Settings { get; set; }
 
 
+        public DataPumperContext()
+        {
+        }
+
         public DataPumperContext(DbContextOptions options) : base(options)
         {
         }
@@ -52,6 +56,10 @@ namespace DataPumper.Web.DataLayer
                 {
                     Key = Setting.CurrentDateField,
                     Value = "CurrentDate"
+                }, new Setting
+                {
+                    Key = Setting.Cron,
+                    Value = "0 30 3 ? * *"
                 });
                 SaveChanges();
             }

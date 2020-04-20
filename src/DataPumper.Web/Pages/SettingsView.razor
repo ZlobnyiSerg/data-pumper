@@ -2,6 +2,7 @@
 @using DataPumper.Web.DataLayer
 @using DataPumper.Web.Domain
 @using DataPumper.Web.Services
+@using Hangfire
 @inject DataPumperContext Context
 @inject DataPumpService Service
 @inject NavigationManager NavigationManager
@@ -12,11 +13,16 @@
 <EditForm Model="@Settings">
     <DataAnnotationsValidator/>
     <ValidationSummary/>
-    
+
     @if (Message != null)
     {
         <div class="alert alert-info">@Message</div>
     }
+
+    <div class="form-group">
+        <label>Cron</label>
+        <InputText class="form-control" @bind-Value="Settings.Cron"></InputText>
+    </div>
 
     <div class="form-group">
         <label>Current date table name</label>
@@ -36,16 +42,19 @@
     SettingsModel Settings { get; set; }
     private Setting _currentDateTableSetting;
     private Setting _currentDateFieldSetting;
+    private Setting _cron;
     protected string Message { get; set; }
 
     protected override async Task OnInitializedAsync()
     {
         _currentDateTableSetting = Context.Settings.FirstOrDefault(s => s.Key == Setting.CurrentDateTable);
         _currentDateFieldSetting = Context.Settings.FirstOrDefault(s => s.Key == Setting.CurrentDateField);
+        _cron = Context.Settings.FirstOrDefault(s => s.Key == Setting.Cron);
         Settings = new SettingsModel
         {
             CurrentDateTable = _currentDateTableSetting?.Value,
-            CurrentDateField = _currentDateFieldSetting?.Value
+            CurrentDateField = _currentDateFieldSetting?.Value,
+            Cron = _cron?.Value
         };
     }
 
@@ -67,9 +76,20 @@
             };
             Context.Settings.Add(_currentDateFieldSetting);
         }
+        if (_cron == null)
+        {
+            _cron = new Setting
+            {
+                Key = Setting.Cron
+            };
+            Context.Settings.Add(_cron);
+        }
         _currentDateTableSetting.Value = Settings.CurrentDateTable;
         _currentDateFieldSetting.Value = Settings.CurrentDateField;
+        _cron.Value = Settings.Cron;
+        RecurringJob.AddOrUpdate<DataPumpService>(MainService.JobId, s=>s.Process(), Settings.Cron);
         await Context.SaveChangesAsync();
         Message = "Changes were saved successfully";
     }
+
 }

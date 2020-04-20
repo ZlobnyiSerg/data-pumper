@@ -4,7 +4,8 @@ namespace DataPumper.Web.DataLayer
     {
         public const string CurrentDateTable = "CurrentDateTable";
         public const string CurrentDateField = "CurrentDateField";
-        
+        public const string Cron = "Cron";
+
         public string Key { get; set; }
         public string Value { get; set; }
     }
