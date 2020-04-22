@@ -17,6 +17,7 @@ namespace DataPumper.Web
     {
         private IHost _webHost;
         public const string JobId = "main-job";
+        public const string FullReloadJobId = "full-reload-job";
 
         public bool Start(HostControl hostControl)
         {

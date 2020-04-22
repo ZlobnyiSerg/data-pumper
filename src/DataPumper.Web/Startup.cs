@@ -74,11 +74,12 @@ namespace DataPumper.Web
                 endpoints.MapFallbackToPage("/_Host");
             });
 
-            context.Database.EnsureCreated();
+            context.Database.Migrate();
             context.Seed();
             
             var cron = context.Settings.FirstOrDefault(s => s.Key == Setting.Cron)?.Value ?? "0 30 3 ? * *";
-            RecurringJob.AddOrUpdate<DataPumpService>(MainService.JobId, s => s.Process(), cron);
+            RecurringJob.AddOrUpdate<DataPumpService>(MainService.JobId, s => s.Process(false), cron);
+            RecurringJob.AddOrUpdate<DataPumpService>(MainService.FullReloadJobId, s=>s.Process(true), Cron.Never);
         }
     }
 }

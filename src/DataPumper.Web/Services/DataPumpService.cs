@@ -35,22 +35,22 @@ namespace DataPumper.Web.Services
 
         public EventHandler<ProgressEventArgs> Progress;
 
-        public async Task Process()
+        public async Task Process(bool fullReload = false)
         {
             _logger.LogInformation($"Performing synchronization for all jobs...");
-            BackgroundJob.Enqueue(() => ProcessInternal(CancellationToken.None));
+            BackgroundJob.Enqueue(() => ProcessInternal(fullReload, CancellationToken.None));
         }
 
-        public async Task ProcessInternal(CancellationToken token)
+        public async Task ProcessInternal(bool fullReload, CancellationToken token)
         {
             _logger.LogWarning("Started job to sync all tables...");
             foreach (var job in _context.TableSyncJobs)
             {
-                await RunJobInternal(job, token);
+                await RunJobInternal(job, fullReload, token);
             }
         }
 
-        private async Task RunJobInternal(TableSyncJob job, CancellationToken token)
+        private async Task RunJobInternal(TableSyncJob job, bool fullReload, CancellationToken token)
         {
             _logger.LogWarning($"Processing {job}");
             var log = new SyncJobLog
@@ -73,7 +73,7 @@ namespace DataPumper.Web.Services
                 await source.Initialize(job.SourceConnectionString);
                 await target.Initialize(job.TargetConnectionString);
 
-                var currentDate = await GetCurrentDate(source);
+                var currentDate = fullReload ? DateTime.Today.AddYears(-1000) : await GetCurrentDate(source);
 
                 var sw = new Stopwatch();
                 sw.Start();

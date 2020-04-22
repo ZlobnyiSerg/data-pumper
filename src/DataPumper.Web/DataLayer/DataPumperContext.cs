@@ -16,8 +16,14 @@ namespace DataPumper.Web.DataLayer
         {
         }
 
-        public DataPumperContext(DbContextOptions options) : base(options)
+        public DataPumperContext(DbContextOptions<DataPumperContext> options) : base(options)
         {
+        }
+
+        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+        {
+            optionsBuilder.UseSqlite(@"Data Source=DataPumper.db;");
+            base.OnConfiguring(optionsBuilder);
         }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
