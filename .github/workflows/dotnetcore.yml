@@ -23,7 +23,7 @@ jobs:
       run: dotnet test --no-restore --verbosity normal
     - name: "Build & test"
       run: |
-        dotnet publish -c Release -o out -p:PublishReadyToRun=true --self-contained true -r win-x64          
+        dotnet publish -c Release -o out --self-contained true -r win-x64
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
