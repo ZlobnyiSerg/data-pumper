@@ -2,7 +2,8 @@ name: .NET Core
 
 on:
   push:
-    branches: [ master ]  
+    tags:
+      - "v*"
 
 jobs:
   pre-release:
@@ -27,8 +28,7 @@ jobs:
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
-        repo_token: "${{ secrets.GITHUB_TOKEN }}"
-        automatic_release_tag: "latest"
+        repo_token: "${{ secrets.GITHUB_TOKEN }}"        
         prerelease: true
         title: "Development Build"
         files: |
