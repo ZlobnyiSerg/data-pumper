@@ -85,7 +85,7 @@ namespace DataPumper.Web.Services
                     var handler = Progress;
                     handler?.Invoke(sender, args);
                 };
-                var records = await _pumper.Pump(source, target, new TableName(job.SourceTableName), new TableName(job.TargetTableName), "ActualDate", fullReload ? DateTime.Today.AddYears(-1000) : job.Date);
+                var records = await _pumper.Pump(source, target, new TableName(job.SourceTableName), new TableName(job.TargetTableName), "ActualDate", fullReload ? DateTime.Today.AddYears(-100) : job.Date);
                 var currentDate = await GetCurrentDate(source) ?? DateTime.Now;
                 
                 job.Date = currentDate;
