@@ -21,9 +21,9 @@ jobs:
       run: dotnet build --configuration Release --no-restore
     - name: Test
       run: dotnet test --no-restore --verbosity normal
-    - name: "Build & test"
+    - name: Publish
       run: |
-        dotnet publish -c Release -o out --self-contained true -r win-x64
+        dotnet publish -c Release -o data-pumper --self-contained true -r win-x64
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:
@@ -32,4 +32,5 @@ jobs:
         prerelease: true
         title: "Development Build"
         files: |
-          out/
+          readme.md
+          data-pumper/
