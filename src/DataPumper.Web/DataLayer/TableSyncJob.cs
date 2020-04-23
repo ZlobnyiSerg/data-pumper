@@ -26,7 +26,7 @@ namespace DataPumper.Web.DataLayer
 
         public override string ToString()
         {
-            return $"Job #{Id}: {SourceTableName} ({SourceProvider}) -> {TargetTableName} ({TargetProvider})";
+            return $"Job #{Id}: {SourceTableName} ({SourceProvider}) -> {TargetTableName} ({TargetProvider}); Last load date: '{Date}'";
         }
     }
 }

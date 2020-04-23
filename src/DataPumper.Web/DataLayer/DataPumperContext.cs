@@ -57,11 +57,11 @@ namespace DataPumper.Web.DataLayer
                 Settings.AddRange(new Setting
                 {
                     Key = Setting.CurrentDateTable,
-                    Value = "lr.Properties"
+                    Value = "lr.VProperties"
                 }, new Setting
                 {
                     Key = Setting.CurrentDateField,
-                    Value = "CurrentDate"
+                    Value = "PropertyCurrentDate"
                 }, new Setting
                 {
                     Key = Setting.Cron,

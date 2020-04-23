@@ -73,8 +73,6 @@ namespace DataPumper.Web.Services
                 await source.Initialize(job.SourceConnectionString);
                 await target.Initialize(job.TargetConnectionString);
 
-                var currentDate = fullReload ? DateTime.Today.AddYears(-1000) : await GetCurrentDate(source);
-
                 var sw = new Stopwatch();
                 sw.Start();
 
@@ -87,8 +85,11 @@ namespace DataPumper.Web.Services
                     var handler = Progress;
                     handler?.Invoke(sender, args);
                 };
-                var records = await _pumper.Pump(source, target, new TableName(job.SourceTableName), new TableName(job.TargetTableName), "ActualDate", currentDate);
-                job.Date = currentDate ?? DateTime.Now;
+                var records = await _pumper.Pump(source, target, new TableName(job.SourceTableName), new TableName(job.TargetTableName), "ActualDate", fullReload ? DateTime.Today.AddYears(-1000) : job.Date);
+                var currentDate = await GetCurrentDate(source) ?? DateTime.Now;
+                
+                job.Date = currentDate;
+                _logger.LogInformation($"New job date is now '{job.Date}'");
 
                 log.Elapsed = sw.Elapsed;
                 log.EndDate = DateTime.Now;
