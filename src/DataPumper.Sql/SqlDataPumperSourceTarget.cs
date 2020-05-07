@@ -49,6 +49,19 @@ namespace DataPumper.Sql
         {
             return _connection.ExecuteScalarAsync<DateTime?>($"SELECT Min({fieldName}) FROM {tableName}", commandTimeout: _timeout);
         }
+        
+        public async Task<string[]> GetInstances(TableName tableName, string fieldName)
+        {
+            var result = new List<string>();
+            await using (var reader = await _connection.ExecuteReaderAsync($"SELECT {fieldName} FROM {tableName}", commandTimeout: _timeout))
+            {
+                while (await reader.ReadAsync())
+                {
+                    result.Add(reader.GetString(0));
+                }
+            }
+            return result.ToArray();
+        }
 
         public async Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan)
         {
@@ -65,17 +78,18 @@ namespace DataPumper.Sql
             return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName}", commandTimeout: _timeout);
         }
 
-        public Task CleanupTable(TableName tableName, string fieldName, DateTime? notOlderThan)
+        public Task CleanupTable(CleanupTableRequest request)
         {
             var handler = Progress;
             handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table..."));
-            if (notOlderThan == null)
+            var inStatement = string.Join(',', $"'{request.InstanceFieldValues}'");
+            if (request.NotOlderThan == null)
             {
-                return _connection.ExecuteAsync($"TRUNCATE TABLE {tableName}", commandTimeout: _timeout);
+                return _connection.ExecuteAsync($"TRUNCATE TABLE {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
             }
-            return _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE {fieldName} >= @NotOlderThan", new
+            return _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan", new
             {
-                NotOlderThan = notOlderThan
+                NotOlderThan = request.NotOlderThan.Value
             }, commandTimeout: _timeout);
         }
 
