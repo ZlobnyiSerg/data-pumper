@@ -26,8 +26,9 @@ jobs:
       run: |
         dotnet publish -c Release -o data-pumper --self-contained true -r win-x64
     - name: Zip Output
+    - uses: montudor/action-zip@v0.1.0
       run: |
-        zip -r data-pumper.zip ./data-pumper
+        zip -qq -r ./data-pumper.zip ./data-pumper
 
     - uses: "marvinpinto/action-automatic-releases@latest"
       with:

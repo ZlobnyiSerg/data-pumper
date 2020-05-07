@@ -3,6 +3,7 @@
 @using DataPumper.Web.Domain
 @using DataPumper.Web.Services
 @using Hangfire
+@using Microsoft.EntityFrameworkCore
 @inject DataPumperContext Context
 @inject DataPumpService Service
 @inject NavigationManager NavigationManager
@@ -47,8 +48,8 @@
 
     protected override async Task OnInitializedAsync()
     {
-        _currentDateTableSetting = Context.Settings.FirstOrDefault(s => s.Key == Setting.CurrentDateTable);
-        _currentDateFieldSetting = Context.Settings.FirstOrDefault(s => s.Key == Setting.CurrentDateField);
+        _currentDateTableSetting = await Context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateTable);
+        _currentDateFieldSetting = await Context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateField);
         _cron = Context.Settings.FirstOrDefault(s => s.Key == Setting.Cron);
         Settings = new SettingsModel
         {
