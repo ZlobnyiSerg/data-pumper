@@ -78,19 +78,28 @@ namespace DataPumper.Sql
             return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName}", commandTimeout: _timeout);
         }
 
-        public Task CleanupTable(CleanupTableRequest request)
+        public async Task CleanupTable(CleanupTableRequest request)
         {
             var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table..."));
+            
             var inStatement = string.Join(',', $"'{request.InstanceFieldValues}'");
+            _logger.LogWarning($"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}"));
+            int deleted;
             if (request.NotOlderThan == null)
             {
-                return _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
+                deleted = await _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
             }
-            return _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan", new
+            else
             {
-                NotOlderThan = request.NotOlderThan.Value
-            }, commandTimeout: _timeout);
+                deleted = await _connection.ExecuteAsync(
+                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan",
+                    new
+                    {
+                        NotOlderThan = request.NotOlderThan.Value
+                    }, commandTimeout: _timeout);
+            }
+            _logger.LogWarning($"Deleted {deleted} record(s)");
         }
 
         public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
