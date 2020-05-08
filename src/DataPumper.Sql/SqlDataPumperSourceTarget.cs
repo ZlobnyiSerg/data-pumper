@@ -82,7 +82,7 @@ namespace DataPumper.Sql
         {
             var handler = Progress;
             
-            var inStatement = string.Join(',', $"'{request.InstanceFieldValues}'");
+            var inStatement = string.Join(',', request.InstanceFieldValues.Select(v=>$"'{v}'"));
             _logger.LogWarning($"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}"));
             int deleted;
