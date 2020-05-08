@@ -85,7 +85,7 @@ namespace DataPumper.Sql
             var inStatement = string.Join(',', $"'{request.InstanceFieldValues}'");
             if (request.NotOlderThan == null)
             {
-                return _connection.ExecuteAsync($"TRUNCATE TABLE {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
+                return _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
             }
             return _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan", new
             {
