@@ -1,10 +1,17 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{A7BA213C-A547-42B6-B498-4DCB90132178}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{A7BA213C-A547-42B6-B498-4DCB90132178}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Sql", "src\DataPumper.Sql\DataPumper.Sql.csproj", "{CF063525-3EB2-4A38-A613-46A9EBEDA07C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Sql", "src\DataPumper.Sql\DataPumper.Sql.csproj", "{CF063525-3EB2-4A38-A613-46A9EBEDA07C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{B4C95943-F5AB-4E11-A826-532EC0549B0B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{B4C95943-F5AB-4E11-A826-532EC0549B0B}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestConsole", "src\TestConsole\TestConsole.csproj", "{5A4C7D9D-B56C-4AE3-9306-5D90E1D54295}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quirco.DataPumper", "src\Quirco.DataPumper\Quirco.DataPumper.csproj", "{AF4049F3-97F7-48DD-A46A-845A585B4A70}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -24,5 +31,19 @@ Global
 		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5A4C7D9D-B56C-4AE3-9306-5D90E1D54295}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A4C7D9D-B56C-4AE3-9306-5D90E1D54295}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A4C7D9D-B56C-4AE3-9306-5D90E1D54295}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A4C7D9D-B56C-4AE3-9306-5D90E1D54295}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF4049F3-97F7-48DD-A46A-845A585B4A70}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF4049F3-97F7-48DD-A46A-845A585B4A70}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF4049F3-97F7-48DD-A46A-845A585B4A70}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF4049F3-97F7-48DD-A46A-845A585B4A70}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A52A0248-CF07-433A-83B0-06746E7549F1}
 	EndGlobalSection
 EndGlobal
