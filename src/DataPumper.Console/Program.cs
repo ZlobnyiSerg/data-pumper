@@ -1,8 +1,14 @@
-﻿using Microsoft.Practices.Unity;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using Common.Logging;
+using Microsoft.Practices.Unity;
 using Quirco.DataPumper;
 using System;
 
-namespace TestConsole
+namespace DataPumper.Console
 {
     class Program
     {
@@ -11,10 +17,14 @@ namespace TestConsole
         const string targetProviderName = "Sql";
         const string targetConnectionString = "targetConStr";
 
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
+
         private static IUnityContainer _container;
 
         static void Main(string[] args)
         {
+            AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+
             Init();
 
             var config = new Configuration();
@@ -29,13 +39,22 @@ namespace TestConsole
             dataPumperService.RunJobs(sourceProviderName, sourceConnectionString, targetProviderName, targetConnectionString);
         }
 
+        private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
+        {
+            var exception = e.ExceptionObject as Exception;
+            if (exception != null)
+                Log.Fatal("Unhandled exception in service", exception);
+            else
+                Log.Fatal("Unhandled error of unknown type: " + e.ExceptionObject);
+        }
+
         private static void Init()
         {
             _container = new UnityContainer();
             Bootstrapper.Initialize(_container);
             _container.RegisterType<DataPumperService>();
             _container.RegisterType<IActualityDatesProvider, TestProvider>();
-            
+
         }
     }
 

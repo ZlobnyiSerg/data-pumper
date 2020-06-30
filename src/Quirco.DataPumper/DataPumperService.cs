@@ -1,7 +1,6 @@
 ﻿using Common.Logging;
 using DataPumper.Core;
 using DataPumper.Sql;
-using Microsoft.Extensions.Logging;
 using Microsoft.Practices.Unity;
 using System;
 
@@ -20,16 +19,16 @@ namespace Quirco.DataPumper
             _actualityDatesProvider = actualityDatesProvider;
         }
 
-        public void RunJobs(string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
+        public async void RunJobs(string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
         {
             InitDataPumperSource(sourceProviderName);
             InitDataPumperTarget(targetProviderName);
 
             var sourceProvider = _container.Resolve<IDataPumperSource>();
-            sourceProvider.Initialize(targetConnectionString);
+            await sourceProvider.Initialize(targetConnectionString);
 
             var targetProvider = _container.Resolve<IDataPumperTarget>();
-            targetProvider.Initialize(sourceConnectionString);
+            await targetProvider.Initialize(sourceConnectionString);
         }
 
         private void InitDataPumperSource(string targetProviderName)
