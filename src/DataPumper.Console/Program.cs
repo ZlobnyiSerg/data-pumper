@@ -13,9 +13,9 @@ namespace DataPumper.Console
     class Program
     {
         const string sourceProviderName = "Sql";
-        const string sourceConnectionString = "sourceConStr";
+        const string sourceConnectionString = "1";
         const string targetProviderName = "Sql";
-        const string targetConnectionString = "targetConStr";
+        const string targetConnectionString = "Server=(local);Database=Logus.HMS.Target;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus.Develop.Target";
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
 
