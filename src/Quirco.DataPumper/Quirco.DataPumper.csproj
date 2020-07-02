@@ -115,6 +115,7 @@
     <Compile Include="DataPumperService.cs" />
     <Compile Include="IActualityDatesProvider.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="DataPumperLog.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />

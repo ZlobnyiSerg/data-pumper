@@ -9,6 +9,7 @@ namespace DataPumper.Console
         {
             container.RegisterType<IActualityDatesProvider, TestProvider>();
             container.RegisterType<DataPumperService>();
+            container.RegisterType<Core.DataPumper>();
         }
     }
 }
