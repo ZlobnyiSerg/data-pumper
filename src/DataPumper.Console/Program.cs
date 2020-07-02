@@ -6,25 +6,29 @@ using System.Threading.Tasks;
 using Common.Logging;
 using Microsoft.Practices.Unity;
 using Quirco.DataPumper;
-using System;
+using Topshelf;
 
 namespace DataPumper.Console
 {
-    class Program
+    internal class Service
     {
         const string sourceProviderName = "Sql";
-        const string sourceConnectionString = "1";
+        const string sourceConnectionString = "Server=(local);Database=Logus.HMS.Source;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus.Develop.Source";
         const string targetProviderName = "Sql";
         const string targetConnectionString = "Server=(local);Database=Logus.HMS.Target;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus.Develop.Target";
 
-        private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
-
         private static IUnityContainer _container;
 
-        static void Main(string[] args)
+        private void Init()
         {
-            AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+            _container = new UnityContainer();
+            Bootstrapper.Initialize(_container);
+            _container.RegisterType<IActualityDatesProvider, TestProvider>();
+            _container.RegisterType<DataPumperService>();
+        }
 
+        public void Start()
+        {
             Init();
 
             var config = new Configuration();
@@ -37,6 +41,36 @@ namespace DataPumper.Console
 
             var dataPumperService = _container.Resolve<DataPumperService>();
             dataPumperService.RunJobs(sourceProviderName, sourceConnectionString, targetProviderName, targetConnectionString);
+
+        }
+
+        public void Stop()
+        {
+
+        }
+    }
+
+    class Program
+    {
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
+
+        static void Main(string[] args)
+        {
+            AppDomain.CurrentDomain.UnhandledException += UnhandledException;
+
+            Log.Info($"Data Pumper is running...");
+
+            HostFactory.Run(x =>
+            {
+                x.Service<Service>(
+                    s =>
+                    {
+                        s.ConstructUsing(() => new Service());
+                        s.WhenStarted(ws => ws.Start());
+                        s.WhenStopped(ws => ws.Stop());
+                    });
+            });
+
         }
 
         private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
@@ -46,15 +80,6 @@ namespace DataPumper.Console
                 Log.Fatal("Unhandled exception in service", exception);
             else
                 Log.Fatal("Unhandled error of unknown type: " + e.ExceptionObject);
-        }
-
-        private static void Init()
-        {
-            _container = new UnityContainer();
-            Bootstrapper.Initialize(_container);
-            _container.RegisterType<DataPumperService>();
-            _container.RegisterType<IActualityDatesProvider, TestProvider>();
-
         }
     }
 
