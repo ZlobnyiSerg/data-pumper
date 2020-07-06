@@ -37,9 +37,9 @@ namespace DataPumper.Sql
             await _connection.OpenAsync();
         }
 
-        public Task<DateTime?> GetCurrentDate(TableName tableName, string fieldName)
+        public Task<DateTime?> GetCurrentDate(string query)
         {
-            return _connection.ExecuteScalarAsync<DateTime?>($"SELECT Min({fieldName}) FROM {tableName}", commandTimeout: _timeout);
+            return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: _timeout);
         }
         
         public async Task<string[]> GetInstances(TableName tableName, string fieldName)
@@ -57,8 +57,6 @@ namespace DataPumper.Sql
 
         public async Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan)
         {
-            var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", null));
             if (notOlderThan != null)
             {
                 return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {fieldName} >= @NotOlderThan", new
@@ -71,12 +69,9 @@ namespace DataPumper.Sql
         }
 
         public async Task CleanupTable(CleanupTableRequest request)
-        {
-            var handler = Progress;
-            
+        {            
             var inStatement = string.Join(",", request.InstanceFieldValues.Select(v=>$"'{v}'").ToArray());
             _logger.Warn($"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}"));
             int deleted;
             if (request.NotOlderThan == null)
             {
@@ -134,8 +129,6 @@ namespace DataPumper.Sql
                     throw new ApplicationException($"Source table contains fields that not present in target table: " + string.Join(",", nonMatchingFields));
             }
         }
-
-        public event EventHandler<ProgressEventArgs> Progress;
 
         public void Dispose()
         {

@@ -7,7 +7,7 @@ namespace DataPumper.Core
 {
     public interface IDataPumperSource : IDataPumperProvider
     {
-        Task<DateTime?> GetCurrentDate(TableName tableName, string fieldName);
+        Task<DateTime?> GetCurrentDate(string query);
         
         Task<string[]> GetInstances(TableName tableName, string fieldName);
         

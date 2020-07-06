@@ -16,7 +16,8 @@ namespace DataPumper.Core
         public async Task<long> Pump(IDataPumperSource source, IDataPumperTarget target,
             TableName sourceTable,
             TableName targetTable,
-            string actualityFieldName, TableName instanceTable, 
+            string actualityFieldName, 
+            TableName instanceTable, 
             DateTime? onDate)
         {
             try

@@ -46,17 +46,4 @@ namespace DataPumper.Console
                 Log.Fatal("Unhandled error of unknown type: " + e.ExceptionObject);
         }
     }
-
-    class TestProvider : IActualityDatesProvider
-    {
-        public DateTime? GetJobActualDate(string jobName)
-        {
-            throw new NotImplementedException();
-        }
-
-        public void SetJobActualDate(string jobName, DateTime date)
-        {
-            throw new NotImplementedException();
-        }
-    }
 }

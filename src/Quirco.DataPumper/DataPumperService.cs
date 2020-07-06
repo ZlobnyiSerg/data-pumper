@@ -109,16 +109,22 @@ namespace Quirco.DataPumper
                 var sw = new Stopwatch();
                 sw.Start();
 
+                var jobActualDate = _actualityDatesProvider.GetJobActualDate(job.Name);
+                var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate;
+
                 var records = await _pumper.Pump(sourceProvider, targetProvider,
                     new TableName(job.SourceTableName),
                     new TableName(job.TargetTableName), 
-                    "ActualDate",
-                    //new TableName(curDateTable), fullReload ? DateTime.Today.AddYears(-100) : job.Date);
+                    _configuration.ActualityColumnName,
                     new TableName("lr.VProperties"),
-                    DateTime.Today.AddYears(-100));
+                    onDate);
+
+                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
+                _actualityDatesProvider.SetJobActualDate(job.Name, currentDate);
 
                 log.ElapsedTime = sw.Elapsed;
                 log.RecordsProcessed = records;
+                log.ActualDate = currentDate;
                 sw.Stop();
             }
             catch (Exception ex)

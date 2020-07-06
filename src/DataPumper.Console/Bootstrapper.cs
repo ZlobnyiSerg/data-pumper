@@ -7,7 +7,7 @@ namespace DataPumper.Console
     {
         public static void Initialize(IUnityContainer container)
         {
-            container.RegisterType<IActualityDatesProvider, TestProvider>();
+            container.RegisterType<IActualityDatesProvider, TestActualityDatesProvider>();
             container.RegisterType<DataPumperService>();
             container.RegisterType<Core.DataPumper>();
         }
