@@ -120,7 +120,7 @@
   <ItemGroup>
     <None Include="app.config" />
     <None Include="data-pumper.config">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />
   </ItemGroup>

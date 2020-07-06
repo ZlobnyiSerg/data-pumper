@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -19,9 +20,10 @@ namespace Quirco.DataPumper
         /// <summary>
         /// Имя задания
         /// </summary>
-        public string Job { get; set; }
+        [JsonProperty("Job")]
+        public string Name { get; set; }
 
-        public int RecordsProcessed { get; set; }
+        public long RecordsProcessed { get; set; }
 
         public TimeSpan ElapsedTime { get; set; }
 

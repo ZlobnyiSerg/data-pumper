@@ -114,15 +114,9 @@ namespace DataPumper.Sql
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
                 }
 
-                bulkCopy.SqlRowsCopied += (sender, args) =>
-                {
-                    _logger.Info($"Records processed: {args.RowsCopied:#########}");
-                    var handler = Progress;
-                    handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", sw.Elapsed));
-                    processed = args.RowsCopied;
-                };
-
                 await bulkCopy.WriteToServerAsync(dataReader);
+
+                processed = bulkCopy.GetRowsCopied();
             }
             
             return processed;

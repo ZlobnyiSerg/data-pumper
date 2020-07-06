@@ -16,8 +16,8 @@ namespace DataPumper.Console
 {
     public class MainService
     {
-        const string sourceConnectionString = "Server=(local);Database=Logus.HMS.Source;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus.Develop.Source";
-        const string targetConnectionString = "Server=(local);Database=Logus.HMS.Target;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus.Develop.Target";
+        const string sourceConnectionString = "Server=(local);Database=Logus.HMS;Integrated Security=true;MultipleActiveResultSets=true;Application Name=DataPumper";
+        const string targetConnectionString = "Server=(local);Database=Logus.HMS.Reporting;Integrated Security=true;MultipleActiveResultSets=true;Application Name=DataPumper";
 
         private static readonly ILog Log = LogManager.GetLogger(typeof(MainService));
 
@@ -71,13 +71,7 @@ namespace DataPumper.Console
 
             var dataPumperService = _container.Resolve<DataPumperService>();
 
-            var sourceProvider = new SqlDataPumperSourceTarget();
-            sourceProvider.Initialize(sourceConnectionString);
-
-            var targetProvider = new SqlDataPumperSourceTarget();
-            targetProvider.Initialize(targetConnectionString);
-
-            dataPumperService.RunJobs(sourceProvider, targetProvider);
+            dataPumperService.RunJobs("SQL", sourceConnectionString, "SQL", targetConnectionString);
 
         }
 
