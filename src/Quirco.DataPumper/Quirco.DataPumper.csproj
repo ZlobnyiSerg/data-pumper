@@ -110,6 +110,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Bootstrapper.cs" />
     <Compile Include="Configuration.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="DataPumperService.cs" />

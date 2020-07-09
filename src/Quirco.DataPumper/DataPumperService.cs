@@ -21,16 +21,19 @@ namespace Quirco.DataPumper
         private readonly IActualityDatesProvider _actualityDatesProvider;
         private readonly NDataPumper.DataPumper _pumper;
         private readonly Configuration _configuration;
+        private readonly IUnityContainer _container;
 
         public DataPumperService(IActualityDatesProvider actualityDatesProvider,
-            NDataPumper.DataPumper dataPumper)
+            NDataPumper.DataPumper dataPumper, 
+            IUnityContainer container)
         {
             _actualityDatesProvider = actualityDatesProvider;
             _pumper = dataPumper;
             _configuration = new Configuration();
+            _container = container;
         }
 
-        public async void RunJobs(string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
+        public void RunJobs(string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
         {
             Log.Info("Performing synchronization for all jobs...");
             var configuration = new Configuration();
@@ -39,64 +42,18 @@ namespace Quirco.DataPumper
             BackgroundJob.Enqueue(() => ProcessInternal(jobs, sourceProviderName, sourceConnectionString, targetProviderName, targetConnectionString));
         }
 
-        private async Task<IDataPumperSource> GetSourceProvider(string sourceProviderName, string sourceConnectionString)
-        {
-            if (sourceProviderName == "SQL")
-            {
-                var sourceProvider = new SqlDataPumperSourceTarget();
-                await sourceProvider.Initialize(sourceConnectionString);
-                return sourceProvider;
-            }
-
-            throw new ApplicationException($"No source provider with name '{sourceProviderName}'");
-        }
-
-        private async Task<IDataPumperTarget> GetTargetProvider(string targetProviderName, string targetConnectionString)
-        {
-            if (targetProviderName == "SQL")
-            {
-                var targetProvider = new SqlDataPumperSourceTarget();
-                await targetProvider.Initialize(targetConnectionString);
-                return targetProvider;
-            }
-
-            throw new ApplicationException($"No target provider with name '{targetProviderName}'");
-        }
-
         [Queue("datapumper")]
         public async Task ProcessInternal(ConfigJobItem[] jobs, string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
         {
             Log.Warn("Started job to sync all tables...");
 
-            var sourceProvider = await GetSourceProvider(sourceProviderName, sourceConnectionString);
-            var targetProvider = await GetTargetProvider(targetProviderName, targetConnectionString);
+            var sourceProvider = await GetProvider<IDataPumperSource>(sourceProviderName, sourceConnectionString);
+            var targetProvider = await GetProvider<IDataPumperTarget>(targetProviderName, targetConnectionString);
 
             var tasks = jobs.ToList().Select(j => RunJobInternal(j, sourceProvider, targetProvider));
             var results = await Task.WhenAll(tasks);
 
             ResultWriteToFile(results);            
-        }
-
-        private void ResultWriteToFile(JobLog[] results)
-        {
-            Log.Trace(Newtonsoft.Json.JsonConvert.SerializeObject(results, Newtonsoft.Json.Formatting.Indented, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            }));
-            var dir = Path.Combine(Environment.CurrentDirectory, _configuration.LogDir);
-            
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            using (StreamWriter file = File.CreateText(Path.Combine(dir, $"{DateTime.Now:yyyyMMddTHHmmss}.log")))
-            {
-                JsonSerializer serializer = new JsonSerializer 
-                { 
-                    Formatting = Formatting.Indented, 
-                    NullValueHandling = NullValueHandling.Ignore 
-                };
-                serializer.Serialize(file, results);
-            }
         }
 
         private async Task<JobLog> RunJobInternal(ConfigJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
@@ -112,14 +69,17 @@ namespace Quirco.DataPumper
                 var jobActualDate = _actualityDatesProvider.GetJobActualDate(job.Name);
                 var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate;
 
+                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
+
                 var records = await _pumper.Pump(sourceProvider, targetProvider,
                     new TableName(job.SourceTableName),
                     new TableName(job.TargetTableName), 
                     _configuration.ActualityColumnName,
                     new TableName("lr.VProperties"),
-                    onDate);
+                    onDate,
+                    job.HistoricMode,
+                    currentDate);
 
-                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
                 _actualityDatesProvider.SetJobActualDate(job.Name, currentDate);
 
                 log.ElapsedTime = sw.Elapsed;
@@ -134,6 +94,46 @@ namespace Quirco.DataPumper
             }
 
             return log;
+        }
+
+        private async Task<T> GetProvider<T>(string providerName, string connectionString) where T : IDataPumperProvider
+        {
+            var providers = _container.ResolveAll<T>();
+            if (providers == null || !providers.Any())
+                throw new ApplicationException($"{typeof(T).Name} types not registered");
+
+            foreach (var provider in providers)
+            {
+                if (providerName == provider.GetName())
+                {
+                    await provider.Initialize(connectionString);
+                    return provider;
+                }
+            }
+
+            throw new ApplicationException($"No target provider named '{providerName}'");
+        }
+
+        private void ResultWriteToFile(JobLog[] results)
+        {
+            Log.Trace(JsonConvert.SerializeObject(results, Formatting.Indented, new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore
+            }));
+            var dir = Path.Combine(Environment.CurrentDirectory, _configuration.LogDir);
+
+            if (!Directory.Exists(dir))
+                Directory.CreateDirectory(dir);
+
+            using (StreamWriter file = File.CreateText(Path.Combine(dir, $"{DateTime.Now:yyyyMMddTHHmmss}.log")))
+            {
+                JsonSerializer serializer = new JsonSerializer
+                {
+                    Formatting = Formatting.Indented,
+                    NullValueHandling = NullValueHandling.Ignore
+                };
+                serializer.Serialize(file, results);
+            }
         }
     }
 }

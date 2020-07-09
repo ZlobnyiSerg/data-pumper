@@ -18,7 +18,9 @@ namespace DataPumper.Core
             TableName targetTable,
             string actualityFieldName, 
             TableName instanceTable, 
-            DateTime? onDate)
+            DateTime? onDate,
+            bool historicMode, 
+            DateTime currentDate)
         {
             try
             {
@@ -26,14 +28,28 @@ namespace DataPumper.Core
                 sw.Start();
 
                 var instances = await source.GetInstances(instanceTable, "PropertyCode");
-                _logger.Info($"Cleaning target table '{targetTable}' (after date {onDate}) for instances: {string.Join(",", instances)}...");
-                await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances));
-                _logger.Info($"Cleaning complete in {sw.Elapsed}, transferring data...");
-                sw.Restart();
+
+                if (!historicMode)
+                {
+                    _logger.Info($"Cleaning target table '{targetTable}' (after date {onDate}) for instances: {string.Join(",", instances)}...");
+                    await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances));
+                    _logger.Info($"Cleaning complete in {sw.Elapsed}, transferring data...");
+                    sw.Restart();
+                }
+
                 using (var reader = await source.GetDataReader(sourceTable, actualityFieldName, onDate))
                 {
-                    var items = await target.InsertData(targetTable, reader);
+                    long items = 0;
+                    if (historicMode)
+                    {
+                        items = await target.InsertDataHistoryMode(targetTable, reader, currentDate);
+                    }
+                    else
+                    {
+                        items = await target.InsertData(targetTable, reader);
+                    }
                     _logger.Info($"Data transfer of {items} records completed in {sw.Elapsed}");
+
                     return items;
                 }
             }

@@ -28,7 +28,10 @@ namespace DataPumper.Console
         private void Init()
         {
             _container = new UnityContainer();
+
             Bootstrapper.Initialize(_container);
+            Quirco.DataPumper.Bootstrapper.Initialize(_container);
+
             JobActivator.Current = new UnityJobActivator(_container);
             JobStorage.Current = new MemoryStorage();
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
@@ -71,7 +74,7 @@ namespace DataPumper.Console
 
             var dataPumperService = _container.Resolve<DataPumperService>();
 
-            dataPumperService.RunJobs("SQL", sourceConnectionString, "SQL", targetConnectionString);
+            dataPumperService.RunJobs("Microsoft SQL Server", sourceConnectionString, "Microsoft SQL Server", targetConnectionString);
 
         }
 

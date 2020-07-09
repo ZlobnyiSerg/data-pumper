@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
@@ -22,7 +23,7 @@ namespace DataPumper.Sql
         {
         }
 
-        public const string Name = "Microsoft SQL Server"; 
+        public const string Name = "Microsoft SQL Server";
 
         public string GetName()
         {
@@ -41,7 +42,7 @@ namespace DataPumper.Sql
         {
             return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: _timeout);
         }
-        
+
         public async Task<string[]> GetInstances(TableName tableName, string fieldName)
         {
             var result = new List<string>();
@@ -69,8 +70,8 @@ namespace DataPumper.Sql
         }
 
         public async Task CleanupTable(CleanupTableRequest request)
-        {            
-            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v=>$"'{v}'").ToArray());
+        {
+            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
             _logger.Warn($"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             int deleted;
             if (request.NotOlderThan == null)
@@ -95,6 +96,7 @@ namespace DataPumper.Sql
             var sw = new Stopwatch();
             sw.Start();
             long processed = 0;
+
             using (var bulkCopy = new SqlBulkCopy(_connection)
             {
                 BatchSize = 1000000,
@@ -113,7 +115,21 @@ namespace DataPumper.Sql
 
                 processed = bulkCopy.GetRowsCopied();
             }
-            
+
+            return processed;
+        }
+
+        public async Task<long> InsertDataHistoryMode(TableName tableName, IDataReader dataReader, DateTime currentDate)
+        {
+            // Create temp table in target
+            var tempTable = await CreateTempTable(tableName);
+            var insertedToTempCount = await InsertData(tempTable, dataReader);
+            await UpdateTempTable(tempTable, currentDate);
+            _logger.Warn($"Cleaning target table '{tableName}', HistoryDateFrom = {currentDate}");
+            var deleted = await _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE [HistoryDateFrom]='{currentDate.ToString("s", CultureInfo.InvariantCulture)}'", commandTimeout: _timeout);
+            _logger.Warn($"Deleted {deleted} record(s)");
+            var tempDataReader = await _connection.ExecuteReaderAsync($"SELECT * FROM {tempTable}", commandTimeout: _timeout);
+            var processed = await InsertData(tableName, tempDataReader);
             return processed;
         }
 
@@ -122,7 +138,7 @@ namespace DataPumper.Sql
             using (var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: _timeout))
             {
                 var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
-                var targetFields = new HashSet<string>( Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
+                var targetFields = new HashSet<string>(Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
 
                 var nonMatchingFields = sourceFields.Where(sf => !targetFields.Contains(sf)).ToList();
                 if (nonMatchingFields.Any())
@@ -133,6 +149,32 @@ namespace DataPumper.Sql
         public void Dispose()
         {
             _connection?.Dispose();
+        }
+
+        public async Task<TableName> CreateTempTable(TableName sourceTableName)
+        {
+            var tempTable = new TableName(sourceTableName.Schema, $"Temp{sourceTableName.Name}");
+
+            var dataReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {sourceTableName}", commandTimeout: _timeout);
+            var dt = dataReader.GetSchemaTable();
+
+            var existValidation = $"IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='{tempTable.Name}' AND xtype='U')";
+            var createTableQuery = SqlTableCreator.GetCreateSQL(tempTable.ToString(), dt, null);
+            var query = $"{existValidation}\n{createTableQuery}\nELSE\nDELETE FROM {tempTable}";
+            await _connection.ExecuteAsync(query, commandTimeout: _timeout);
+
+            return tempTable;
+        }
+
+        public async Task UpdateTempTable(TableName tempTableName, DateTime dateTime)
+        {
+            var query = $"UPDATE {tempTableName} " +
+                $"\nSET [HistoryDateFrom] = '{dateTime.ToString("s", CultureInfo.InvariantCulture)}'" +
+                $"\n,[HistoryDateTo] = '{dateTime.ToString("s", CultureInfo.InvariantCulture)}'" +
+                $"\nUPDATE [lr].[TempOccupation]" +
+                $"\nSET [HistoryDateTo] ='1.01.2200'" +
+                $"\nWHERE CONVERT(date, [ActualDate]) = convert(date, [HistoryDateFrom])";
+            await _connection.ExecuteAsync(query, commandTimeout: _timeout);
         }
     }
 }

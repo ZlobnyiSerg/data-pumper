@@ -10,6 +10,8 @@ namespace DataPumper.Core
         Task CleanupTable(CleanupTableRequest request);
 
         Task<long> InsertData(TableName tableName, IDataReader dataReader);
+
+        Task<long> InsertDataHistoryMode(TableName tableName, IDataReader dataReader, DateTime currentDate);
     }
 
     public class CleanupTableRequest
