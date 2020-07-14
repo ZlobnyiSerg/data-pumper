@@ -62,7 +62,7 @@ namespace DataPumper.Console
             }
         }
 
-        public void Start()
+        public async void Start()
         {
             Init();
 
@@ -72,10 +72,22 @@ namespace DataPumper.Console
                 Queues = new[] { "datapumper" }
             });
 
+            BackgroundJob.Enqueue(()=> RunJobs());
+
+        }
+
+        [Queue("datapumper")]
+        public async Task RunJobs()
+        {
             var dataPumperService = _container.Resolve<DataPumperService>();
 
-            dataPumperService.RunJobs("Microsoft SQL Server", sourceConnectionString, "Microsoft SQL Server", targetConnectionString);
+            var sourceProvider = new SqlDataPumperSourceTarget();
+            await sourceProvider.Initialize(sourceConnectionString);
 
+            var targetProvider = new SqlDataPumperSourceTarget();
+            await targetProvider.Initialize(targetConnectionString);
+
+            await dataPumperService.RunJobs(sourceProvider, targetProvider);
         }
 
         public void Stop()

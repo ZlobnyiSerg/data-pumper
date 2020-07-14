@@ -1,14 +1,15 @@
 ﻿using Common.Logging;
 using DataPumper.Core;
-using DataPumper.Sql;
-using Hangfire;
 using Microsoft.Practices.Unity;
 using Newtonsoft.Json;
+using Quirco.DataPumper.DataLayer;
 using System;
 using System.Collections.Generic;
+using System.Data.Entity;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using NDataPumper = DataPumper.Core;
 
@@ -20,119 +21,99 @@ namespace Quirco.DataPumper
 
         private readonly IActualityDatesProvider _actualityDatesProvider;
         private readonly NDataPumper.DataPumper _pumper;
-        private readonly Configuration _configuration;
-        private readonly IUnityContainer _container;
+        private readonly DPConfiguration _configuration;
 
         public DataPumperService(IActualityDatesProvider actualityDatesProvider,
-            NDataPumper.DataPumper dataPumper, 
-            IUnityContainer container)
+            NDataPumper.DataPumper dataPumper)
         {
             _actualityDatesProvider = actualityDatesProvider;
             _pumper = dataPumper;
-            _configuration = new Configuration();
-            _container = container;
+            _configuration = new DPConfiguration();
         }
 
-        public void RunJobs(string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
+        public async Task RunJobs(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
         {
             Log.Info("Performing synchronization for all jobs...");
-            var configuration = new Configuration();
+            using (var ctx = new DataPumperContext())
+            {
+                ctx.Database.Initialize(false);
+            }
+            var configuration = new DPConfiguration();
             var jobs = configuration.Jobs;
+            if (!(sourceProvider is IDataPumperSource))
+                throw new ApplicationException($"Source provider '{sourceProvider.GetName()}' is not IDataPumperSource");
 
-            BackgroundJob.Enqueue(() => ProcessInternal(jobs, sourceProviderName, sourceConnectionString, targetProviderName, targetConnectionString));
+            if (!(targetProvider is IDataPumperTarget))
+                throw new ApplicationException($"Target provider '{targetProvider.GetName()}' is not IDataPumperTarget");
+
+            var dataPumperSource = sourceProvider as IDataPumperSource;
+            var dataPumperTarget = targetProvider as IDataPumperTarget;
+            await ProcessInternal(jobs, dataPumperSource, dataPumperTarget);
         }
 
-        [Queue("datapumper")]
-        public async Task ProcessInternal(ConfigJobItem[] jobs, string sourceProviderName, string sourceConnectionString, string targetProviderName, string targetConnectionString)
+        public async Task ProcessInternal(ConfigJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Warn("Started job to sync all tables...");
 
-            var sourceProvider = await GetProvider<IDataPumperSource>(sourceProviderName, sourceConnectionString);
-            var targetProvider = await GetProvider<IDataPumperTarget>(targetProviderName, targetConnectionString);
-
             var tasks = jobs.ToList().Select(j => RunJobInternal(j, sourceProvider, targetProvider));
-            var results = await Task.WhenAll(tasks);
-
-            ResultWriteToFile(results);            
+            await Task.WhenAll(tasks);   
         }
 
-        private async Task<JobLog> RunJobInternal(ConfigJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        private async Task RunJobInternal(ConfigJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Warn($"Processing {job.Name}");
-            var log = new JobLog { Name = job.Name};
-
-            try
+            using (var ctx = new DataPumperContext())
             {
-                var sw = new Stopwatch();
-                sw.Start();
-
-                var jobActualDate = _actualityDatesProvider.GetJobActualDate(job.Name);
-                var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate;
-
-                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
-
-                var records = await _pumper.Pump(sourceProvider, targetProvider,
-                    new TableName(job.SourceTableName),
-                    new TableName(job.TargetTableName), 
-                    _configuration.ActualityColumnName,
-                    new TableName("lr.VProperties"),
-                    onDate,
-                    job.HistoricMode,
-                    currentDate);
-
-                _actualityDatesProvider.SetJobActualDate(job.Name, currentDate);
-
-                log.ElapsedTime = sw.Elapsed;
-                log.RecordsProcessed = records;
-                log.ActualDate = currentDate;
-                sw.Stop();
-            }
-            catch (Exception ex)
-            {
-                Log.Error($"Error processing job {job}", ex);
-                log.Error = ex.Message;
-            }
-
-            return log;
-        }
-
-        private async Task<T> GetProvider<T>(string providerName, string connectionString) where T : IDataPumperProvider
-        {
-            var providers = _container.ResolveAll<T>();
-            if (providers == null || !providers.Any())
-                throw new ApplicationException($"{typeof(T).Name} types not registered");
-
-            foreach (var provider in providers)
-            {
-                if (providerName == provider.GetName())
+                var tableSync = await ctx.TableSyncs.FirstOrDefaultAsync(ts => ts.TableName == job.TargetTableName);
+                if (tableSync == null)
                 {
-                    await provider.Initialize(connectionString);
-                    return provider;
+                    tableSync = new TableSync
+                    {
+                        TableName = job.TargetTableName
+                    };
+                    ctx.TableSyncs.Add(tableSync);
                 }
-            }
 
-            throw new ApplicationException($"No target provider named '{providerName}'");
-        }
+                var jobLog = new DataPumperLogEntry();
+                ctx.Logs.Add(jobLog);
 
-        private void ResultWriteToFile(JobLog[] results)
-        {
-            Log.Trace(JsonConvert.SerializeObject(results, Formatting.Indented, new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore
-            }));
-            var dir = Path.Combine(Environment.CurrentDirectory, _configuration.LogDir);
+                await ctx.SaveChangesAsync();
 
-            if (!Directory.Exists(dir))
-                Directory.CreateDirectory(dir);
-
-            using (StreamWriter file = File.CreateText(Path.Combine(dir, $"{DateTime.Now:yyyyMMddTHHmmss}.log")))
-            {
-                JsonSerializer serializer = new JsonSerializer
+                try
                 {
-                    Formatting = Formatting.Indented,
-                    NullValueHandling = NullValueHandling.Ignore
-                };
-                serializer.Serialize(file, results);
+                    var sw = new Stopwatch();
+                    sw.Start();
+
+                    var jobActualDate = _actualityDatesProvider.GetJobActualDate(job.Name);
+                    var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate;
+
+                    var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
+
+                    var records = await _pumper.Pump(sourceProvider, targetProvider,
+                        new TableName(job.SourceTableName),
+                        new TableName(job.TargetTableName),
+                        _configuration.ActualityColumnName,
+                        new TableName("lr.VProperties"),
+                        onDate,
+                        job.HistoricMode,
+                        currentDate);
+
+                    _actualityDatesProvider.SetJobActualDate(job.Name, currentDate);
+
+                    tableSync.ActualDate = currentDate;
+                    jobLog.EndDate = DateTime.Now;
+                    jobLog.RecordsProcessed = records;
+                    jobLog.Status = SyncStatus.Success;
+                    sw.Stop();
+                }
+                catch (Exception ex)
+                {
+                    Log.Error($"Error processing job {job}", ex);
+                    jobLog.Message = ex.Message;
+                    jobLog.Status = SyncStatus.Error;
+                }
+
+                await ctx.SaveChangesAsync();
             }
         }
     }

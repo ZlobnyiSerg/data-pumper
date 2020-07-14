@@ -122,15 +122,16 @@ namespace DataPumper.Sql
         public async Task<long> InsertDataHistoryMode(TableName tableName, IDataReader dataReader, DateTime currentDate)
         {
             // Create temp table in target
-            var tempTable = await CreateTempTable(tableName);
-            var insertedToTempCount = await InsertData(tempTable, dataReader);
-            await UpdateTempTable(tempTable, currentDate);
-            _logger.Warn($"Cleaning target table '{tableName}', HistoryDateFrom = {currentDate}");
-            var deleted = await _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE [HistoryDateFrom]='{currentDate.ToString("s", CultureInfo.InvariantCulture)}'", commandTimeout: _timeout);
-            _logger.Warn($"Deleted {deleted} record(s)");
-            var tempDataReader = await _connection.ExecuteReaderAsync($"SELECT * FROM {tempTable}", commandTimeout: _timeout);
-            var processed = await InsertData(tableName, tempDataReader);
-            return processed;
+            //var tempTable = await CreateTempTable(tableName);
+            //var insertedToTempCount = await InsertData(tempTable, dataReader);
+            //await UpdateTempTable(tempTable, currentDate);
+            //_logger.Warn($"Cleaning target table '{tableName}', HistoryDateFrom = {currentDate}");
+            //var deleted = await _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE [HistoryDateFrom]='{currentDate.ToString("s", CultureInfo.InvariantCulture)}'", commandTimeout: _timeout);
+            //_logger.Warn($"Deleted {deleted} record(s)");
+            //var tempDataReader = await _connection.ExecuteReaderAsync($"SELECT * FROM {tempTable}", commandTimeout: _timeout);
+            //var processed = await InsertData(tableName, tempDataReader);
+            //return processed;
+            return 0;
         }
 
         private async Task CheckTablesCompatibility(TableName tableName, IDataReader dataReader)
@@ -149,32 +150,6 @@ namespace DataPumper.Sql
         public void Dispose()
         {
             _connection?.Dispose();
-        }
-
-        public async Task<TableName> CreateTempTable(TableName sourceTableName)
-        {
-            var tempTable = new TableName(sourceTableName.Schema, $"Temp{sourceTableName.Name}");
-
-            var dataReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {sourceTableName}", commandTimeout: _timeout);
-            var dt = dataReader.GetSchemaTable();
-
-            var existValidation = $"IF NOT EXISTS (SELECT * FROM SYSOBJECTS WHERE NAME='{tempTable.Name}' AND xtype='U')";
-            var createTableQuery = SqlTableCreator.GetCreateSQL(tempTable.ToString(), dt, null);
-            var query = $"{existValidation}\n{createTableQuery}\nELSE\nDELETE FROM {tempTable}";
-            await _connection.ExecuteAsync(query, commandTimeout: _timeout);
-
-            return tempTable;
-        }
-
-        public async Task UpdateTempTable(TableName tempTableName, DateTime dateTime)
-        {
-            var query = $"UPDATE {tempTableName} " +
-                $"\nSET [HistoryDateFrom] = '{dateTime.ToString("s", CultureInfo.InvariantCulture)}'" +
-                $"\n,[HistoryDateTo] = '{dateTime.ToString("s", CultureInfo.InvariantCulture)}'" +
-                $"\nUPDATE [lr].[TempOccupation]" +
-                $"\nSET [HistoryDateTo] ='1.01.2200'" +
-                $"\nWHERE CONVERT(date, [ActualDate]) = convert(date, [HistoryDateFrom])";
-            await _connection.ExecuteAsync(query, commandTimeout: _timeout);
         }
     }
 }

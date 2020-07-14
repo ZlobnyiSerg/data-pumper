@@ -7,13 +7,15 @@ using System.Text;
 
 namespace Quirco.DataPumper
 {
-    public class Configuration
+    public class DPConfiguration
     {
         public IConfigurationRoot ConfigurationXml => ConfigurationManager.Configuration ??
             (ConfigurationManager.Configuration = new ConfigurationBuilder()
                 .AddXmlFile("data-pumper.config")
                 .AddXmlFile("data-pumper.local.config", true)
                 .Build());
+
+        public string ConnectionString => ConfigurationXml.Get<string>("Core:ConnectionString");
 
         public string CurrentDateQuery => ConfigurationXml.Get<string>("Core:CurrentDateQuery");
 
