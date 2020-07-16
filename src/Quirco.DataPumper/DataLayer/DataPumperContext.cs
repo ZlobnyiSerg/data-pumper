@@ -15,7 +15,7 @@ namespace Quirco.DataPumper.DataLayer
 
         public DbSet<TableSync> TableSyncs { get; set; }
 
-        public DbSet<DataPumperLogEntry> Logs { get; set; }
+        public DbSet<JobLog> Logs { get; set; }
 
         public DataPumperContext() : this(configuration.ConnectionString)
         {

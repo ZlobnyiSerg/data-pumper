@@ -56,11 +56,11 @@ namespace DataPumper.Sql
             return result.ToArray();
         }
 
-        public async Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan)
+        public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan)
         {
             if (notOlderThan != null)
             {
-                return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {fieldName} >= @NotOlderThan", new
+                return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan", new
                 {
                     NotOlderThan = notOlderThan
                 }, commandTimeout: _timeout);
@@ -72,22 +72,35 @@ namespace DataPumper.Sql
         public async Task CleanupTable(CleanupTableRequest request)
         {
             var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
-            _logger.Warn($"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
+            _logger.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             int deleted;
             if (request.NotOlderThan == null)
             {
-                deleted = await _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
+                var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})";
+                deleted = await _connection.ExecuteAsync(query, commandTimeout: _timeout);
             }
             else
             {
-                deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan",
-                    new
+                var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan";
+                deleted = await _connection.ExecuteAsync(query , new
                     {
                         NotOlderThan = request.NotOlderThan.Value
                     }, commandTimeout: _timeout);
             }
-            _logger.Warn($"Deleted {deleted} record(s)");
+            _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
+        }
+
+        public async Task CleanupHistoryTable(CleanupTableRequest request)
+        {
+            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
+            _logger.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.NotOlderThan}");
+            var deleted = await _connection.ExecuteAsync(
+                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.HistoryDateFromFieldName} = @CurrentPropertyDate",
+                    new
+                    {
+                        request.CurrentPropertyDate
+                    }, commandTimeout: _timeout);
+            _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 
         public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
@@ -117,21 +130,6 @@ namespace DataPumper.Sql
             }
 
             return processed;
-        }
-
-        public async Task<long> InsertDataHistoryMode(TableName tableName, IDataReader dataReader, DateTime currentDate)
-        {
-            // Create temp table in target
-            //var tempTable = await CreateTempTable(tableName);
-            //var insertedToTempCount = await InsertData(tempTable, dataReader);
-            //await UpdateTempTable(tempTable, currentDate);
-            //_logger.Warn($"Cleaning target table '{tableName}', HistoryDateFrom = {currentDate}");
-            //var deleted = await _connection.ExecuteAsync($"DELETE FROM {tableName} WHERE [HistoryDateFrom]='{currentDate.ToString("s", CultureInfo.InvariantCulture)}'", commandTimeout: _timeout);
-            //_logger.Warn($"Deleted {deleted} record(s)");
-            //var tempDataReader = await _connection.ExecuteReaderAsync($"SELECT * FROM {tempTable}", commandTimeout: _timeout);
-            //var processed = await InsertData(tableName, tempDataReader);
-            //return processed;
-            return 0;
         }
 
         private async Task CheckTablesCompatibility(TableName tableName, IDataReader dataReader)

@@ -121,12 +121,25 @@
     <Compile Include="DPConfiguration.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="DataLayer\DataPumperContext.cs" />
-    <Compile Include="DataLayer\DataPumperContextFactory.cs" />
-    <Compile Include="DataLayer\DataPumperLogEntry.cs" />
-    <Compile Include="DataLayer\IDataPumperContextFactory.cs" />
+    <Compile Include="DataLayer\JobLog.cs" />
     <Compile Include="DataLayer\TableSync.cs" />
     <Compile Include="DataPumperService.cs" />
-    <Compile Include="IActualityDatesProvider.cs" />
+    <Compile Include="Migrations\202007150656030_Init.cs" />
+    <Compile Include="Migrations\202007150656030_Init.Designer.cs">
+      <DependentUpon>202007150656030_Init.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202007152249285_Add-LastQuery.cs" />
+    <Compile Include="Migrations\202007152249285_Add-LastQuery.Designer.cs">
+      <DependentUpon>202007152249285_Add-LastQuery.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202007152314506_Add-PreviousActualDate.cs" />
+    <Compile Include="Migrations\202007152314506_Add-PreviousActualDate.Designer.cs">
+      <DependentUpon>202007152314506_Add-PreviousActualDate.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Migrations\202007160618187_Actuality.cs" />
+    <Compile Include="Migrations\202007160618187_Actuality.Designer.cs">
+      <DependentUpon>202007160618187_Actuality.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -146,6 +159,20 @@
       <Project>{3a12de89-4a19-4974-be08-300375e094a7}</Project>
       <Name>DataPumper.Sql</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\202007150656030_Init.resx">
+      <DependentUpon>202007150656030_Init.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202007152249285_Add-LastQuery.resx">
+      <DependentUpon>202007152249285_Add-LastQuery.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202007152314506_Add-PreviousActualDate.resx">
+      <DependentUpon>202007152314506_Add-PreviousActualDate.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202007160618187_Actuality.resx">
+      <DependentUpon>202007160618187_Actuality.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

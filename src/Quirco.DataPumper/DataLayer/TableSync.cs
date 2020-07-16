@@ -20,5 +20,7 @@ namespace Quirco.DataPumper.DataLayer
         public DateTime CreatedDate { get; set; } = DateTime.Now;
 
         public DateTime? ActualDate { get; set; }
+
+        public DateTime? PreviousActualDate { get; set; }
     }
 }

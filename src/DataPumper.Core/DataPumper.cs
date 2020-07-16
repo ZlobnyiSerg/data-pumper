@@ -17,8 +17,9 @@ namespace DataPumper.Core
             TableName sourceTable,
             TableName targetTable,
             string actualityFieldName, 
+            string historyDateFromFieldName,
             TableName instanceTable, 
-            DateTime? onDate,
+            DateTime onDate,
             bool historicMode, 
             DateTime currentDate)
         {
@@ -29,26 +30,25 @@ namespace DataPumper.Core
 
                 var instances = await source.GetInstances(instanceTable, "PropertyCode");
 
-                if (!historicMode)
+                if (historicMode)
+                {
+                    _logger.Info($"Cleaning target table in history mode '{targetTable}' (history date from {currentDate}) for instances: {string.Join(",", instances)}...");
+                    await target.CleanupHistoryTable(new CleanupTableRequest(targetTable, historyDateFromFieldName, "PropertyCode", instances, currentDate));
+                    _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
+                    sw.Restart();
+                }
+                else
                 {
                     _logger.Info($"Cleaning target table '{targetTable}' (after date {onDate}) for instances: {string.Join(",", instances)}...");
                     await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances));
-                    _logger.Info($"Cleaning complete in {sw.Elapsed}, transferring data...");
+                    _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
 
                 using (var reader = await source.GetDataReader(sourceTable, actualityFieldName, onDate))
                 {
-                    long items = 0;
-                    if (historicMode)
-                    {
-                        items = await target.InsertDataHistoryMode(targetTable, reader, currentDate);
-                    }
-                    else
-                    {
-                        items = await target.InsertData(targetTable, reader);
-                    }
-                    _logger.Info($"Data transfer of {items} records completed in {sw.Elapsed}");
+                    var items = await target.InsertData(targetTable, reader);
+                    _logger.Info($"Data transfer '{targetTable}' of {items} records completed in {sw.Elapsed}");
 
                     return items;
                 }

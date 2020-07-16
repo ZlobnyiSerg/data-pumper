@@ -89,7 +89,8 @@ namespace DataPumper.Web.Services
                 var curDateTable = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateTable, token))?.Value;
                 var records = await _pumper.Pump(source, target, 
                     new TableName(job.SourceTableName), 
-                    new TableName(job.TargetTableName), "ActualDate", 
+                    new TableName(job.TargetTableName), 
+                    "ActualDate", 
                     new TableName(curDateTable), fullReload ? DateTime.Today.AddYears(-100) : job.Date);
                 var currentDate = await GetCurrentDate(source) ?? DateTime.Now;
                 

@@ -8,8 +8,8 @@ using System.Threading.Tasks;
 
 namespace Quirco.DataPumper.DataLayer
 {
-    [Table("DataPumperLog", Schema ="dp")]
-    public class DataPumperLogEntry
+    [Table("JobLog", Schema ="dp")]
+    public class JobLog
     {
         [Key]
         public long Id { get; set; }

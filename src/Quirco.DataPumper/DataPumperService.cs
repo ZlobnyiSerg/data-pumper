@@ -19,14 +19,11 @@ namespace Quirco.DataPumper
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
 
-        private readonly IActualityDatesProvider _actualityDatesProvider;
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DPConfiguration _configuration;
 
-        public DataPumperService(IActualityDatesProvider actualityDatesProvider,
-            NDataPumper.DataPumper dataPumper)
+        public DataPumperService(NDataPumper.DataPumper dataPumper)
         {
-            _actualityDatesProvider = actualityDatesProvider;
             _pumper = dataPumper;
             _configuration = new DPConfiguration();
         }
@@ -34,10 +31,6 @@ namespace Quirco.DataPumper
         public async Task RunJobs(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
         {
             Log.Info("Performing synchronization for all jobs...");
-            using (var ctx = new DataPumperContext())
-            {
-                ctx.Database.Initialize(false);
-            }
             var configuration = new DPConfiguration();
             var jobs = configuration.Jobs;
             if (!(sourceProvider is IDataPumperSource))
@@ -74,7 +67,7 @@ namespace Quirco.DataPumper
                     ctx.TableSyncs.Add(tableSync);
                 }
 
-                var jobLog = new DataPumperLogEntry();
+                var jobLog = new JobLog { TableSync = tableSync };
                 ctx.Logs.Add(jobLog);
 
                 await ctx.SaveChangesAsync();
@@ -84,21 +77,29 @@ namespace Quirco.DataPumper
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    var jobActualDate = _actualityDatesProvider.GetJobActualDate(job.Name);
-                    var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate;
+                    var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась то будет Null
+                    var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;
 
                     var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
+
+                    if (job.HistoricMode && currentDate == tableSync.ActualDate)
+                    {
+                        onDate = tableSync.PreviousActualDate == null ? DateTime.Today.AddYears(-100) : tableSync.PreviousActualDate.Value;
+                    }
+                    else if (job.HistoricMode)
+                    {
+                        tableSync.PreviousActualDate = tableSync.ActualDate;
+                    }
 
                     var records = await _pumper.Pump(sourceProvider, targetProvider,
                         new TableName(job.SourceTableName),
                         new TableName(job.TargetTableName),
                         _configuration.ActualityColumnName,
-                        new TableName("lr.VProperties"),
+                        _configuration.HistoricColumnFrom,
+                        new TableName("lr.VProperties"), // Таблица, где хранятся текущие даты
                         onDate,
                         job.HistoricMode,
                         currentDate);
-
-                    _actualityDatesProvider.SetJobActualDate(job.Name, currentDate);
 
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;
