@@ -124,6 +124,10 @@
     <Compile Include="DataLayer\JobLog.cs" />
     <Compile Include="DataLayer\TableSync.cs" />
     <Compile Include="DataPumperService.cs" />
+    <Compile Include="Migrations\202007161322343_Init.cs" />
+    <Compile Include="Migrations\202007161322343_Init.Designer.cs">
+      <DependentUpon>202007161322343_Init.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -143,6 +147,11 @@
       <Project>{3a12de89-4a19-4974-be08-300375e094a7}</Project>
       <Name>DataPumper.Sql</Name>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Include="Migrations\202007161322343_Init.resx">
+      <DependentUpon>202007161322343_Init.cs</DependentUpon>
+    </EmbeddedResource>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
