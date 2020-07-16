@@ -31,6 +31,7 @@ namespace Quirco.DataPumper.Migrations
                         TableName = c.String(nullable: false),
                         CreatedDate = c.DateTime(nullable: false),
                         ActualDate = c.DateTime(),
+                        PreviousActualDate = c.DateTime(),
                     })
                 .PrimaryKey(t => t.Id)
                 .Index(t => t.CreatedDate);

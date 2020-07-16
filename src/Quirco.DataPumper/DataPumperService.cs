@@ -77,7 +77,7 @@ namespace Quirco.DataPumper
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась то будет Null
+                    var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
                     var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;
 
                     var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;

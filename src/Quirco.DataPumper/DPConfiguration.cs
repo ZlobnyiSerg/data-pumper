@@ -19,8 +19,6 @@ namespace Quirco.DataPumper
 
         public string CurrentDateQuery => ConfigurationXml.Get<string>("Core:CurrentDateQuery");
 
-        public string LogDir => ConfigurationXml.Get<string>("Core:LogDir");
-
         public string ActualityColumnName => ConfigurationXml.Get<string>("Core:ActualityColumnName");
 
         public string HistoricColumnFrom => ConfigurationXml.Get<string>("Core:HistoricColumns:From");

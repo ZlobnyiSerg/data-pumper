@@ -16,14 +16,12 @@ namespace DataPumper.Console
 {
     public class MainService
     {
-        const string sourceConnectionString = "Server=(local);Database=Logus.HMS;Integrated Security=true;MultipleActiveResultSets=true;Application Name=DataPumper";
-        const string targetConnectionString = "Server=(local);Database=Logus.HMS.Reporting;Integrated Security=true;MultipleActiveResultSets=true;Application Name=DataPumper";
-
         private static readonly ILog Log = LogManager.GetLogger(typeof(MainService));
 
         private BackgroundJobServer _jobServer;
         private IDisposable _hangfireDashboard;
         private static IUnityContainer _container;
+        private static ConsoleConfiguration _configuration = new ConsoleConfiguration();
 
         private void Init()
         {
@@ -49,7 +47,7 @@ namespace DataPumper.Console
             });
             try
             {
-                var host = "http://localhost:9019";
+                var host = _configuration.HangFireDashboardUrl;
                 if (!string.IsNullOrEmpty(host))
                 {
                     _hangfireDashboard = WebApp.Start<Startup>(host);
@@ -82,10 +80,10 @@ namespace DataPumper.Console
             var dataPumperService = _container.Resolve<DataPumperService>();
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(sourceConnectionString);
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
-            await targetProvider.Initialize(targetConnectionString);
+            await targetProvider.Initialize(_configuration.TargetConnectionString);
 
             await dataPumperService.RunJobs(sourceProvider, targetProvider);
         }

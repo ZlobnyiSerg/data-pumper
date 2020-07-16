@@ -3,8 +3,6 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.30011.22
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{A7BA213C-A547-42B6-B498-4DCB90132178}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Sql", "src\DataPumper.Sql\DataPumper.Sql.csproj", "{3A12DE89-4A19-4974-BE08-300375E094A7}"
@@ -19,10 +17,6 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Release|Any CPU.Build.0 = Release|Any CPU
 		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Release|Any CPU.ActiveCfg = Release|Any CPU

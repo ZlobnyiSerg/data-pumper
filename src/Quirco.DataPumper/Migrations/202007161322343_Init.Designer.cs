@@ -7,13 +7,13 @@ namespace Quirco.DataPumper.Migrations
     using System.Resources;
     
     [GeneratedCode("EntityFramework.Migrations", "6.2.0-61023")]
-    public sealed partial class Actuality : IMigrationMetadata
+    public sealed partial class Init : IMigrationMetadata
     {
-        private readonly ResourceManager Resources = new ResourceManager(typeof(Actuality));
+        private readonly ResourceManager Resources = new ResourceManager(typeof(Init));
         
         string IMigrationMetadata.Id
         {
-            get { return "202007160618187_Actuality"; }
+            get { return "202007161322343_Init"; }
         }
         
         string IMigrationMetadata.Source
