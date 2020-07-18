@@ -32,14 +32,14 @@ namespace DataPumper.Core
 
                 if (historicMode)
                 {
-                    _logger.Info($"Cleaning target table in history mode '{targetTable}' (history date from {currentDate}) for instances: {string.Join(",", instances)}...");
+                    _logger.Info($"Cleaning target table in history mode '{targetTable}' (historyDateFrom {currentDate}) for instances: {string.Join(",", instances)}...");
                     await target.CleanupHistoryTable(new CleanupTableRequest(targetTable, historyDateFromFieldName, "PropertyCode", instances, currentDate));
                     _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
                 else
                 {
-                    _logger.Info($"Cleaning target table '{targetTable}' (after date {onDate}) for instances: {string.Join(",", instances)}...");
+                    _logger.Info($"Cleaning target table '{targetTable}' (from date {onDate}) for instances: {string.Join(",", instances)}...");
                     await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances));
                     _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();

@@ -70,10 +70,32 @@ namespace DataPumper.Console
                 Queues = new[] { "datapumper" }
             });
 
-            BackgroundJob.Enqueue(()=> RunJobs());
+            //BackgroundJob.Enqueue(()=> RunJobs());
+
+            var dpConfig = new DPConfiguration();
+            foreach (var job in dpConfig.Jobs)
+            {
+                BackgroundJob.Enqueue(() => RunJob(job));
+            }
 
         }
 
+        [JobDisplayName("DataPumper run job {0}")]
+        [Queue("datapumper")]
+        public async Task RunJob(ConfigJobItem jobItem)
+        {
+            var dataPumperService = _container.Resolve<DataPumperService>();
+
+            var sourceProvider = new SqlDataPumperSourceTarget();
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);
+
+            var targetProvider = new SqlDataPumperSourceTarget();
+            await targetProvider.Initialize(_configuration.TargetConnectionString);
+
+            await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider);
+        }
+
+        [JobDisplayName("DataPumper run all jobs...")]
         [Queue("datapumper")]
         public async Task RunJobs()
         {

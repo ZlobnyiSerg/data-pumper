@@ -22,10 +22,22 @@ namespace Quirco.DataPumper
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DPConfiguration _configuration;
 
+        public EventHandler<ProgressEventArgs> Progress;
+
         public DataPumperService(NDataPumper.DataPumper dataPumper)
         {
             _pumper = dataPumper;
             _configuration = new DPConfiguration();
+        }
+
+        public async Task RunJob(ConfigJobItem jobItem, IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
+        {
+            Log.Info($"Performing synchronization for job '{jobItem.Name}'...");
+            ValidateProviders(sourceProvider, targetProvider);
+
+            var dataPumperSource = sourceProvider as IDataPumperSource;
+            var dataPumperTarget = targetProvider as IDataPumperTarget;
+            await RunJobInternal(jobItem, dataPumperSource, dataPumperTarget);
         }
 
         public async Task RunJobs(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
@@ -33,15 +45,20 @@ namespace Quirco.DataPumper
             Log.Info("Performing synchronization for all jobs...");
             var configuration = new DPConfiguration();
             var jobs = configuration.Jobs;
+            ValidateProviders(sourceProvider, targetProvider);
+
+            var dataPumperSource = sourceProvider as IDataPumperSource;
+            var dataPumperTarget = targetProvider as IDataPumperTarget;
+            await ProcessInternal(jobs, dataPumperSource, dataPumperTarget);
+        }
+
+        private static void ValidateProviders(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
+        {
             if (!(sourceProvider is IDataPumperSource))
                 throw new ApplicationException($"Source provider '{sourceProvider.GetName()}' is not IDataPumperSource");
 
             if (!(targetProvider is IDataPumperTarget))
                 throw new ApplicationException($"Target provider '{targetProvider.GetName()}' is not IDataPumperTarget");
-
-            var dataPumperSource = sourceProvider as IDataPumperSource;
-            var dataPumperTarget = targetProvider as IDataPumperTarget;
-            await ProcessInternal(jobs, dataPumperSource, dataPumperTarget);
         }
 
         public async Task ProcessInternal(ConfigJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
@@ -76,6 +93,15 @@ namespace Quirco.DataPumper
                 {
                     var sw = new Stopwatch();
                     sw.Start();
+
+                    targetProvider.Progress += (sender, args) =>
+                    {
+                        jobLog.RecordsProcessed = args.Processed;
+                        ctx.SaveChanges();
+
+                        var handler = Progress;
+                        handler?.Invoke(sender, args);
+                    };
 
                     var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
                     var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;

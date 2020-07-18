@@ -25,6 +25,8 @@ namespace DataPumper.Sql
 
         public const string Name = "Microsoft SQL Server";
 
+        public event EventHandler<ProgressEventArgs> Progress;
+
         public string GetName()
         {
             return Name;
@@ -58,6 +60,8 @@ namespace DataPumper.Sql
 
         public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan)
         {
+            var handler = Progress;
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", null));
             if (notOlderThan != null)
             {
                 return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan", new
@@ -123,6 +127,13 @@ namespace DataPumper.Sql
                     var column = dataReader.GetName(i);
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
                 }
+
+                bulkCopy.SqlRowsCopied += (sender, args) =>
+                {
+                    _logger.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
+                    var handler = Progress;
+                    handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", sw.Elapsed));
+                };
 
                 await bulkCopy.WriteToServerAsync(dataReader);
 

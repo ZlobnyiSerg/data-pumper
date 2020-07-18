@@ -12,6 +12,8 @@ namespace DataPumper.Core
         Task CleanupHistoryTable(CleanupTableRequest request);
 
         Task<long> InsertData(TableName tableName, IDataReader dataReader);
+
+        event EventHandler<ProgressEventArgs> Progress;
     }
 
     public class CleanupTableRequest

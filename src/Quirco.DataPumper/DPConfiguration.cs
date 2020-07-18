@@ -43,5 +43,10 @@ namespace Quirco.DataPumper
         public string TargetTableName { get; set; }
 
         public bool HistoricMode { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Name} [{SourceTableName}] -> [{TargetTableName}] HistoricMode='{HistoricMode}'";
+        }
     }
 }

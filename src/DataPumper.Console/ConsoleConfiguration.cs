@@ -12,6 +12,7 @@ namespace DataPumper.Console
         public IConfigurationRoot ConfigurationXml => ConfigurationManager.Configuration ??
             (ConfigurationManager.Configuration = new ConfigurationBuilder()
                 .AddXmlFile("console.config")
+                .AddXmlFile("console.local.config", true)
                 .Build());
 
         public string SourceConnectionString => ConfigurationXml.Get<string>("Core:SourceConnectionString");
