@@ -156,6 +156,13 @@ namespace DataPumper.Sql
             }
         }
 
+        public async Task RunStoredProcedure(string spQuety)
+        {
+            _logger.Info($"Start execute stored procedure: '{spQuety}'");
+             await _connection.ExecuteAsync(spQuety, commandTimeout: _timeout);
+            _logger.Info($"Stop execute stored procedure: '{spQuety}'");
+        }
+
         public void Dispose()
         {
             _connection?.Dispose();

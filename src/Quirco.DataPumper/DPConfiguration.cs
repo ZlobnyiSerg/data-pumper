@@ -30,7 +30,9 @@ namespace Quirco.DataPumper
             Name = c.Key,
             SourceTableName = c.Get<string>("Source"),
             TargetTableName = c.Get<string>("Target"),
-            HistoricMode = c.Get("HistoricMode", false)
+            HistoricMode = c.Get("HistoricMode", false),
+            TargetSPQueryBefore = c.Get("TargetSP:SPQueryBefore", ""),
+            TargetSPQueryAfter = c.Get("TargetSP:SPQueryAfter", "")
         }).ToArray();
     }
 
@@ -43,6 +45,16 @@ namespace Quirco.DataPumper
         public string TargetTableName { get; set; }
 
         public bool HistoricMode { get; set; }
+
+        /// <summary>
+        /// Запрос на вызов хранимой процедуры до выполнения задания
+        /// </summary>
+        public string TargetSPQueryBefore { get; set; }
+
+        /// <summary>
+        /// Запрос на вызов хранимой процедуры после выполнения задания
+        /// </summary>
+        public string TargetSPQueryAfter { get; set; }
 
         public override string ToString()
         {

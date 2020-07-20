@@ -13,6 +13,8 @@ namespace DataPumper.Core
 
         Task<long> InsertData(TableName tableName, IDataReader dataReader);
 
+        Task RunStoredProcedure(string spQuety);
+
         event EventHandler<ProgressEventArgs> Progress;
     }
 

@@ -103,6 +103,8 @@ namespace Quirco.DataPumper
                         handler?.Invoke(sender, args);
                     };
 
+                    RunTargetSPBefore(job.TargetSPQueryBefore, targetProvider);
+
                     var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
                     var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;
 
@@ -127,6 +129,8 @@ namespace Quirco.DataPumper
                         job.HistoricMode,
                         currentDate);
 
+                    RunTargetSPAfter(job.TargetSPQueryAfter, targetProvider);
+
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;
                     jobLog.RecordsProcessed = records;
@@ -142,6 +146,16 @@ namespace Quirco.DataPumper
 
                 await ctx.SaveChangesAsync();
             }
+        }
+
+        private void RunTargetSPBefore(string targetSPQueryBefore, IDataPumperTarget targetProvider)
+        {
+            targetProvider.RunStoredProcedure(targetSPQueryBefore);
+        }
+
+        private void RunTargetSPAfter(string targetSPQueryAfter, IDataPumperTarget targetProvider)
+        {
+            targetProvider.RunStoredProcedure(targetSPQueryAfter);
         }
     }
 }
