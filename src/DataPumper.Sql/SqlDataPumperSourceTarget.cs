@@ -156,11 +156,14 @@ namespace DataPumper.Sql
             }
         }
 
-        public async Task RunStoredProcedure(string spQuety)
+        public async Task RunStoredProcedure(string spQuery)
         {
-            _logger.Info($"Start execute stored procedure: '{spQuety}'");
-             await _connection.ExecuteAsync(spQuety, commandTimeout: _timeout);
-            _logger.Info($"Stop execute stored procedure: '{spQuety}'");
+            if (!string.IsNullOrEmpty(spQuery))
+            {
+                _logger.Info($"Start execute stored procedure: '{spQuery}'");
+                await _connection.ExecuteAsync(spQuery, commandTimeout: _timeout);
+                _logger.Info($"Stop execute stored procedure: '{spQuery}'");
+            }
         }
 
         public void Dispose()

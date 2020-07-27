@@ -33,7 +33,7 @@ namespace Quirco.DataPumper
         public async Task RunJob(ConfigJobItem jobItem, IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
         {
             Log.Info($"Performing synchronization for job '{jobItem.Name}'...");
-            ValidateProviders(sourceProvider, targetProvider);
+            Validation(sourceProvider, targetProvider);
 
             var dataPumperSource = sourceProvider as IDataPumperSource;
             var dataPumperTarget = targetProvider as IDataPumperTarget;
@@ -45,20 +45,11 @@ namespace Quirco.DataPumper
             Log.Info("Performing synchronization for all jobs...");
             var configuration = new DPConfiguration();
             var jobs = configuration.Jobs;
-            ValidateProviders(sourceProvider, targetProvider);
+            Validation(sourceProvider, targetProvider);
 
             var dataPumperSource = sourceProvider as IDataPumperSource;
             var dataPumperTarget = targetProvider as IDataPumperTarget;
             await ProcessInternal(jobs, dataPumperSource, dataPumperTarget);
-        }
-
-        private static void ValidateProviders(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
-        {
-            if (!(sourceProvider is IDataPumperSource))
-                throw new ApplicationException($"Source provider '{sourceProvider.GetName()}' is not IDataPumperSource");
-
-            if (!(targetProvider is IDataPumperTarget))
-                throw new ApplicationException($"Target provider '{targetProvider.GetName()}' is not IDataPumperTarget");
         }
 
         public async Task ProcessInternal(ConfigJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
@@ -124,7 +115,7 @@ namespace Quirco.DataPumper
                         new TableName(job.TargetTableName),
                         _configuration.ActualityColumnName,
                         _configuration.HistoricColumnFrom,
-                        new TableName("lr.VProperties"), // Таблица, где хранятся текущие даты
+                        new TableName(_configuration.Properties), // Таблица, где хранятся объекты
                         onDate,
                         job.HistoricMode,
                         currentDate);
@@ -156,6 +147,35 @@ namespace Quirco.DataPumper
         private void RunTargetSPAfter(string targetSPQueryAfter, IDataPumperTarget targetProvider)
         {
             targetProvider.RunStoredProcedure(targetSPQueryAfter);
+        }
+
+        private void Validation(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
+        {
+            ValidateProviders(sourceProvider, targetProvider);
+
+            if (string.IsNullOrEmpty(_configuration.Properties))
+                throw new ApplicationException($"Required set 'Properties' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(_configuration.ActualityColumnName))
+                throw new ApplicationException($"Required set 'ActualityColumnName' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(_configuration.HistoricColumnFrom))
+                throw new ApplicationException($"Required set 'HistoricColumns.From' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(_configuration.HistoricColumnTo))
+                throw new ApplicationException($"Required set 'HistoricColumns.To' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(_configuration.CurrentDateQuery))
+                throw new ApplicationException($"Required set 'CurrentDateQuery' in data-pumper.config");
+        }
+
+        private static void ValidateProviders(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
+        {
+            if (!(sourceProvider is IDataPumperSource))
+                throw new ApplicationException($"Source provider '{sourceProvider.GetName()}' is not IDataPumperSource");
+
+            if (!(targetProvider is IDataPumperTarget))
+                throw new ApplicationException($"Target provider '{targetProvider.GetName()}' is not IDataPumperTarget");
         }
     }
 }

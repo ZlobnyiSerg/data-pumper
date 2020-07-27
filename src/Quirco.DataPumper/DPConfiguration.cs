@@ -21,6 +21,8 @@ namespace Quirco.DataPumper
 
         public string ActualityColumnName => ConfigurationXml.Get<string>("Core:ActualityColumnName");
 
+        public string Properties => ConfigurationXml.Get<string>("Core:Properties");
+
         public string HistoricColumnFrom => ConfigurationXml.Get<string>("Core:HistoricColumns:From");
 
         public string HistoricColumnTo => ConfigurationXml.Get<string>("Core:HistoricColumns:To");
