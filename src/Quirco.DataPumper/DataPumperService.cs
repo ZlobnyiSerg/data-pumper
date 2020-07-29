@@ -32,7 +32,7 @@ namespace Quirco.DataPumper
 
         public async Task RunJob(ConfigJobItem jobItem, IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
         {
-            Log.Info($"Performing synchronization for job '{jobItem.Name}'...");
+            Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
             Validation(sourceProvider, targetProvider);
 
             var dataPumperSource = sourceProvider as IDataPumperSource;
@@ -120,12 +120,12 @@ namespace Quirco.DataPumper
                         job.HistoricMode,
                         currentDate);
 
-                    RunTargetSPAfter(job.TargetSPQueryAfter, targetProvider);
-
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;
                     jobLog.RecordsProcessed = records;
                     jobLog.Status = SyncStatus.Success;
+
+                    RunTargetSPAfter(job.TargetSPQueryAfter, targetProvider);
                     sw.Stop();
                 }
                 catch (Exception ex)
