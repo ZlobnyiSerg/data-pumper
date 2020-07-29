@@ -32,7 +32,7 @@ namespace Quirco.DataPumper
 
         public async Task RunJob(ConfigJobItem jobItem, IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
         {
-            Log.Info($"Performing synchronization for job '{jobItem.Name}'...");
+            Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
             Validation(sourceProvider, targetProvider);
 
             var dataPumperSource = sourceProvider as IDataPumperSource;
