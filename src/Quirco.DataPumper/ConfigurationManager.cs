@@ -6,6 +6,9 @@ using Microsoft.Extensions.Configuration;
 
 namespace Quirco.DataPumper
 {
+    /// <summary>
+    /// Менеджер конфигурации
+    /// </summary>
     public static class ConfigurationManager
     {
         public static T GetRequired<T>(string key)
