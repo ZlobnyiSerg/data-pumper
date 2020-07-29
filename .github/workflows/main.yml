@@ -24,7 +24,7 @@ jobs:
       - run: msbuild -t:build
         working-directory: src/Quirco.DataPumper
       - name: Nuget Add Source
-        run: nuget sources Add -Name "github" -Source dotnet nuget add source https://nuget.pkg.github.com/fawgv/index.json -n github -u fawgv -p ${{ secrets.GITHUBTOKEN }}
+        run: nuget sources Add -Name "github" -Source dotnet nuget add source https://nuget.pkg.github.com/fawgv/index.json -u fawgv -p ${{ secrets.GITHUBTOKEN }}
       - name: Nuget SetAPIKey
         run: nuget setapikey ${{ secrets.GITHUBTOKEN }} -Source "github"
       - name: Publish the package to GitHub packages
