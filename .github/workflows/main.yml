@@ -20,7 +20,7 @@ jobs:
         shell: bash
         
       - name: Zip .exe
-        run: echo version_${{ steps.get_version.outputs.VERSION }}.zip
+        run: echo version_${{ steps.get_version.outputs.VERSION }}.1zip
         
       - uses: nuget/setup-nuget@v1.0.2
         with:
