@@ -11,7 +11,6 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
       - name: Get tag version
         id: get_tag_version
         run: echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
@@ -19,6 +18,9 @@ jobs:
         
       - name: Tag version
         run: echo ${{ steps.get_version.outputs.SOURCE_TAG }}
+      
+      - uses: actions/checkout@v2
+      
       - uses: nuget/setup-nuget@v1.0.2
         with:
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
