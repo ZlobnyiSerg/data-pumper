@@ -11,7 +11,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-      - uses: actions/checkout@v2
+      #- uses: actions/checkout@v2
       
       - name: Get the version
         id: get_version
@@ -19,12 +19,12 @@ jobs:
         shell: bash
         
       - name: Zip .exe
-        run: echo {{ steps.get_version.outputs.SOURCE_TAG }}
+        run: echo ${{ steps.get_version.outputs.SOURCE_TAG }}
         
-      - uses: nuget/setup-nuget@v1.0.2
-        with:
-          nuget-api-key: ${{ secrets.NUGET_API_KEY }}
-          nuget-version: 'latest'
+      #- uses: nuget/setup-nuget@v1.0.2
+      #  with:
+      #    nuget-api-key: ${{ secrets.NUGET_API_KEY }}
+      #    nuget-version: 'latest'
       # - name: Setup MSBuild.exe
       #   uses: warrenbuckley/Setup-MSBuild@v1
       #   env:
