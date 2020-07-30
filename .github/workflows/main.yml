@@ -19,7 +19,8 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
         shell: bash
         
-      
+      - name: Zip .exe
+        run: echo version_${{ steps.get_version.outputs.VERSION }}.zip
         
       - uses: nuget/setup-nuget@v1.0.2
         with:
