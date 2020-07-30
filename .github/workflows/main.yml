@@ -14,16 +14,13 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       
-      - name: tag number
-        run : echo ${{ github.event.release.tag_name }}
-      
       - name: Get the version
         id: get_version
         run: $SOURCE_TAG = ${env:GITHUB_REF} -replace "refs/tags/", ""
         
         
       - name: Zip .exe
-        run: echo version_${{ steps.get_version.outputs.VERSION }}.1zip
+        run: echo version_${{ steps.get_version.outputs.SOURCE_TAG }}.2zip
         
       - uses: nuget/setup-nuget@v1.0.2
         with:
