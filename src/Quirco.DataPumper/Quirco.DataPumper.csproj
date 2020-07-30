@@ -16,7 +16,6 @@
     <RepositoryType>git</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>bin\debug\</PackageOutputPath>
-    <Version>1.0.0</Version>
     <Authors>ZlobnyiSerg</Authors>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
