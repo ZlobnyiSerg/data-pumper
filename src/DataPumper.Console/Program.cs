@@ -17,7 +17,7 @@ namespace DataPumper.Console
 {
     class Program
     {
-        private static readonly ILog Log = LogManager.GetLogger(typeof(Program));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(Program)); 
 
         static void Main(string[] args)
         {
