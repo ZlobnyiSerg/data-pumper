@@ -13,6 +13,14 @@ jobs:
 
     steps:
       - uses: actions/checkout@v2
+      
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        shell: bash
+        
+      
+        
       - uses: nuget/setup-nuget@v1.0.2
         with:
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
@@ -23,23 +31,6 @@ jobs:
       #     working-directory: src/Quirco.DataPumper
       # - run: msbuild -t:restore
       #   working-directory: src/Quirco.DataPumper
-        
-      - name: Branch name
-        id: branch_name
-        run: |
-            $SOURCE_NAME = ${env:GITHUB_REF} -replace ‘refs/\w+/’, ‘’
-            $SOURCE_BRANCH = ${env:GITHUB_REF} -replace ‘refs/heads/’, ‘’
-            $SOURCE_TAG = ${env:GITHUB_REF} -replace ‘refs/tags/’, ‘’
-          
-      - name: Build base image
-        run: |
-            echo “::set-env name=SOURCE_NAME::$SOURCE_NAME”
-            echo “::set-env name=SOURCE_BRANCH::$SOURCE_BRANCH”
-            echo “::set-env name=SOURCE_TAG::$SOURCE_TAG”
-        env:
-          SOURCE_NAME: ${{ steps.branch_name.outputs.SOURCE_NAME }}
-          SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
-          SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
           
       # - run: msbuild -t:build -p:CI=true
       #   working-directory: src/Quirco.DataPumper
