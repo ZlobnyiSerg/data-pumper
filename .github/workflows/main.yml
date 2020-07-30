@@ -2,8 +2,9 @@ name: publish to nuget
 
 on: 
   push:
-    tags:
-      - "v*"
+    branches: [ master ]
+    #tags:
+    #  - "v*"
 
 jobs:
   build:
@@ -16,36 +17,36 @@ jobs:
         with:
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
           nuget-version: 'latest'
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
-        env:
-          working-directory: src/Quirco.DataPumper
-      - run: msbuild -t:restore
-        working-directory: src/Quirco.DataPumper
+      # - name: Setup MSBuild.exe
+      #   uses: warrenbuckley/Setup-MSBuild@v1
+      #   env:
+      #     working-directory: src/Quirco.DataPumper
+      # - run: msbuild -t:restore
+      #   working-directory: src/Quirco.DataPumper
         
       - name: Branch name
         id: branch_name
         run: |
-          echo ::set-output name=SOURCE_NAME::${GITHUB_REF#refs/*/}
-          echo ::set-output name=SOURCE_BRANCH::${GITHUB_REF#refs/heads/}
-          echo ::set-output name=SOURCE_TAG::${GITHUB_REF#refs/tags/}
+            $SOURCE_NAME = ${env:GITHUB_REF} -replace ‘refs/\w+/’, ‘’
+            $SOURCE_BRANCH = ${env:GITHUB_REF} -replace ‘refs/heads/’, ‘’
+            $SOURCE_TAG = ${env:GITHUB_REF} -replace ‘refs/tags/’, ‘’
           
       - name: Build base image
         run: |
-          echo $SOURCE_NAME
-          echo $SOURCE_BRANCH
-          echo $SOURCE_TAG
+            echo “::set-env name=SOURCE_NAME::$SOURCE_NAME”
+            echo “::set-env name=SOURCE_BRANCH::$SOURCE_BRANCH”
+            echo “::set-env name=SOURCE_TAG::$SOURCE_TAG”
         env:
           SOURCE_NAME: ${{ steps.branch_name.outputs.SOURCE_NAME }}
           SOURCE_BRANCH: ${{ steps.branch_name.outputs.SOURCE_BRANCH }}
           SOURCE_TAG: ${{ steps.branch_name.outputs.SOURCE_TAG }}
           
-      - run: msbuild -t:build -p:CI=true
-        working-directory: src/Quirco.DataPumper
-      - name: Nuget Add Source
-        run: nuget sources Add -Name "github" -Source https://nuget.pkg.github.com/fawgv/index.json -Username fawgv -Password ${{ secrets.GITHUBTOKEN }}
-      - name: Nuget SetAPIKey
-        run: nuget setapikey ${{ secrets.GITHUBTOKEN }} -Source "github"
-      - name: Publish the package to GitHub packages
-        working-directory: src/Quirco.DataPumper
-        run: nuget push bin\Debug\*.nupkg -source "github" -SkipDuplicate
+      # - run: msbuild -t:build -p:CI=true
+      #   working-directory: src/Quirco.DataPumper
+      # - name: Nuget Add Source
+      #   run: nuget sources Add -Name "github" -Source https://nuget.pkg.github.com/fawgv/index.json -Username fawgv -Password ${{ secrets.GITHUBTOKEN }}
+      # - name: Nuget SetAPIKey
+      #   run: nuget setapikey ${{ secrets.GITHUBTOKEN }} -Source "github"
+      # - name: Publish the package to GitHub packages
+      #   working-directory: src/Quirco.DataPumper
+      #   run: nuget push bin\Debug\*.nupkg -source "github" -SkipDuplicate
