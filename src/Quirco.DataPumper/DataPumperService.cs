@@ -120,12 +120,12 @@ namespace Quirco.DataPumper
                         job.HistoricMode,
                         currentDate);
 
-                    RunTargetSPAfter(job.TargetSPQueryAfter, targetProvider);
-
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;
                     jobLog.RecordsProcessed = records;
                     jobLog.Status = SyncStatus.Success;
+
+                    RunTargetSPAfter(job.TargetSPQueryAfter, targetProvider);
                     sw.Stop();
                 }
                 catch (Exception ex)
