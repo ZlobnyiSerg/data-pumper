@@ -27,8 +27,8 @@ jobs:
           nuget-version: 'latest'
           
       - name: Setup MSBuild.exe
-         uses: warrenbuckley/Setup-MSBuild@v1
-         env:
+        uses: warrenbuckley/Setup-MSBuild@v1
+        env:
            working-directory: src/Quirco.DataPumper
       - run: msbuild -t:restore
         working-directory: src/Quirco.DataPumper
