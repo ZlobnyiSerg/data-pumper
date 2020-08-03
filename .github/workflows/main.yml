@@ -33,7 +33,7 @@ jobs:
       - run: msbuild -t:restore
         working-directory: src/Quirco.DataPumper
         
-      - run: msbuild -t:build -p:PackageVersion=0.6.18
+      - run: msbuild -t:build -p:PackageVersion=${{ steps.get_version.outputs.SOURCE_TAG }}
         working-directory: src/Quirco.DataPumper
       - name: Nuget Add Source
         run: nuget sources Add -Name "github" -Source https://nuget.pkg.github.com/fawgv/index.json -Username fawgv -Password ${{ secrets.GITHUBTOKEN }}
