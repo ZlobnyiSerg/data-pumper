@@ -20,7 +20,7 @@ jobs:
         
       - name: Correct tag version
         id: get_version
-        run: echo ::set-output name=SOURCE_TAG::${{ steps.get_version.outputs.SOURCE_TAG }#"v"}
+        run: echo ::set-output name=SOURCE_TAG::${{ steps.get_version.outputs.SOURCE_TAG }}#"v"
         shell: bash
         
       - name: Tag version
