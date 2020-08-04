@@ -33,12 +33,10 @@ jobs:
       - run: msbuild -t:restore
         working-directory: src/Quirco.DataPumper
         
-      - run: msbuild -t:build -p:PackageVersion=${{ steps.get_version.outputs.SOURCE_TAG }}
+      - run: msbuild -t:build -p:Configuration=Release -p:PackageVersion=${{ steps.get_version.outputs.SOURCE_TAG }}
         working-directory: src/Quirco.DataPumper
-      - name: Nuget Add Source
-        run: nuget sources Add -Name "github" -Source https://nuget.pkg.github.com/fawgv/index.json -Username fawgv -Password ${{ secrets.GITHUBTOKEN }}
       - name: Nuget SetAPIKey
-        run: nuget setapikey ${{ secrets.GITHUBTOKEN }} -Source "github"
-      - name: Publish the package to GitHub packages
+        run: nuget setapikey ${{ secrets.NUGET_API_KEY }}
+      - name: Publish the package to nuget.org
         working-directory: src/Quirco.DataPumper
-        run: nuget push bin\Debug\*.nupkg -source "github" -SkipDuplicate
+        run: nuget push bin\Debug\*.nupkg -Source https://api.nuget.org/v3/index.json -SkipDuplicate
