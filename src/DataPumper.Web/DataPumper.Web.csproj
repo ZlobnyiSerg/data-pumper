@@ -6,11 +6,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\DataPumper.Core\DataPumper.Core.csproj" />
-      <ProjectReference Include="..\DataPumper.Sql\DataPumper.Sql.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
       <Folder Include="Data" />
       <Folder Include="Pages\Components" />
     </ItemGroup>

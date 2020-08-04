@@ -1,10 +1,15 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{A7BA213C-A547-42B6-B498-4DCB90132178}"
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30011.22
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Sql", "src\DataPumper.Sql\DataPumper.Sql.csproj", "{CF063525-3EB2-4A38-A613-46A9EBEDA07C}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Sql", "src\DataPumper.Sql\DataPumper.Sql.csproj", "{3A12DE89-4A19-4974-BE08-300375E094A7}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{B4C95943-F5AB-4E11-A826-532EC0549B0B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quirco.DataPumper", "src\Quirco.DataPumper\Quirco.DataPumper.csproj", "{450A20AF-D07D-4125-9F61-50F220577D0F}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Console", "src\DataPumper.Console\DataPumper.Console.csproj", "{F5872821-986F-4875-9881-ADD0F8C51236}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -12,17 +17,27 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A7BA213C-A547-42B6-B498-4DCB90132178}.Release|Any CPU.Build.0 = Release|Any CPU
-		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{CF063525-3EB2-4A38-A613-46A9EBEDA07C}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B4C95943-F5AB-4E11-A826-532EC0549B0B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3A12DE89-4A19-4974-BE08-300375E094A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3A12DE89-4A19-4974-BE08-300375E094A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3A12DE89-4A19-4974-BE08-300375E094A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3A12DE89-4A19-4974-BE08-300375E094A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{450A20AF-D07D-4125-9F61-50F220577D0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{450A20AF-D07D-4125-9F61-50F220577D0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{450A20AF-D07D-4125-9F61-50F220577D0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{450A20AF-D07D-4125-9F61-50F220577D0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F5872821-986F-4875-9881-ADD0F8C51236}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F5872821-986F-4875-9881-ADD0F8C51236}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F5872821-986F-4875-9881-ADD0F8C51236}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F5872821-986F-4875-9881-ADD0F8C51236}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A52A0248-CF07-433A-83B0-06746E7549F1}
 	EndGlobalSection
 EndGlobal

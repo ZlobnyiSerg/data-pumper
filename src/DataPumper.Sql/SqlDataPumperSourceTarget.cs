@@ -3,26 +3,29 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
+using Common.Logging;
 using Dapper;
 using DataPumper.Core;
-using Microsoft.Extensions.Logging;
 
 namespace DataPumper.Sql
 {
     public class SqlDataPumperSourceTarget : IDataPumperSource, IDataPumperTarget, IDisposable
     {
-        private readonly ILogger<SqlDataPumperSourceTarget> _logger;
+        private static readonly ILog _logger = LogManager.GetLogger(typeof(SqlDataPumperSourceTarget));
+
         private SqlConnection _connection;
         private int _timeout = 60 * 60 * 3; // 3 hours
 
-        public SqlDataPumperSourceTarget(ILogger<SqlDataPumperSourceTarget> logger)
+        public SqlDataPumperSourceTarget()
         {
-            _logger = logger;
         }
 
-        public const string Name = "Microsoft SQL Server"; 
+        public const string Name = "Microsoft SQL Server";
+
+        public event EventHandler<ProgressEventArgs> Progress;
 
         public string GetName()
         {
@@ -32,30 +35,22 @@ namespace DataPumper.Sql
         public async Task Initialize(string connectionString)
         {
             if (_connection != null)
-                await _connection.DisposeAsync();
+                _connection.Dispose();
             _connection = new SqlConnection(connectionString);
             await _connection.OpenAsync();
         }
 
-        public async IAsyncEnumerable<TableDefinition> GetTables()
+        public Task<DateTime?> GetCurrentDate(string query)
         {
-            foreach (var table in await _connection.QueryAsync<dynamic>("SELECT * FROM INFORMATION_SCHEMA.TABLES"))
-            {
-                yield return new TableDefinition(new TableName(table.TABLE_SCHEMA, table.TABLE_NAME), null);
-            }
+            return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: _timeout);
         }
 
-        public Task<DateTime?> GetCurrentDate(TableName tableName, string fieldName)
-        {
-            return _connection.ExecuteScalarAsync<DateTime?>($"SELECT Min({fieldName}) FROM {tableName}", commandTimeout: _timeout);
-        }
-        
         public async Task<string[]> GetInstances(TableName tableName, string fieldName)
         {
             var result = new List<string>();
-            await using (var reader = await _connection.ExecuteReaderAsync($"SELECT {fieldName} FROM {tableName}", commandTimeout: _timeout))
+            using (var reader = await _connection.ExecuteReaderAsync($"SELECT {fieldName} FROM {tableName}", commandTimeout: _timeout))
             {
-                while (await reader.ReadAsync())
+                while (reader.Read())
                 {
                     result.Add(reader.GetString(0));
                 }
@@ -63,13 +58,13 @@ namespace DataPumper.Sql
             return result.ToArray();
         }
 
-        public async Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan)
+        public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan)
         {
             var handler = Progress;
             handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", null));
             if (notOlderThan != null)
             {
-                return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {fieldName} >= @NotOlderThan", new
+                return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan", new
                 {
                     NotOlderThan = notOlderThan
                 }, commandTimeout: _timeout);
@@ -80,26 +75,36 @@ namespace DataPumper.Sql
 
         public async Task CleanupTable(CleanupTableRequest request)
         {
-            var handler = Progress;
-            
-            var inStatement = string.Join(',', request.InstanceFieldValues.Select(v=>$"'{v}'"));
-            _logger.LogWarning($"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Cleaning target table, instances: ({inStatement}), actuality date >= {request.NotOlderThan}"));
+            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
+            _logger.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             int deleted;
             if (request.NotOlderThan == null)
             {
-                deleted = await _connection.ExecuteAsync($"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
+                var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})";
+                deleted = await _connection.ExecuteAsync(query, commandTimeout: _timeout);
             }
             else
             {
-                deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan",
-                    new
+                var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan";
+                deleted = await _connection.ExecuteAsync(query , new
                     {
                         NotOlderThan = request.NotOlderThan.Value
                     }, commandTimeout: _timeout);
             }
-            _logger.LogWarning($"Deleted {deleted} record(s)");
+            _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
+        }
+
+        public async Task CleanupHistoryTable(CleanupTableRequest request)
+        {
+            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
+            _logger.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.NotOlderThan}");
+            var deleted = await _connection.ExecuteAsync(
+                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.HistoryDateFromFieldName} = @CurrentPropertyDate",
+                    new
+                    {
+                        request.CurrentPropertyDate
+                    }, commandTimeout: _timeout);
+            _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 
         public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
@@ -107,47 +112,59 @@ namespace DataPumper.Sql
             await CheckTablesCompatibility(tableName, dataReader);
             var sw = new Stopwatch();
             sw.Start();
-            using var bulkCopy = new SqlBulkCopy(_connection)
+            long processed = 0;
+
+            using (var bulkCopy = new SqlBulkCopy(_connection)
             {
                 BatchSize = 1000000,
                 BulkCopyTimeout = _timeout,
                 NotifyAfter = 10000,
                 DestinationTableName = tableName.ToString()
-            };
-
-            for (int i = 0; i < dataReader.FieldCount; i++)
+            })
             {
-                var column = dataReader.GetName(i);
-                bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
+                for (int i = 0; i < dataReader.FieldCount; i++)
+                {
+                    var column = dataReader.GetName(i);
+                    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
+                }
+
+                bulkCopy.SqlRowsCopied += (sender, args) =>
+                {
+                    _logger.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
+                    var handler = Progress;
+                    handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", sw.Elapsed));
+                };
+
+                await bulkCopy.WriteToServerAsync(dataReader);
+
+                processed = bulkCopy.GetRowsCopied();
             }
 
-            long processed = 0;
-
-            bulkCopy.SqlRowsCopied += (sender, args) =>
-            {
-                _logger.LogInformation($"Records processed: {args.RowsCopied:#########}");
-                var handler = Progress;
-                handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", sw.Elapsed));
-                processed = args.RowsCopied;
-            };
-
-            await bulkCopy.WriteToServerAsync(dataReader);
             return processed;
         }
 
         private async Task CheckTablesCompatibility(TableName tableName, IDataReader dataReader)
         {
-            await using var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: _timeout);
+            using (var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: _timeout))
+            {
+                var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
+                var targetFields = new HashSet<string>(Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
 
-            var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
-            var targetFields = Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName).ToHashSet();
-
-            var nonMatchingFields = sourceFields.Where(sf => !targetFields.Contains(sf)).ToList();
-            if (nonMatchingFields.Any())
-                throw new ApplicationException($"Source table contains fields that not present in target table: "+string.Join(",", nonMatchingFields));
+                var nonMatchingFields = sourceFields.Where(sf => !targetFields.Contains(sf)).ToList();
+                if (nonMatchingFields.Any())
+                    throw new ApplicationException($"Source table contains fields that not present in target table: " + string.Join(",", nonMatchingFields));
+            }
         }
 
-        public event EventHandler<ProgressEventArgs> Progress;
+        public void RunStoredProcedure(string spQuery)
+        {
+            if (!string.IsNullOrEmpty(spQuery))
+            {
+                _logger.Info($"Start execute stored procedure: '{spQuery}'");
+                _connection.Execute(spQuery, commandTimeout: _timeout);
+                _logger.Info($"Stop execute stored procedure: '{spQuery}'");
+            }
+        }
 
         public void Dispose()
         {

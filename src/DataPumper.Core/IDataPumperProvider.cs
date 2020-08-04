@@ -8,6 +8,5 @@ namespace DataPumper.Core
         string GetName();
         
         Task Initialize(string connectionString);
-        IAsyncEnumerable<TableDefinition> GetTables();
     }
 }
