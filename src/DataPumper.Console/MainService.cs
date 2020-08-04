@@ -72,7 +72,7 @@ namespace DataPumper.Console
 
             //BackgroundJob.Enqueue(()=> RunJobs());
 
-            var dpConfig = new DPConfiguration();
+            var dpConfig = new DataPumperConfiguration();
             foreach (var job in dpConfig.Jobs)
             {
                 BackgroundJob.Enqueue(() => RunJob(job));
@@ -82,7 +82,7 @@ namespace DataPumper.Console
 
         [JobDisplayName("DataPumper run job {0}")]
         [Queue("datapumper")]
-        public async Task RunJob(ConfigJobItem jobItem)
+        public async Task RunJob(PumperJobItem jobItem)
         {
             var dataPumperService = _container.Resolve<DataPumperService>();
 

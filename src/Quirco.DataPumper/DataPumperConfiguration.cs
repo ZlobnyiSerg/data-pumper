@@ -7,7 +7,7 @@ using System.Text;
 
 namespace Quirco.DataPumper
 {
-    public class DPConfiguration
+    public class DataPumperConfiguration
     {
         public IConfigurationRoot ConfigurationXml => ConfigurationManager.Configuration ??
             (ConfigurationManager.Configuration = new ConfigurationBuilder()
@@ -27,18 +27,36 @@ namespace Quirco.DataPumper
 
         public string HistoricColumnTo => ConfigurationXml.Get<string>("Core:HistoricColumns:To");
 
-        public ConfigJobItem[] Jobs => ConfigurationXml.GetSection("Jobs").GetChildren().Select(c => new ConfigJobItem 
+        public PumperJobItem[] Jobs => ConfigurationXml.GetSection("Jobs").GetChildren().Select(c => new PumperJobItem 
         {
             Name = c.Key,
             SourceTableName = c.Get<string>("Source"),
             TargetTableName = c.Get<string>("Target"),
             HistoricMode = c.Get("HistoricMode", false),
-            TargetSPQueryBefore = c.Get("TargetSP:SPQueryBefore", ""),
-            TargetSPQueryAfter = c.Get("TargetSP:SPQueryAfter", "")
+            PreRunStoreProcedureOnTarget = c.Get("TargetSP:SPQueryBefore", ""),
+            PostRunStoredProcedureOnTarget = c.Get("TargetSP:SPQueryAfter", "")
         }).ToArray();
+
+        public DataPumperConfiguration()
+        {
+            if (string.IsNullOrEmpty(Properties))
+                throw new ApplicationException($"Required set 'Properties' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(ActualityColumnName))
+                throw new ApplicationException($"Required set 'ActualityColumnName' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(HistoricColumnFrom))
+                throw new ApplicationException($"Required set 'HistoricColumns.From' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(HistoricColumnTo))
+                throw new ApplicationException($"Required set 'HistoricColumns.To' in data-pumper.config");
+
+            if (string.IsNullOrEmpty(CurrentDateQuery))
+                throw new ApplicationException($"Required set 'CurrentDateQuery' in data-pumper.config");
+        }
     }
 
-    public class ConfigJobItem
+    public class PumperJobItem
     {
         public string Name { get; set; }
 
@@ -51,12 +69,12 @@ namespace Quirco.DataPumper
         /// <summary>
         /// Запрос на вызов хранимой процедуры до выполнения задания
         /// </summary>
-        public string TargetSPQueryBefore { get; set; }
+        public string PreRunStoreProcedureOnTarget { get; set; }
 
         /// <summary>
         /// Запрос на вызов хранимой процедуры после выполнения задания
         /// </summary>
-        public string TargetSPQueryAfter { get; set; }
+        public string PostRunStoredProcedureOnTarget { get; set; }
 
         public override string ToString()
         {

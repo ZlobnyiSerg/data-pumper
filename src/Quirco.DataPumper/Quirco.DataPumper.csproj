@@ -53,7 +53,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
-    <Compile Include="DPConfiguration.cs" />
+    <Compile Include="DataPumperConfiguration.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="DataLayer\DataPumperContext.cs" />
     <Compile Include="DataLayer\JobLog.cs" />

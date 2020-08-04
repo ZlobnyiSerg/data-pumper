@@ -20,39 +20,31 @@ namespace Quirco.DataPumper
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
 
         private readonly NDataPumper.DataPumper _pumper;
-        private readonly DPConfiguration _configuration;
+        private readonly DataPumperConfiguration _configuration;
 
         public EventHandler<ProgressEventArgs> Progress;
 
         public DataPumperService(NDataPumper.DataPumper dataPumper)
         {
             _pumper = dataPumper;
-            _configuration = new DPConfiguration();
+            _configuration = new DataPumperConfiguration();
         }
 
-        public async Task RunJob(ConfigJobItem jobItem, IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
+        public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
-            Validation(sourceProvider, targetProvider);
-
-            var dataPumperSource = sourceProvider as IDataPumperSource;
-            var dataPumperTarget = targetProvider as IDataPumperTarget;
-            await RunJobInternal(jobItem, dataPumperSource, dataPumperTarget);
+            await RunJobInternal(jobItem, sourceProvider, targetProvider);
         }
 
-        public async Task RunJobs(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
+        public async Task RunJobs(IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Info("Performing synchronization for all jobs...");
-            var configuration = new DPConfiguration();
+            var configuration = new DataPumperConfiguration();
             var jobs = configuration.Jobs;
-            Validation(sourceProvider, targetProvider);
-
-            var dataPumperSource = sourceProvider as IDataPumperSource;
-            var dataPumperTarget = targetProvider as IDataPumperTarget;
-            await ProcessInternal(jobs, dataPumperSource, dataPumperTarget);
+            await ProcessInternal(jobs, sourceProvider, targetProvider);
         }
 
-        public async Task ProcessInternal(ConfigJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        public async Task ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Warn("Started job to sync all tables...");
 
@@ -60,7 +52,7 @@ namespace Quirco.DataPumper
             await Task.WhenAll(tasks);   
         }
 
-        private async Task RunJobInternal(ConfigJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        private async Task RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Warn($"Processing {job.Name}");
             using (var ctx = new DataPumperContext())
@@ -94,7 +86,7 @@ namespace Quirco.DataPumper
                         handler?.Invoke(sender, args);
                     };
 
-                    RunTargetSPBefore(job.TargetSPQueryBefore, targetProvider);
+                    RunTargetSPBefore(job.PreRunStoreProcedureOnTarget, targetProvider);
 
                     var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
                     var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;
@@ -125,7 +117,7 @@ namespace Quirco.DataPumper
                     jobLog.RecordsProcessed = records;
                     jobLog.Status = SyncStatus.Success;
 
-                    RunTargetSPAfter(job.TargetSPQueryAfter, targetProvider);
+                    RunTargetSPAfter(job.PostRunStoredProcedureOnTarget, targetProvider);
                     sw.Stop();
                 }
                 catch (Exception ex)
@@ -147,35 +139,6 @@ namespace Quirco.DataPumper
         private void RunTargetSPAfter(string targetSPQueryAfter, IDataPumperTarget targetProvider)
         {
             targetProvider.RunStoredProcedure(targetSPQueryAfter);
-        }
-
-        private void Validation(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
-        {
-            ValidateProviders(sourceProvider, targetProvider);
-
-            if (string.IsNullOrEmpty(_configuration.Properties))
-                throw new ApplicationException($"Required set 'Properties' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(_configuration.ActualityColumnName))
-                throw new ApplicationException($"Required set 'ActualityColumnName' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(_configuration.HistoricColumnFrom))
-                throw new ApplicationException($"Required set 'HistoricColumns.From' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(_configuration.HistoricColumnTo))
-                throw new ApplicationException($"Required set 'HistoricColumns.To' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(_configuration.CurrentDateQuery))
-                throw new ApplicationException($"Required set 'CurrentDateQuery' in data-pumper.config");
-        }
-
-        private static void ValidateProviders(IDataPumperProvider sourceProvider, IDataPumperProvider targetProvider)
-        {
-            if (!(sourceProvider is IDataPumperSource))
-                throw new ApplicationException($"Source provider '{sourceProvider.GetName()}' is not IDataPumperSource");
-
-            if (!(targetProvider is IDataPumperTarget))
-                throw new ApplicationException($"Target provider '{targetProvider.GetName()}' is not IDataPumperTarget");
         }
     }
 }

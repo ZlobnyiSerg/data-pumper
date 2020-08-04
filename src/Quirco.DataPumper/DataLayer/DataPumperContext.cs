@@ -11,7 +11,7 @@ namespace Quirco.DataPumper.DataLayer
 {
     public class DataPumperContext : DbContext
     {
-        private static DPConfiguration configuration = new DPConfiguration();
+        private static DataPumperConfiguration configuration = new DataPumperConfiguration();
 
         public DbSet<TableSync> TableSyncs { get; set; }
 
