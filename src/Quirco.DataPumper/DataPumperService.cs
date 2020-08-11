@@ -21,6 +21,7 @@ namespace Quirco.DataPumper
 
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DataPumperConfiguration _configuration;
+        private readonly SmtpSender _smtp;
 
         public EventHandler<ProgressEventArgs> Progress;
 
@@ -28,6 +29,7 @@ namespace Quirco.DataPumper
         {
             _pumper = dataPumper;
             _configuration = new DataPumperConfiguration();
+            _smtp = new SmtpSender();
         }
 
         public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
@@ -49,7 +51,9 @@ namespace Quirco.DataPumper
             Log.Warn("Started job to sync all tables...");
 
             var tasks = jobs.ToList().Select(j => RunJobInternal(j, sourceProvider, targetProvider));
-            await Task.WhenAll(tasks);   
+            await Task.WhenAll(tasks);
+
+            _smtp.SendEmailAsync();
         }
 
         private async Task RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
@@ -125,6 +129,8 @@ namespace Quirco.DataPumper
                     Log.Error($"Error processing job {job}", ex);
                     jobLog.Message = ex.Message;
                     jobLog.Status = SyncStatus.Error;
+
+                    _smtp.JobLogs.Add(jobLog);
                 }
 
                 await ctx.SaveChangesAsync();
