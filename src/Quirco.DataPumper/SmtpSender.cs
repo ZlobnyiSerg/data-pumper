@@ -23,55 +23,55 @@ namespace Quirco.DataPumper
 
         public void SendEmailAsync(IEnumerable<JobLog> jobLogs)
         {
-            int errors = 0;
-            SmtpClient smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort);
-            smtp.Credentials = new NetworkCredential(_configuration.EmailFrom, _configuration.PasswordFrom);
-            smtp.EnableSsl = true;
-
-            MailMessage message = new MailMessage(_configuration.EmailFrom,_configuration.Targets.First());
-            foreach(var i in _configuration.Targets)
+            if(jobLogs.Count() > 0)
             {
-                if(i != _configuration.Targets.First()) message.CC.Add(i);
-            }
+                int errors = 0;
+                SmtpClient smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort);
+                smtp.Credentials = new NetworkCredential(_configuration.EmailFrom, _configuration.PasswordFrom);
+                smtp.EnableSsl = true;
 
-            message.IsBodyHtml = true;
-            message.Subject = "Job Errors";
-            message.Body = @"<h2>Jobs Errors</h2>";
+                MailMessage message = new MailMessage(_configuration.EmailFrom, _configuration.Targets.First());
+                foreach (var target in _configuration.Targets)
+                {
+                    if (target != _configuration.Targets.First()) message.CC.Add(target);
+                }
 
-            foreach(var i in jobLogs)
-            {
-                message.Body += $@"
-                <p>
-                    <b>Time:</b> {i.StartDate} - {i.EndDate}
-                </p>";
+                message.IsBodyHtml = true;
+                message.Subject = "Job Errors";
+                message.Body = @"<h2>Jobs Errors</h2>";
 
-                message.Body += $@"
-                <p>
-                    <b>Status:</b> {i.Status}
-                </p>";
-
-                if(i.Status == SyncStatus.Error)
+                foreach (var jobLog in jobLogs)
                 {
                     message.Body += $@"
                     <p>
-                        <b>Exception:</b> {i.Message}
+                        <b>Time:</b> {jobLog.StartDate} - {jobLog.EndDate}
                     </p>";
-                    errors++;
-                }
-                message.Body += "</br>";
-            }
 
-            try
-            {
-                smtp.Send(message);
-                Log.Info($"{errors} job-error reports sent to:");
-                foreach (var i in message.CC) Log.Info(i.Address);
-            }
-            catch(Exception e) 
-            {
-                Log.Error($"SmtpSender exception: {e.Message}");
-            }
-            
+                    message.Body += $@"
+                    <p>
+                        <b>Status:</b> {jobLog.Status}
+                    </p>";
+
+                    if (jobLog.Status == SyncStatus.Error)
+                    message.Body += $@"
+                    <p>
+                        <b>Exception:</b> {jobLog.Message}
+                    </p>";
+                 
+                    message.Body += "</br>";
+                }
+
+                try
+                {
+                    smtp.Send(message);
+                    Log.Info($"{jobLogs.Count()} reports sent to:");
+                    foreach (var mes in message.CC) Log.Info(mes.Address);
+                }
+                catch (Exception e)
+                {
+                    Log.Error($"SmtpSender exception: {e.Message}");
+                }
+            }   
         }
     }
 }

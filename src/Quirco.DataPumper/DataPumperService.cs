@@ -58,9 +58,9 @@ namespace Quirco.DataPumper
 
             var jobLogs = new List<JobLog>();
 
-            foreach(var j in jobs)
+            foreach(var job in jobs)
             {
-                var jobLog = await RunJobInternal(j, sourceProvider, targetProvider);
+                var jobLog = await RunJobInternal(job, sourceProvider, targetProvider);
                 jobLogs.Add(jobLog);
             }
 
