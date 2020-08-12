@@ -1,5 +1,7 @@
 ﻿using Common.Logging;
+using Common.Logging.Configuration;
 using DataPumper.Core;
+using Hangfire;
 using Microsoft.Practices.Unity;
 using Newtonsoft.Json;
 using Quirco.DataPumper.DataLayer;
@@ -30,6 +32,7 @@ namespace Quirco.DataPumper
             _pumper = dataPumper;
             _configuration = new DataPumperConfiguration();
             _smtp = new SmtpSender();
+            
         }
 
         public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
@@ -43,20 +46,28 @@ namespace Quirco.DataPumper
             Log.Info("Performing synchronization for all jobs...");
             var configuration = new DataPumperConfiguration();
             var jobs = configuration.Jobs;
-            await ProcessInternal(jobs, sourceProvider, targetProvider);
+            var logs = await ProcessInternal(jobs, sourceProvider, targetProvider);
+
+            BackgroundJob.Enqueue(() => 
+                _smtp.SendEmailAsync(logs.Where(l => l.Status == SyncStatus.Error)));
         }
 
-        public async Task ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Warn("Started job to sync all tables...");
 
-            var tasks = jobs.ToList().Select(j => RunJobInternal(j, sourceProvider, targetProvider));
-            await Task.WhenAll(tasks);
+            var jobLogs = new List<JobLog>();
 
-            _smtp.SendEmailAsync();
+            foreach(var j in jobs)
+            {
+                var jobLog = await RunJobInternal(j, sourceProvider, targetProvider);
+                jobLogs.Add(jobLog);
+            }
+
+            return jobLogs;
         }
 
-        private async Task RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
         {
             Log.Warn($"Processing {job.Name}");
             using (var ctx = new DataPumperContext())
@@ -129,11 +140,11 @@ namespace Quirco.DataPumper
                     Log.Error($"Error processing job {job}", ex);
                     jobLog.Message = ex.Message;
                     jobLog.Status = SyncStatus.Error;
-
-                    _smtp.JobLogs.Add(jobLog);
                 }
 
                 await ctx.SaveChangesAsync();
+
+                return jobLog;
             }
         }
 

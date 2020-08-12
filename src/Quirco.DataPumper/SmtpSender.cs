@@ -1,4 +1,5 @@
-﻿using Microsoft.Practices.Unity;
+﻿using Common.Logging;
+using Microsoft.Practices.Unity;
 using Quirco.DataPumper.DataLayer;
 using System;
 using System.Collections.Generic;
@@ -12,16 +13,17 @@ namespace Quirco.DataPumper
 {
     class SmtpSender
     {
-        public List<JobLog> JobLogs { get; set; }
+        private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
         private readonly DataPumperConfiguration _configuration;
+
         public SmtpSender()
         {
             _configuration = new DataPumperConfiguration();
-            JobLogs = new List<JobLog>();
         }
 
-        public async Task SendEmailAsync()
+        public void SendEmailAsync(IEnumerable<JobLog> jobLogs)
         {
+            int errors = 0;
             SmtpClient smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort);
             smtp.Credentials = new NetworkCredential(_configuration.EmailFrom, _configuration.PasswordFrom);
             smtp.EnableSsl = true;
@@ -32,12 +34,11 @@ namespace Quirco.DataPumper
                 if(i != _configuration.Targets.First()) message.CC.Add(i);
             }
 
-
-            message.Subject = "Jobs Errors";
-
+            message.IsBodyHtml = true;
+            message.Subject = "Job Errors";
             message.Body = @"<h2>Jobs Errors</h2>";
 
-            foreach(var i in JobLogs)
+            foreach(var i in jobLogs)
             {
                 message.Body += $@"
                 <p>
@@ -46,15 +47,31 @@ namespace Quirco.DataPumper
 
                 message.Body += $@"
                 <p>
-                    <b>Exception:</b> {i.Message}
+                    <b>Status:</b> {i.Status}
                 </p>";
 
+                if(i.Status == SyncStatus.Error)
+                {
+                    message.Body += $@"
+                    <p>
+                        <b>Exception:</b> {i.Message}
+                    </p>";
+                    errors++;
+                }
+                message.Body += "</br>";
             }
 
-            message.IsBodyHtml = true;
-
+            try
+            {
+                smtp.Send(message);
+                Log.Info($"{errors} job-error reports sent to:");
+                foreach (var i in message.CC) Log.Info(i.Address);
+            }
+            catch(Exception e) 
+            {
+                Log.Error($"SmtpSender exception: {e.Message}");
+            }
             
-            await smtp.SendMailAsync(message);
         }
     }
 }
