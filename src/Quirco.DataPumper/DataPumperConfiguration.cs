@@ -27,6 +27,16 @@ namespace Quirco.DataPumper
 
         public string HistoricColumnTo => ConfigurationXml.Get<string>("Core:HistoricColumns:To");
 
+        public string EmailFrom => ConfigurationXml.Get<string>("SmtpSender:Sender:Email");
+
+        public string PasswordFrom => ConfigurationXml.Get<string>("SmtpSender:Sender:Password");
+
+        public List<string> Targets => ConfigurationXml.GetList<string>("SmtpSender:Targets", ',');
+
+        public string ServerAdress => ConfigurationXml.Get<string>("SmtpSender:SmtpServer:Adress");
+
+        public int ServerPort => ConfigurationXml.Get<int>("SmtpSender:SmtpServer:Port");
+
         public PumperJobItem[] Jobs => ConfigurationXml.GetSection("Jobs").GetChildren().Select(c => new PumperJobItem 
         {
             Name = c.Key,
