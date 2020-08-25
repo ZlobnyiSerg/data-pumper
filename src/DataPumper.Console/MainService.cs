@@ -28,7 +28,6 @@ namespace DataPumper.Console
             _container = new UnityContainer();
 
             Bootstrapper.Initialize(_container);
-            Quirco.DataPumper.Bootstrapper.Initialize(_container);
 
             JobActivator.Current = new UnityJobActivator(_container);
             JobStorage.Current = new MemoryStorage();

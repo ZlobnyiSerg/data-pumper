@@ -12,7 +12,7 @@
     <TargetFrameworkVersion>v4.5.2</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
-    <RepositoryUrl>https://github.com/fawgv/data-pumper</RepositoryUrl>
+    <RepositoryUrl>https://github.com/ZlobnyiSerg/data-pumper</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageOutputPath>bin\debug\</PackageOutputPath>
@@ -52,7 +52,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Bootstrapper.cs" />
     <Compile Include="DataPumperConfiguration.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="DataLayer\DataPumperContext.cs" />

@@ -1,5 +1,8 @@
-﻿using Microsoft.Practices.Unity;
+﻿using DataPumper.Core;
+using DataPumper.Sql;
+using Microsoft.Practices.Unity;
 using Quirco.DataPumper;
+using System.Collections.Generic;
 
 namespace DataPumper.Console
 {
@@ -9,6 +12,14 @@ namespace DataPumper.Console
         {
             container.RegisterType<DataPumperService>();
             container.RegisterType<Core.DataPumper>();
+
+            // IDataPumperSource
+            container.RegisterType<IEnumerable<IDataPumperSource>, IDataPumperSource[]>();
+            container.RegisterType<IDataPumperSource, SqlDataPumperSourceTarget>(nameof(SqlDataPumperSourceTarget));
+
+            // IDataPumperTarget
+            container.RegisterType<IEnumerable<IDataPumperTarget>, IDataPumperTarget[]>();
+            container.RegisterType<IDataPumperTarget, SqlDataPumperSourceTarget>(nameof(SqlDataPumperSourceTarget));
         }
     }
 }
