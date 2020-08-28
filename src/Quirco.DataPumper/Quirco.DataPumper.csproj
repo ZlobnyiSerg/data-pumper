@@ -76,10 +76,12 @@
     <ProjectReference Include="..\DataPumper.Core\DataPumper.Core.csproj">
       <Project>{4ebc109b-bb0d-4e3e-9024-8a1180ec9c47}</Project>
       <Name>DataPumper.Core</Name>
+	  <IncludeAssets>DataPumper.Core.dll</IncludeAssets>
     </ProjectReference>
     <ProjectReference Include="..\DataPumper.Sql\DataPumper.Sql.csproj">
       <Project>{3a12de89-4a19-4974-be08-300375e094a7}</Project>
       <Name>DataPumper.Sql</Name>
+	  <IncludeAssets>DataPumper.Sql.dll</IncludeAssets>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
