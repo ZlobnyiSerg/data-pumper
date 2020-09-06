@@ -39,4 +39,4 @@ jobs:
         run: nuget setapikey ${{ secrets.NUGET_API_KEY }}
       - name: Publish the package to nuget.org
         working-directory: src/Quirco.DataPumper
-        run: nuget push bin\Release\*.nupkg -Source https://api.nuget.org/v3/index.json -SkipDuplicate
+        run: nuget push bin\debug\*.nupkg -Source https://api.nuget.org/v3/index.json -SkipDuplicate
