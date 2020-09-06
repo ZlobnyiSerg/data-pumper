@@ -19,6 +19,7 @@
     <Authors>ZlobnyiSerg</Authors>
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
+    <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -76,11 +77,13 @@
     <ProjectReference Include="..\DataPumper.Core\DataPumper.Core.csproj">
       <Project>{4ebc109b-bb0d-4e3e-9024-8a1180ec9c47}</Project>
       <Name>DataPumper.Core</Name>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
 	  <IncludeAssets>DataPumper.Core.dll</IncludeAssets>
     </ProjectReference>
     <ProjectReference Include="..\DataPumper.Sql\DataPumper.Sql.csproj">
       <Project>{3a12de89-4a19-4974-be08-300375e094a7}</Project>
       <Name>DataPumper.Sql</Name>
+      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
 	  <IncludeAssets>DataPumper.Sql.dll</IncludeAssets>
     </ProjectReference>
   </ItemGroup>
@@ -115,4 +118,9 @@
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
+    <ItemGroup>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+    </ItemGroup>
+  </Target>
 </Project>
