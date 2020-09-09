@@ -15,8 +15,6 @@ namespace Quirco.DataPumper
                 .AddXmlFile("data-pumper.local.config", true)
                 .Build());
 
-        public string ConnectionString => ConfigurationXml.Get<string>("Core:ConnectionString");
-
         public string CurrentDateQuery => ConfigurationXml.Get<string>("Core:CurrentDateQuery");
 
         public string ActualityColumnName => ConfigurationXml.Get<string>("Core:ActualityColumnName");

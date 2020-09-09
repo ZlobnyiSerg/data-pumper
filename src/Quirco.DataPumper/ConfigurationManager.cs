@@ -22,6 +22,8 @@ namespace Quirco.DataPumper
         }
 
         public static IConfigurationRoot Configuration { get; set; }
+
+        public static string ConnectionString { get; set; } = Configuration.Get<string>("Core:ConnectionString");
     }
 
     public static class ConfigurationMixin
