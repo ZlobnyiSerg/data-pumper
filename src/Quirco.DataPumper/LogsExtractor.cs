@@ -9,14 +9,9 @@ namespace Quirco.DataPumper
 {
     public class LogsExtractor
     {
-        private string _connectionString;
-        public LogsExtractor(string connectionString)
-        {
-            _connectionString = connectionString;
-        }
         public IEnumerable<JobLog> GetLogs(int count)
         {
-            using (var ctx = new DataPumperContext(_connectionString))
+            using (var ctx = new DataPumperContext())
             {
                 return ctx.Logs.Take(count);
             }
