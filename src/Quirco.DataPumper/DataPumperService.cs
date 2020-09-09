@@ -35,24 +35,24 @@ namespace Quirco.DataPumper
             
         }
 
-        public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
-            await RunJobInternal(jobItem, sourceProvider, targetProvider);
+            await RunJobInternal(jobItem, sourceProvider, targetProvider, fullReloading);
         }
 
-        public async Task RunJobs(IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        public async Task RunJobs(IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info("Performing synchronization for all jobs...");
             var configuration = new DataPumperConfiguration();
             var jobs = configuration.Jobs;
-            var logs = await ProcessInternal(jobs, sourceProvider, targetProvider);
+            var logs = await ProcessInternal(jobs, sourceProvider, targetProvider, fullReloading);
 
             BackgroundJob.Enqueue(() => 
                 _smtp.SendEmailAsync(logs.Where(l => l.Status == SyncStatus.Error)));
         }
 
-        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn("Started job to sync all tables...");
 
@@ -60,14 +60,14 @@ namespace Quirco.DataPumper
 
             foreach(var job in jobs)
             {
-                var jobLog = await RunJobInternal(job, sourceProvider, targetProvider);
+                var jobLog = await RunJobInternal(job, sourceProvider, targetProvider, fullReloading);
                 jobLogs.Add(jobLog);
             }
 
             return jobLogs;
         }
 
-        private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider)
+        private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn($"Processing {job.Name}");
             using (var ctx = new DataPumperContext())
@@ -103,6 +103,12 @@ namespace Quirco.DataPumper
 
                     RunTargetSPBefore(job.PreRunStoreProcedureOnTarget, targetProvider);
 
+                    if (fullReloading)
+                    {
+                        // При полной перезаливке обнуляем ActualDate
+                        tableSync.ActualDate = null;
+                    }
+
                     var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
                     var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;
 
@@ -125,7 +131,8 @@ namespace Quirco.DataPumper
                         new TableName(_configuration.Properties), // Таблица, где хранятся объекты
                         onDate,
                         job.HistoricMode,
-                        currentDate);
+                        currentDate,
+                        fullReloading);
 
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;

@@ -78,7 +78,7 @@ namespace DataPumper.Sql
             var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
             _logger.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             int deleted;
-            if (request.NotOlderThan == null)
+            if (request.NotOlderThan == null || request.FullReloading)
             {
                 var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})";
                 deleted = await _connection.ExecuteAsync(query, commandTimeout: _timeout);
@@ -97,13 +97,23 @@ namespace DataPumper.Sql
         public async Task CleanupHistoryTable(CleanupTableRequest request)
         {
             var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
-            _logger.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.NotOlderThan}");
-            var deleted = await _connection.ExecuteAsync(
+            _logger.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.CurrentPropertyDate}");
+
+            int deleted = 0;
+            if (request.FullReloading)
+            {
+                deleted = await _connection.ExecuteAsync(
+                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
+            }
+            else
+            {
+                deleted = await _connection.ExecuteAsync(
                     $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.HistoryDateFromFieldName} = @CurrentPropertyDate",
                     new
                     {
                         request.CurrentPropertyDate
                     }, commandTimeout: _timeout);
+            }
             _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 

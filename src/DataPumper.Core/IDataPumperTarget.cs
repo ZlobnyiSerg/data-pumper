@@ -34,22 +34,26 @@ namespace DataPumper.Core
 
         public string HistoryDateFromFieldName { get; }
 
-        public CleanupTableRequest(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string instanceFieldName, string[] instanceFieldValues)
+        public bool FullReloading { get; }
+
+        public CleanupTableRequest(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string instanceFieldName, string[] instanceFieldValues, bool fullReloading)
         {
             TableName = tableName;
             ActualityFieldName = actualityFieldName;
             NotOlderThan = notOlderThan;
             InstanceFieldName = instanceFieldName;
             InstanceFieldValues = instanceFieldValues;
+            FullReloading = fullReloading;
         }
 
-        public CleanupTableRequest(TableName tableName, string historyDateFromFieldName, string instanceFieldName, string[] instanceFieldValues, DateTime currentPropertyDate)
+        public CleanupTableRequest(TableName tableName, string historyDateFromFieldName, string instanceFieldName, string[] instanceFieldValues, DateTime currentPropertyDate, bool fullReloading)
         {
             TableName = tableName;
             HistoryDateFromFieldName = historyDateFromFieldName;
             CurrentPropertyDate = currentPropertyDate;
             InstanceFieldName = instanceFieldName;
             InstanceFieldValues = instanceFieldValues;
+            FullReloading = fullReloading;
         }
     }
 }
