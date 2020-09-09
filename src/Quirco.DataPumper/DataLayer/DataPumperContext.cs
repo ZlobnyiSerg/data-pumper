@@ -16,11 +16,9 @@ namespace Quirco.DataPumper.DataLayer
 
         public DbSet<JobLog> Logs { get; set; }
 
-        public DataPumperContext() : this(new DataPumperConfiguration().ConnectionString)
+        public DataPumperContext() : this("Server=FIUTEE_HOME\\SQLEXPRESS;Database=Logus.HMS;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus")
         {
-            var test = new DataPumperConfiguration();
 
-            Log.Warn("!!!!!!!!!!!!!!!!! "+test.ConnectionString);
         }
 
         public DataPumperContext(string connectionString) : base(connectionString)
