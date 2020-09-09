@@ -21,7 +21,8 @@ namespace DataPumper.Core
             TableName instanceTable, 
             DateTime onDate,
             bool historicMode, 
-            DateTime currentDate)
+            DateTime currentDate,
+            bool fullReloading)
         {
             try
             {
@@ -33,14 +34,14 @@ namespace DataPumper.Core
                 if (historicMode)
                 {
                     _logger.Info($"Cleaning target table in history mode '{targetTable}' (historyDateFrom {currentDate}) for instances: {string.Join(",", instances)}...");
-                    await target.CleanupHistoryTable(new CleanupTableRequest(targetTable, historyDateFromFieldName, "PropertyCode", instances, currentDate));
+                    await target.CleanupHistoryTable(new CleanupTableRequest(targetTable, historyDateFromFieldName, "PropertyCode", instances, currentDate, fullReloading));
                     _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
                 else
                 {
                     _logger.Info($"Cleaning target table '{targetTable}' (from date {onDate}) for instances: {string.Join(",", instances)}...");
-                    await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances));
+                    await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances, fullReloading));
                     _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
