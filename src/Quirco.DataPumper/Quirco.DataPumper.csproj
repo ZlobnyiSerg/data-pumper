@@ -59,6 +59,7 @@
     <Compile Include="DataLayer\JobLog.cs" />
     <Compile Include="DataLayer\TableSync.cs" />
     <Compile Include="DataPumperService.cs" />
+    <Compile Include="LogsExtractor.cs" />
     <Compile Include="Migrations\202007161322343_Init.cs" />
     <Compile Include="Migrations\202007161322343_Init.Designer.cs">
       <DependentUpon>202007161322343_Init.cs</DependentUpon>
@@ -78,13 +79,13 @@
       <Project>{4ebc109b-bb0d-4e3e-9024-8a1180ec9c47}</Project>
       <Name>DataPumper.Core</Name>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-	  <IncludeAssets>DataPumper.Core.dll</IncludeAssets>
+      <IncludeAssets>DataPumper.Core.dll</IncludeAssets>
     </ProjectReference>
     <ProjectReference Include="..\DataPumper.Sql\DataPumper.Sql.csproj">
       <Project>{3a12de89-4a19-4974-be08-300375e094a7}</Project>
       <Name>DataPumper.Sql</Name>
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-	  <IncludeAssets>DataPumper.Sql.dll</IncludeAssets>
+      <IncludeAssets>DataPumper.Sql.dll</IncludeAssets>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -120,7 +121,7 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Target DependsOnTargets="ResolveReferences" Name="CopyProjectReferencesToPackage">
     <ItemGroup>
-      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths->WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))"/>
+      <BuildOutputInPackage Include="@(ReferenceCopyLocalPaths-&gt;WithMetadataValue('ReferenceSourceTarget', 'ProjectReference'))" />
     </ItemGroup>
   </Target>
 </Project>
