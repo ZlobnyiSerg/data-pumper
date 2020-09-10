@@ -11,15 +11,14 @@ namespace Quirco.DataPumper.DataLayer
 {
     public class DataPumperContext : DbContext
     {
-        private static DataPumperConfiguration configuration = new DataPumperConfiguration();
+        public static DataPumperConfiguration configuration = new DataPumperConfiguration();
 
         public DbSet<TableSync> TableSyncs { get; set; }
 
         public DbSet<JobLog> Logs { get; set; }
 
-        public DataPumperContext() : this(configuration.ConnectionString)
+        public DataPumperContext() : this("Server=FIUTEE_HOME\\SQLEXPRESS;Database=Logus.HMS;Integrated Security=true;MultipleActiveResultSets=true;Application Name=Logus")
         {
-
         }
 
         public DataPumperContext(string connectionString) : base(connectionString)
