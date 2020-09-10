@@ -69,11 +69,9 @@ namespace Quirco.DataPumper
 
         private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
         {
-            Log.Warn("config : "+DataPumperContext.configuration.ConnectionString);
             Log.Warn($"Processing {job.Name}");
             using (var ctx = new DataPumperContext())
             {
-                Log.Warn("context : "+ctx.Database.Connection.ConnectionString);
                 var tableSync = await ctx.TableSyncs.FirstOrDefaultAsync(ts => ts.TableName == job.TargetTableName);
                 if (tableSync == null)
                 {

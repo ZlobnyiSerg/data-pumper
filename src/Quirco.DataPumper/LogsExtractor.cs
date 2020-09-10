@@ -11,10 +11,12 @@ namespace Quirco.DataPumper
     {
         public IEnumerable<JobLog> GetLogs(int count)
         {
+            IEnumerable<JobLog> logs;
             using (var ctx = new DataPumperContext())
             {
-                return ctx.Logs.Take(count);
+                logs = ctx.Logs.ToList();
             }
+            return logs.Take(10);
         }
     }
 }
