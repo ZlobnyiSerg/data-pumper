@@ -16,7 +16,7 @@ namespace Quirco.DataPumper
             {
                 logs = ctx.Logs.ToList();
             }
-            return logs.Take(10);
+            return logs.Take(count);
         }
     }
 }
