@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 namespace Quirco.DataPumper
 {
-    class SmtpSender
+    class SmtpSender : ILogsSender
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
         private readonly DataPumperConfiguration _configuration;
@@ -21,11 +21,10 @@ namespace Quirco.DataPumper
             _configuration = new DataPumperConfiguration();
         }
 
-        public void SendEmailAsync(IEnumerable<JobLog> jobLogs)
+        public void Send(IEnumerable<JobLog> jobLogs)
         {
             if (jobLogs.Count() == 0) return;
             
-            int errors = 0;
             SmtpClient smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort);
             smtp.Credentials = new NetworkCredential(_configuration.EmailFrom, _configuration.PasswordFrom);
             smtp.EnableSsl = true;

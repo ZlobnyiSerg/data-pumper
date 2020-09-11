@@ -23,16 +23,16 @@ namespace Quirco.DataPumper
 
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DataPumperConfiguration _configuration;
-        private readonly SmtpSender _smtp;
         private readonly string[] _tenantCodes;
 
         public EventHandler<ProgressEventArgs> Progress;
+        public ILogsSender LogsSender { get; set; }
 
         public DataPumperService(NDataPumper.DataPumper dataPumper)
         {
             _pumper = dataPumper;
             _configuration = new DataPumperConfiguration();
-            _smtp = new SmtpSender();            
+            LogsSender = new SmtpSender();            
         }
 
         public DataPumperService(NDataPumper.DataPumper dataPumper, string[] tenantCodes) : this(dataPumper)
@@ -53,8 +53,8 @@ namespace Quirco.DataPumper
             var jobs = configuration.Jobs;
             var logs = await ProcessInternal(jobs, sourceProvider, targetProvider, fullReloading);
 
-            BackgroundJob.Enqueue(() => 
-                _smtp.SendEmailAsync(logs.Where(l => l.Status == SyncStatus.Error)));
+            BackgroundJob.Enqueue(() =>
+                LogsSender.Send(logs.Where(l => l.Status == SyncStatus.Error)));
         }
 
         public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
