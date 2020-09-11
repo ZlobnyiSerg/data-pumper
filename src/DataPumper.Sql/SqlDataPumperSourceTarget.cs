@@ -45,48 +45,43 @@ namespace DataPumper.Sql
             return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: _timeout);
         }
 
-        public async Task<string[]> GetInstances(TableName tableName, string fieldName)
-        {
-            var result = new List<string>();
-            using (var reader = await _connection.ExecuteReaderAsync($"SELECT {fieldName} FROM {tableName}", commandTimeout: _timeout))
-            {
-                while (reader.Read())
-                {
-                    result.Add(reader.GetString(0));
-                }
-            }
-            return result.ToArray();
-        }
-
-        public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan)
+        public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string tenantField, string[] tenantCodes)
         {
             var handler = Progress;
             handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", null));
+
+            string inStatement = GetInStatement(tenantCodes);
+
             if (notOlderThan != null)
             {
-                return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan", new
-                {
-                    NotOlderThan = notOlderThan
-                }, commandTimeout: _timeout);
+                return await _connection.ExecuteReaderAsync(
+                    $"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan" + GetQuerySuffix(tenantField, tenantCodes, inStatement, "AND"), 
+                    new
+                    {
+                        NotOlderThan = notOlderThan
+                    }, commandTimeout: _timeout);
             }
 
-            return await _connection.ExecuteReaderAsync($"SELECT * FROM {tableName}", commandTimeout: _timeout);
+            return await _connection.ExecuteReaderAsync(
+                $"SELECT * FROM {tableName}" + GetQuerySuffix(tenantField, tenantCodes, inStatement, "WHERE"), commandTimeout: _timeout);
         }
 
         public async Task CleanupTable(CleanupTableRequest request)
         {
-            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
+            string inStatement = GetInStatement(request.InstanceFieldValues);
+
             _logger.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             int deleted;
             if (request.NotOlderThan == null || request.FullReloading)
             {
-                var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})";
-                deleted = await _connection.ExecuteAsync(query, commandTimeout: _timeout);
+                deleted = await _connection.ExecuteAsync(
+                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: _timeout);
             }
             else
             {
-                var query = $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.ActualityFieldName} >= @NotOlderThan";
-                deleted = await _connection.ExecuteAsync(query , new
+                deleted = await _connection.ExecuteAsync(
+                    $"DELETE FROM {request.TableName} WHERE {request.ActualityFieldName} >= @NotOlderThan" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "AND"),
+                    new
                     {
                         NotOlderThan = request.NotOlderThan.Value
                     }, commandTimeout: _timeout);
@@ -96,19 +91,20 @@ namespace DataPumper.Sql
 
         public async Task CleanupHistoryTable(CleanupTableRequest request)
         {
-            var inStatement = string.Join(",", request.InstanceFieldValues.Select(v => $"'{v}'").ToArray());
+            var inStatement = GetInStatement(request.InstanceFieldValues);
+
             _logger.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.CurrentPropertyDate}");
 
             int deleted = 0;
             if (request.FullReloading)
             {
                 deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement})", commandTimeout: _timeout);
+                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: _timeout);
             }
             else
             {
                 deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName} WHERE {request.InstanceFieldName} IN ({inStatement}) AND {request.HistoryDateFromFieldName} = @CurrentPropertyDate",
+                    $"DELETE FROM {request.TableName} WHERE {request.HistoryDateFromFieldName} = @CurrentPropertyDate" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "AND"),
                     new
                     {
                         request.CurrentPropertyDate
@@ -174,6 +170,21 @@ namespace DataPumper.Sql
                 _connection.Execute(spQuery, commandTimeout: _timeout);
                 _logger.Info($"Stop execute stored procedure: '{spQuery}'");
             }
+        }
+
+        private static string GetInStatement(string[] instanceFieldValues)
+        {
+            return instanceFieldValues != null
+                ? string.Join(",", instanceFieldValues.Select(v => $"'{v}'").ToArray())
+                : string.Empty;
+        }
+
+        private static string GetQuerySuffix(string tenantField, string[] tenantCodes, string inStatement, string command)
+        {
+            var querySuffix = string.Empty;
+            if (tenantCodes != null && tenantCodes.Any() && tenantField != null)
+                querySuffix = $" {command} {tenantField} IN ({inStatement})";
+            return querySuffix;
         }
 
         public void Dispose()

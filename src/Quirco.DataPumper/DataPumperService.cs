@@ -24,6 +24,7 @@ namespace Quirco.DataPumper
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DataPumperConfiguration _configuration;
         private readonly SmtpSender _smtp;
+        private readonly string[] _tenantCodes;
 
         public EventHandler<ProgressEventArgs> Progress;
 
@@ -31,8 +32,12 @@ namespace Quirco.DataPumper
         {
             _pumper = dataPumper;
             _configuration = new DataPumperConfiguration();
-            _smtp = new SmtpSender();
-            
+            _smtp = new SmtpSender();            
+        }
+
+        public DataPumperService(NDataPumper.DataPumper dataPumper, string[] tenantCodes) : this(dataPumper)
+        {
+            _tenantCodes = tenantCodes;
         }
 
         public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
@@ -128,11 +133,12 @@ namespace Quirco.DataPumper
                         new TableName(job.TargetTableName),
                         _configuration.ActualityColumnName,
                         _configuration.HistoricColumnFrom,
-                        new TableName(_configuration.Properties), // Таблица, где хранятся объекты
+                        _configuration.TenantField,
                         onDate,
                         job.HistoricMode,
                         currentDate,
-                        fullReloading);
+                        fullReloading,
+                        _tenantCodes);
 
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;

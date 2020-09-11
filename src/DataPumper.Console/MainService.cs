@@ -69,13 +69,13 @@ namespace DataPumper.Console
                 Queues = new[] { "datapumper" }
             });
 
-            //BackgroundJob.Enqueue(()=> RunJobs());
+            BackgroundJob.Enqueue(()=> RunJobs());
 
-            var dpConfig = new DataPumperConfiguration();
-            foreach (var job in dpConfig.Jobs)
-            {
-                BackgroundJob.Enqueue(() => RunJob(job));
-            }
+            //var dpConfig = new DataPumperConfiguration();
+            //foreach (var job in dpConfig.Jobs)
+            //{
+            //    BackgroundJob.Enqueue(() => RunJob(job));
+            //}
 
         }
 
@@ -83,7 +83,7 @@ namespace DataPumper.Console
         [Queue("datapumper")]
         public async Task RunJob(PumperJobItem jobItem)
         {
-            var dataPumperService = _container.Resolve<DataPumperService>();
+            var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
@@ -98,7 +98,7 @@ namespace DataPumper.Console
         [Queue("datapumper")]
         public async Task RunJobs()
         {
-            var dataPumperService = _container.Resolve<DataPumperService>();
+            var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);

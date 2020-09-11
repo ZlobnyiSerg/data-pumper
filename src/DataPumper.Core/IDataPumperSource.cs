@@ -9,8 +9,6 @@ namespace DataPumper.Core
     {
         Task<DateTime?> GetCurrentDate(string query);
         
-        Task<string[]> GetInstances(TableName tableName, string fieldName);
-        
-        Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan);
+        Task<IDataReader> GetDataReader(TableName tableName, string fieldName, DateTime? notOlderThan, string tenantField, string[] tenantCodes);
     }
 }

@@ -18,35 +18,34 @@ namespace DataPumper.Core
             TableName targetTable,
             string actualityFieldName, 
             string historyDateFromFieldName,
-            TableName instanceTable, 
+            string tenantField, 
             DateTime onDate,
             bool historicMode, 
             DateTime currentDate,
-            bool fullReloading)
+            bool fullReloading, 
+            string[] tenantCodes)
         {
             try
             {
                 var sw = new Stopwatch();
                 sw.Start();
 
-                var instances = await source.GetInstances(instanceTable, "PropertyCode");
-
                 if (historicMode)
                 {
-                    _logger.Info($"Cleaning target table in history mode '{targetTable}' (historyDateFrom {currentDate}) for instances: {string.Join(",", instances)}...");
-                    await target.CleanupHistoryTable(new CleanupTableRequest(targetTable, historyDateFromFieldName, "PropertyCode", instances, currentDate, fullReloading));
+                    _logger.Info($"Cleaning target table in history mode '{targetTable}' (historyDateFrom {currentDate}) for instances: {string.Join(",", tenantCodes ?? new string[0])}...");
+                    await target.CleanupHistoryTable(new CleanupTableRequest(targetTable, historyDateFromFieldName, tenantField, tenantCodes, currentDate, fullReloading));
                     _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
                 else
                 {
-                    _logger.Info($"Cleaning target table '{targetTable}' (from date {onDate}) for instances: {string.Join(",", instances)}...");
-                    await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, "PropertyCode", instances, fullReloading));
+                    _logger.Info($"Cleaning target table '{targetTable}' (from date {onDate}) for instances: {string.Join(",", tenantCodes ?? new string[0])}...");
+                    await target.CleanupTable(new CleanupTableRequest(targetTable, actualityFieldName, onDate, tenantField, tenantCodes, fullReloading));
                     _logger.Info($"Cleaning '{targetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
 
-                using (var reader = await source.GetDataReader(sourceTable, actualityFieldName, onDate))
+                using (var reader = await source.GetDataReader(sourceTable, actualityFieldName, onDate, tenantField, tenantCodes))
                 {
                     var items = await target.InsertData(targetTable, reader);
                     _logger.Info($"Data transfer '{targetTable}' of {items} records completed in {sw.Elapsed}");

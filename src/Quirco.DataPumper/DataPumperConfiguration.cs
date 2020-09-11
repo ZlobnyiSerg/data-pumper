@@ -21,7 +21,7 @@ namespace Quirco.DataPumper
 
         public string ActualityColumnName => ConfigurationXml.Get<string>("Core:ActualityColumnName");
 
-        public string Properties => ConfigurationXml.Get<string>("Core:Properties");
+        public string TenantField => ConfigurationXml.Get<string>("Core:TenantField");
 
         public string HistoricColumnFrom => ConfigurationXml.Get<string>("Core:HistoricColumns:From");
 
@@ -49,9 +49,6 @@ namespace Quirco.DataPumper
 
         public DataPumperConfiguration()
         {
-            if (string.IsNullOrEmpty(Properties))
-                throw new ApplicationException($"Required set 'Properties' in data-pumper.config");
-
             if (string.IsNullOrEmpty(ActualityColumnName))
                 throw new ApplicationException($"Required set 'ActualityColumnName' in data-pumper.config");
 

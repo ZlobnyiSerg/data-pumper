@@ -20,5 +20,16 @@ namespace DataPumper.Console
         public string TargetConnectionString => ConfigurationXml.Get<string>("Core:TargetConnectionString");
 
         public string HangFireDashboardUrl => ConfigurationXml.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");
+
+        public string[] TenantCodes
+        {
+            get
+            {
+                string tenantCodes = ConfigurationXml.Get<string>("Core:TenantCodes");
+                if (string.IsNullOrEmpty(tenantCodes)) return null;
+
+                return tenantCodes.Split(',');
+            }
+        }
     }
 }
