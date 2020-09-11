@@ -59,6 +59,7 @@
     <Compile Include="DataLayer\JobLog.cs" />
     <Compile Include="DataLayer\TableSync.cs" />
     <Compile Include="DataPumperService.cs" />
+    <Compile Include="ILogsSender.cs" />
     <Compile Include="LogsExtractor.cs" />
     <Compile Include="Migrations\202007161322343_Init.cs" />
     <Compile Include="Migrations\202007161322343_Init.Designer.cs">
@@ -94,9 +95,9 @@
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>
-	<PackageReference Include="Dapper">
-		<Version>1.60.6</Version>
-	</PackageReference>
+    <PackageReference Include="Dapper">
+      <Version>1.60.6</Version>
+    </PackageReference>
     <PackageReference Include="Common.Logging">
       <Version>3.3.1</Version>
     </PackageReference>
