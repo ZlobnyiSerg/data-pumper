@@ -16,6 +16,8 @@ namespace DataPumper.Console
 {
     public class MainService
     {
+
+        public const string Queue = "datapumper";
         private static readonly ILog Log = LogManager.GetLogger(typeof(MainService));
 
         private BackgroundJobServer _jobServer;
@@ -59,28 +61,25 @@ namespace DataPumper.Console
             }
         }
 
-        public async void Start()
+        public void Start()
         {
             Init();
 
             _jobServer = new BackgroundJobServer(new BackgroundJobServerOptions
             {
                 WorkerCount = 5,
-                Queues = new[] { "datapumper" }
+                Queues = new[] { Queue }
             });
 
-            BackgroundJob.Enqueue(()=> RunJobs());
-
-            //var dpConfig = new DataPumperConfiguration();
-            //foreach (var job in dpConfig.Jobs)
-            //{
-            //    BackgroundJob.Enqueue(() => RunJob(job));
-            //}
-
+            if (!string.IsNullOrEmpty(_configuration.ScheduleCron))
+            {
+                RecurringJob.AddOrUpdate(()=>RunJobs(false), _configuration.ScheduleCron);
+                RecurringJob.AddOrUpdate(()=>RunJobs(true), Cron.Never);
+            }
         }
 
         [JobDisplayName("DataPumper run job {0}")]
-        [Queue("datapumper")]
+        [Queue(Queue)]
         public async Task RunJob(PumperJobItem jobItem)
         {
             var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
@@ -95,8 +94,8 @@ namespace DataPumper.Console
         }
 
         [JobDisplayName("DataPumper run all jobs...")]
-        [Queue("datapumper")]
-        public async Task RunJobs()
+        [Queue(Queue)]
+        public async Task RunJobs(bool fullReload)
         {
             var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
 
@@ -106,7 +105,7 @@ namespace DataPumper.Console
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
 
-            await dataPumperService.RunJobs(sourceProvider, targetProvider);
+            await dataPumperService.RunJobs(sourceProvider, targetProvider, fullReload);
         }
 
         public void Stop()

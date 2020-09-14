@@ -48,6 +48,7 @@
     <Compile Include="IDataPumperTarget.cs" />
     <Compile Include="ProgressEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PumpParameters.cs" />
     <Compile Include="TableDefinition.cs" />
     <Compile Include="TableRow.cs" />
   </ItemGroup>

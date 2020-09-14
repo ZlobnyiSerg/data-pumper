@@ -32,7 +32,7 @@ namespace Quirco.DataPumper
         {
             _pumper = dataPumper;
             _configuration = new DataPumperConfiguration();
-            LogsSender = new SmtpSender();            
+            LogsSender = new SmtpSender();
         }
 
         public DataPumperService(NDataPumper.DataPumper dataPumper, string[] tenantCodes) : this(dataPumper)
@@ -57,13 +57,14 @@ namespace Quirco.DataPumper
                 LogsSender.Send(logs.Where(l => l.Status == SyncStatus.Error)));
         }
 
-        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
+        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider,
+            bool fullReloading)
         {
             Log.Warn("Started job to sync all tables...");
 
             var jobLogs = new List<JobLog>();
 
-            foreach(var job in jobs)
+            foreach (var job in jobs)
             {
                 var jobLog = await RunJobInternal(job, sourceProvider, targetProvider, fullReloading);
                 jobLogs.Add(jobLog);
@@ -87,7 +88,7 @@ namespace Quirco.DataPumper
                     ctx.TableSyncs.Add(tableSync);
                 }
 
-                var jobLog = new JobLog { TableSync = tableSync };
+                var jobLog = new JobLog {TableSync = tableSync};
                 ctx.Logs.Add(jobLog);
 
                 await ctx.SaveChangesAsync();
@@ -129,16 +130,17 @@ namespace Quirco.DataPumper
                     }
 
                     var records = await _pumper.Pump(sourceProvider, targetProvider,
-                        new TableName(job.SourceTableName),
-                        new TableName(job.TargetTableName),
-                        _configuration.ActualityColumnName,
-                        _configuration.HistoricColumnFrom,
-                        _configuration.TenantField,
-                        onDate,
-                        job.HistoricMode,
-                        currentDate,
-                        fullReloading,
-                        _tenantCodes);
+                        new PumpParameters(
+                            new TableName(job.SourceTableName),
+                            new TableName(job.TargetTableName),
+                            _configuration.ActualityColumnName,
+                            _configuration.HistoricColumnFrom,
+                            _configuration.TenantField,
+                            onDate,
+                            job.HistoricMode,
+                            currentDate,
+                            fullReloading,
+                            _tenantCodes));
 
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;

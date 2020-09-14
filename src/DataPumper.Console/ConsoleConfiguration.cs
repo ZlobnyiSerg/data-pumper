@@ -20,6 +20,8 @@ namespace DataPumper.Console
         public string TargetConnectionString => ConfigurationXml.Get<string>("Core:TargetConnectionString");
 
         public string HangFireDashboardUrl => ConfigurationXml.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");
+        
+        public string ScheduleCron => ConfigurationXml.Get<string>("Core:ScheduleCron");
 
         public string[] TenantCodes
         {
