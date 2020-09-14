@@ -52,9 +52,7 @@ namespace Quirco.DataPumper
             var configuration = new DataPumperConfiguration();
             var jobs = configuration.Jobs;
             var logs = await ProcessInternal(jobs, sourceProvider, targetProvider, fullReloading);
-
-            BackgroundJob.Enqueue(() =>
-                LogsSender.Send(logs.Where(l => l.Status == SyncStatus.Error)));
+            LogsSender.Send(logs);
         }
 
         public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)

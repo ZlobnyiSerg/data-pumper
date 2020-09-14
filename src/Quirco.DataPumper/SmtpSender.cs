@@ -39,7 +39,7 @@ namespace Quirco.DataPumper
             message.Subject = "Job Errors";
             message.Body = @"<h2>Jobs Errors</h2>";
 
-            foreach (var jobLog in jobLogs)
+            foreach (var jobLog in jobLogs.Where(j => j.Status == SyncStatus.Error))
             {
                 message.Body += $@"
                 <p>
