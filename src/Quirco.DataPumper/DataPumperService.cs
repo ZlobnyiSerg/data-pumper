@@ -43,7 +43,8 @@ namespace Quirco.DataPumper
         public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
-            await RunJobInternal(jobItem, sourceProvider, targetProvider, fullReloading);
+            var log = await RunJobInternal(jobItem, sourceProvider, targetProvider, fullReloading);
+            LogsSender.Send(new[] { log });
         }
 
         public async Task RunJobs(IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
