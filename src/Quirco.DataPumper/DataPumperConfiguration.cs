@@ -27,15 +27,15 @@ namespace Quirco.DataPumper
 
         public string HistoricColumnTo => ConfigurationXml.Get<string>("Core:HistoricColumns:To");
 
-        public string EmailFrom => ConfigurationXml.Get<string>("SmtpSender:Sender:Email");
+        public string EmailFrom => ConfigurationXml.Get<string>("EmailNotifications:Sender:Email");
 
-        public string PasswordFrom => ConfigurationXml.Get<string>("SmtpSender:Sender:Password");
+        public string PasswordFrom => ConfigurationXml.Get<string>("EmailNotifications:Sender:Password");
 
-        public List<string> Targets => ConfigurationXml.GetList<string>("SmtpSender:Targets", ',');
+        public List<string> Targets => ConfigurationXml.GetList<string>("EmailNotifications:Recipients", ',');
 
-        public string ServerAdress => ConfigurationXml.Get<string>("SmtpSender:SmtpServer:Adress");
+        public string ServerAdress => ConfigurationXml.Get<string>("EmailNotifications:SmtpServer:Adress");
 
-        public int ServerPort => ConfigurationXml.Get<int>("SmtpSender:SmtpServer:Port");
+        public int ServerPort => ConfigurationXml.Get<int>("EmailNotifications:SmtpServer:Port");
 
         public PumperJobItem[] Jobs => ConfigurationXml.GetSection("Jobs").GetChildren().Select(c => new PumperJobItem 
         {
@@ -43,8 +43,8 @@ namespace Quirco.DataPumper
             SourceTableName = c.Get<string>("Source"),
             TargetTableName = c.Get<string>("Target"),
             HistoricMode = c.Get("HistoricMode", false),
-            PreRunStoreProcedureOnTarget = c.Get("TargetSP:SPQueryBefore", ""),
-            PostRunStoredProcedureOnTarget = c.Get("TargetSP:SPQueryAfter", "")
+            PreRunQuery = c.Get("Queries:PreRun", ""),
+            PostRunQuery = c.Get("Queries:PostRun", "")
         }).ToArray();
 
         public DataPumperConfiguration()
@@ -76,12 +76,12 @@ namespace Quirco.DataPumper
         /// <summary>
         /// Запрос на вызов хранимой процедуры до выполнения задания
         /// </summary>
-        public string PreRunStoreProcedureOnTarget { get; set; }
+        public string PreRunQuery { get; set; }
 
         /// <summary>
         /// Запрос на вызов хранимой процедуры после выполнения задания
         /// </summary>
-        public string PostRunStoredProcedureOnTarget { get; set; }
+        public string PostRunQuery { get; set; }
 
         public override string ToString()
         {

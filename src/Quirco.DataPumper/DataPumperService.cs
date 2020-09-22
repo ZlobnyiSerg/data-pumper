@@ -106,7 +106,7 @@ namespace Quirco.DataPumper
                         handler?.Invoke(sender, args);
                     };
 
-                    RunTargetSPBefore(job.PreRunStoreProcedureOnTarget, targetProvider);
+                    targetProvider.RunQuery(job.PreRunQuery);
 
                     if (fullReloading)
                     {
@@ -145,8 +145,7 @@ namespace Quirco.DataPumper
                     jobLog.EndDate = DateTime.Now;
                     jobLog.RecordsProcessed = records;
                     jobLog.Status = SyncStatus.Success;
-
-                    RunTargetSPAfter(job.PostRunStoredProcedureOnTarget, targetProvider);
+                    targetProvider.RunQuery(job.PostRunQuery);
                     sw.Stop();
                 }
                 catch (Exception ex)
@@ -160,16 +159,6 @@ namespace Quirco.DataPumper
 
                 return jobLog;
             }
-        }
-
-        private void RunTargetSPBefore(string targetSPQueryBefore, IDataPumperTarget targetProvider)
-        {
-            targetProvider.RunStoredProcedure(targetSPQueryBefore);
-        }
-
-        private void RunTargetSPAfter(string targetSPQueryAfter, IDataPumperTarget targetProvider)
-        {
-            targetProvider.RunStoredProcedure(targetSPQueryAfter);
         }
     }
 }

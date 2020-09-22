@@ -162,13 +162,15 @@ namespace DataPumper.Sql
             }
         }
 
-        public void RunStoredProcedure(string spQuery)
+        public void RunQuery(string queryText)
         {
-            if (!string.IsNullOrEmpty(spQuery))
+            if (!string.IsNullOrEmpty(queryText))
             {
-                _logger.Info($"Start execute stored procedure: '{spQuery}'");
-                _connection.Execute(spQuery, commandTimeout: _timeout);
-                _logger.Info($"Stop execute stored procedure: '{spQuery}'");
+                var sw = new Stopwatch();
+                sw.Start();
+                _logger.Info($"Running query: '{queryText}'");
+                _connection.Execute(queryText, commandTimeout: _timeout);
+                _logger.Info($"Query finished in {sw.Elapsed}");
             }
         }
 
