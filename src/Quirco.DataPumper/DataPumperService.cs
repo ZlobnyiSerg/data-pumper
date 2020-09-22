@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
+using Microsoft.Extensions.Configuration;
 using Quirco.DataPumper.DataModels;
 using NDataPumper = DataPumper.Core;
 
@@ -21,14 +22,14 @@ namespace Quirco.DataPumper
         public EventHandler<NDataPumper.ProgressEventArgs> Progress;
         public ILogsSender LogsSender { get; set; }
 
-        public DataPumperService(NDataPumper.DataPumper dataPumper)
+        public DataPumperService(DataPumperConfiguration configuration)
         {
-            _pumper = dataPumper;
-            _configuration = new DataPumperConfiguration();
-            LogsSender = new SmtpSender();
+            _pumper = new NDataPumper.DataPumper();
+            _configuration = configuration;
+            LogsSender = new SmtpSender(configuration);
         }
 
-        public DataPumperService(NDataPumper.DataPumper dataPumper, string[] tenantCodes) : this(dataPumper)
+        public DataPumperService(DataPumperConfiguration configuration, string[] tenantCodes) : this(configuration)
         {
             _tenantCodes = tenantCodes;
         }
@@ -42,9 +43,8 @@ namespace Quirco.DataPumper
 
         public async Task RunJobs(NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading = false)
         {
-            Log.Info("Performing synchronization for all jobs...");
-            var configuration = new DataPumperConfiguration();
-            var jobs = configuration.Jobs;
+            Log.Info("Running all jobs...");
+            var jobs = _configuration.Jobs;
             var logs = await ProcessInternal(jobs, sourceProvider, targetProvider, fullReloading);
             LogsSender.Send(logs.ToList());
         }
@@ -68,7 +68,7 @@ namespace Quirco.DataPumper
         private async Task<JobLog> RunJobInternal(PumperJobItem job, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn($"Processing {job.Name}");
-            using (var ctx = new DataPumperContext())
+            using (var ctx = new DataPumperContext(_configuration.ConnectionString))
             {
                 var tableSync = await ctx.TableSyncs.FirstOrDefaultAsync(ts => ts.TableName == job.TargetTableName);
                 if (tableSync == null)
@@ -153,5 +153,13 @@ namespace Quirco.DataPumper
                 return jobLog;
             }
         }
+
+        public Task<List<JobLog>> GetLogRecords(int skip, int take)
+        {
+            using (var ctx = new DataPumperContext(_configuration.ConnectionString))
+            {
+                return ctx.Logs.Skip(skip).Take(take).ToListAsync();
+            }
+        } 
     }
 }

@@ -14,9 +14,9 @@ namespace Quirco.DataPumper
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
         private readonly DataPumperConfiguration _configuration;
 
-        public SmtpSender()
+        public SmtpSender(DataPumperConfiguration configuration)
         {
-            _configuration = new DataPumperConfiguration();
+            _configuration = configuration;
         }
 
         public void Send(ICollection<JobLog> jobLogs)

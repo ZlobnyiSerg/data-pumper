@@ -7,57 +7,43 @@ namespace Quirco.DataPumper
 {
     public class DataPumperConfiguration
     {
-        public IConfigurationRoot ConfigurationXml => ConfigurationManager.Configuration ??
-            (ConfigurationManager.Configuration = new ConfigurationBuilder()
-                .AddXmlFile("data-pumper.config")
-                .AddXmlFile("data-pumper.local.config", true)
-                .Build());
+        private readonly IConfiguration _configuration;
+        
+        public string ConnectionString => ConfigurationManager.ConnectionString ?? _configuration.Get<string>("Core:ConnectionString");
 
-        public string ConnectionString => ConfigurationManager.ConnectionString ?? ConfigurationXml.Get<string>("Core:ConnectionString");
+        public string CurrentDateQuery => _configuration.Get<string>("Core:CurrentDateQuery");
 
-        public string CurrentDateQuery => ConfigurationXml.Get<string>("Core:CurrentDateQuery");
+        public string ActualityColumnName => _configuration.GetRequired<string>("Core:ActualityColumnName");
 
-        public string ActualityColumnName => ConfigurationXml.Get<string>("Core:ActualityColumnName");
+        public string TenantField => _configuration.Get<string>("Core:TenantField");
 
-        public string TenantField => ConfigurationXml.Get<string>("Core:TenantField");
+        public string HistoricColumnFrom => _configuration.Get<string>("Core:HistoricColumns:From");
 
-        public string HistoricColumnFrom => ConfigurationXml.Get<string>("Core:HistoricColumns:From");
+        public string HistoricColumnTo => _configuration.Get<string>("Core:HistoricColumns:To");
 
-        public string HistoricColumnTo => ConfigurationXml.Get<string>("Core:HistoricColumns:To");
+        public string EmailFrom => _configuration.Get<string>("EmailNotifications:Sender:Email");
 
-        public string EmailFrom => ConfigurationXml.Get<string>("EmailNotifications:Sender:Email");
+        public string PasswordFrom => _configuration.Get<string>("EmailNotifications:Sender:Password");
 
-        public string PasswordFrom => ConfigurationXml.Get<string>("EmailNotifications:Sender:Password");
+        public string Recipients => _configuration.Get<string>("EmailNotifications:Recipients", null);
 
-        public string Recipients => ConfigurationXml.Get<string>("EmailNotifications:Recipients", null);
+        public string ServerAdress => _configuration.Get<string>("EmailNotifications:SmtpServer:Adress");
 
-        public string ServerAdress => ConfigurationXml.Get<string>("EmailNotifications:SmtpServer:Adress");
+        public int ServerPort => _configuration.Get<int>("EmailNotifications:SmtpServer:Port");
 
-        public int ServerPort => ConfigurationXml.Get<int>("EmailNotifications:SmtpServer:Port");
-
-        public PumperJobItem[] Jobs => ConfigurationXml.GetSection("Jobs").GetChildren().Select(c => new PumperJobItem 
+        public PumperJobItem[] Jobs => _configuration.GetSection("Jobs").GetChildren().Select(c => new PumperJobItem
         {
             Name = c.Key,
             SourceTableName = c.Get<string>("Source"),
             TargetTableName = c.Get<string>("Target"),
             HistoricMode = c.Get("HistoricMode", false),
-            PreRunQuery = c.Get("Queries:PreRun", ""),
-            PostRunQuery = c.Get("Queries:PostRun", "")
+            PreRunQuery = c.Get<string>("Queries:PreRun"),
+            PostRunQuery = c.Get<string>("Queries:PostRun")
         }).ToArray();
 
-        public DataPumperConfiguration()
+        public DataPumperConfiguration(IConfiguration configuration)
         {
-            if (string.IsNullOrEmpty(ActualityColumnName))
-                throw new ApplicationException($"Required set 'ActualityColumnName' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(HistoricColumnFrom))
-                throw new ApplicationException($"Required set 'HistoricColumns.From' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(HistoricColumnTo))
-                throw new ApplicationException($"Required set 'HistoricColumns.To' in data-pumper.config");
-
-            if (string.IsNullOrEmpty(CurrentDateQuery))
-                throw new ApplicationException($"Required set 'CurrentDateQuery' in data-pumper.config");
+            _configuration = configuration;
         }
     }
 

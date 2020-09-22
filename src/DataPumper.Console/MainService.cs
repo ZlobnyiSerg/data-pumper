@@ -4,6 +4,7 @@ using Common.Logging;
 using DataPumper.Sql;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Owin.Hosting;
 using Microsoft.Practices.Unity;
 using Newtonsoft.Json;
@@ -13,14 +14,25 @@ namespace DataPumper.Console
 {
     public class MainService : IDisposable
     {
-
         public const string Queue = "datapumper";
         private static readonly ILog Log = LogManager.GetLogger(typeof(MainService));
 
         private BackgroundJobServer _jobServer;
         private IDisposable _hangfireDashboard;
         private static IUnityContainer _container;
-        private static ConsoleConfiguration _configuration = new ConsoleConfiguration();
+        private ConsoleConfiguration _configuration;
+        private IConfigurationRoot _configSource;
+
+        public MainService()
+        {
+            _configSource = ConfigurationManager.Configuration ??
+                             (ConfigurationManager.Configuration = new ConfigurationBuilder()
+                                 .AddXmlFile("data-pumper.config")
+                                 .AddXmlFile("data-pumper.local.config", true)
+                                 .Build());
+            _configuration = new ConsoleConfiguration(_configSource);
+        }
+
 
         private void Init()
         {
@@ -33,7 +45,7 @@ namespace DataPumper.Console
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
             {
                 Attempts = 4,
-                DelaysInSeconds = new[] { 1, 5, 60, 300 }
+                DelaysInSeconds = new[] {1, 5, 60, 300}
             });
             GlobalConfiguration.Configuration.UseSerializerSettings(new JsonSerializerSettings
             {
@@ -64,14 +76,14 @@ namespace DataPumper.Console
 
             _jobServer = new BackgroundJobServer(new BackgroundJobServerOptions
             {
-                WorkerCount = 5,
-                Queues = new[] { Queue }
+                WorkerCount = 1,
+                Queues = new[] {Queue}
             });
 
             if (!string.IsNullOrEmpty(_configuration.ScheduleCron))
             {
-                RecurringJob.AddOrUpdate(()=>RunJobs(false), _configuration.ScheduleCron);
-                RecurringJob.AddOrUpdate(()=>RunJobs(true), Cron.Never);
+                RecurringJob.AddOrUpdate(() => RunJobs(false), _configuration.ScheduleCron);
+                RecurringJob.AddOrUpdate(() => RunJobs(true), Cron.Never);
             }
         }
 
@@ -79,7 +91,7 @@ namespace DataPumper.Console
         [Queue(Queue)]
         public async Task RunJob(PumperJobItem jobItem)
         {
-            var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
+            var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
@@ -94,10 +106,10 @@ namespace DataPumper.Console
         [Queue(Queue)]
         public async Task RunJobs(bool fullReload)
         {
-            var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
+            var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.SourceConnectionString);            
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
@@ -111,13 +123,15 @@ namespace DataPumper.Console
         }
 
         public void Dispose()
-        {            
+        {
             Dispose(true);
             GC.SuppressFinalize(this);
         }
 
 
         private bool _disposed;
+        
+
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
@@ -127,6 +141,7 @@ namespace DataPumper.Console
                     _jobServer?.Dispose();
                     _hangfireDashboard?.Dispose();
                 }
+
                 _disposed = true;
             }
         }

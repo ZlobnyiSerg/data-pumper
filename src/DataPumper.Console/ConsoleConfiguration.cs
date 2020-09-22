@@ -4,25 +4,26 @@ namespace DataPumper.Console
 {
     public class ConsoleConfiguration
     {
-        public IConfigurationRoot ConfigurationXml => ConfigurationManager.Configuration ??
-            (ConfigurationManager.Configuration = new ConfigurationBuilder()
-                .AddXmlFile("console.config")
-                .AddXmlFile("console.local.config", true)
-                .Build());
+        private readonly IConfiguration _configuration;
 
-        public string SourceConnectionString => ConfigurationXml.Get<string>("Core:SourceConnectionString");
+        public ConsoleConfiguration(IConfiguration configuration)
+        {
+            _configuration = configuration;
+        }
 
-        public string TargetConnectionString => ConfigurationXml.Get<string>("Core:TargetConnectionString");
+        public string SourceConnectionString => _configuration.Get<string>("Core:SourceConnectionString");
 
-        public string HangFireDashboardUrl => ConfigurationXml.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");
+        public string TargetConnectionString => _configuration.Get<string>("Core:TargetConnectionString");
+
+        public string HangFireDashboardUrl => _configuration.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");
         
-        public string ScheduleCron => ConfigurationXml.Get<string>("Core:ScheduleCron");
+        public string ScheduleCron => _configuration.Get<string>("Core:ScheduleCron");
 
         public string[] TenantCodes
         {
             get
             {
-                var tenantCodes = ConfigurationXml.Get<string>("Core:TenantCodes");
+                var tenantCodes = _configuration.Get<string>("Core:TenantCodes");
                 if (string.IsNullOrEmpty(tenantCodes)) return null;
 
                 return tenantCodes.Split(',');
