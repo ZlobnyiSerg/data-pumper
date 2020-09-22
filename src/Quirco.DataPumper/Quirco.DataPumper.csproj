@@ -72,9 +72,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
-    <None Include="data-pumper.config">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-    </None>
+    <None Include="data-pumper-example.config" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\DataPumper.Core\DataPumper.Core.csproj">

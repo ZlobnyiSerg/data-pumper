@@ -1,14 +1,17 @@
 ﻿using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
 using DataPumper.Sql;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Hangfire.SqlServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Owin.Hosting;
 using Microsoft.Practices.Unity;
 using Newtonsoft.Json;
 using Quirco.DataPumper;
+using Quirco.DataPumper.DataModels;
 
 namespace DataPumper.Console
 {
@@ -25,14 +28,18 @@ namespace DataPumper.Console
 
         public MainService()
         {
-            _configSource = ConfigurationManager.Configuration ??
-                             (ConfigurationManager.Configuration = new ConfigurationBuilder()
-                                 .AddXmlFile("data-pumper.config")
-                                 .AddXmlFile("data-pumper.local.config", true)
-                                 .Build());
+            _configSource = new ConfigurationBuilder()
+                .AddXmlFile("data-pumper.config")
+                .AddXmlFile("data-pumper.local.config", true)
+                .Build();
             _configuration = new ConsoleConfiguration(_configSource);
-        }
+            ConfigurationManager.Configuration = _configSource;
 
+            using (var ctx = new DataPumperContext(_configuration.ConnectionString))
+            {
+                ctx.TableSyncs.ToList();
+            }
+        }
 
         private void Init()
         {
@@ -41,11 +48,11 @@ namespace DataPumper.Console
             Bootstrapper.Initialize(_container);
 
             JobActivator.Current = new UnityJobActivator(_container);
-            JobStorage.Current = new MemoryStorage();
+            JobStorage.Current = new SqlServerStorage(_configuration.ConnectionString);
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
             {
-                Attempts = 4,
-                DelaysInSeconds = new[] {1, 5, 60, 300}
+                Attempts = 3,
+                DelaysInSeconds = new[] {1, 10, 60}
             });
             GlobalConfiguration.Configuration.UseSerializerSettings(new JsonSerializerSettings
             {
@@ -87,14 +94,14 @@ namespace DataPumper.Console
             }
         }
 
-        [JobDisplayName("DataPumper run job {0}")]
+        [JobDisplayName("Run single job: {0}")]
         [Queue(Queue)]
         public async Task RunJob(PumperJobItem jobItem)
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.SourceConnectionString);
+            await sourceProvider.Initialize(_configuration.ConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
@@ -102,14 +109,14 @@ namespace DataPumper.Console
             await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider);
         }
 
-        [JobDisplayName("DataPumper run all jobs...")]
+        [JobDisplayName("Run all jobs")]
         [Queue(Queue)]
         public async Task RunJobs(bool fullReload)
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.SourceConnectionString);
+            await sourceProvider.Initialize(_configuration.ConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
@@ -130,7 +137,7 @@ namespace DataPumper.Console
 
 
         private bool _disposed;
-        
+
 
         protected virtual void Dispose(bool disposing)
         {

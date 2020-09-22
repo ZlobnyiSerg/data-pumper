@@ -5,21 +5,6 @@ using Microsoft.Extensions.Configuration;
 
 namespace DataPumper.Console
 {
-    public static class ConfigurationManager
-    {
-        public static T GetRequired<T>(string key)
-        {
-            return Configuration.GetRequired<T>(key);
-        }
-
-        public static T Get<T>(string key, T defaultValue = default(T))
-        {
-            return Configuration.Get(key, defaultValue);
-        }
-
-        public static IConfigurationRoot Configuration { get; set; }
-    }
-
     public static class ConfigurationMixin
     {
         public static string Get(this IConfiguration config, string key, string defaultValue = null)

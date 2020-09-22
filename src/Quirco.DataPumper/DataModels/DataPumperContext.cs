@@ -8,7 +8,11 @@ namespace Quirco.DataPumper.DataModels
         public DbSet<TableSync> TableSyncs { get; set; }
 
         public DbSet<JobLog> Logs { get; set; }
-        
+
+        public DataPumperContext() : this(ConfigurationManager.Configuration.Get("Core:ConnectionString"))
+        {
+        }
+
         public DataPumperContext(string connectionString) : base(connectionString)
         {
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataPumperContext, Configuration>());

@@ -82,7 +82,6 @@ namespace Quirco.DataPumper
 
                 var jobLog = new JobLog {TableSync = tableSync};
                 ctx.Logs.Add(jobLog);
-
                 await ctx.SaveChangesAsync();
 
                 try
@@ -92,11 +91,14 @@ namespace Quirco.DataPumper
 
                     targetProvider.Progress += (sender, args) =>
                     {
-                        jobLog.RecordsProcessed = args.Processed;
-                        ctx.SaveChanges();
-
-                        var handler = Progress;
-                        handler?.Invoke(sender, args);
+                        using (var logContext = new DataPumperContext(_configuration.ConnectionString))
+                        {
+                            var logRecord = logContext.Logs.FirstOrDefault(l => l.Id == jobLog.Id);
+                            logRecord.RecordsProcessed = args.Processed;
+                            logContext.SaveChanges();
+                            var handler = Progress;
+                            handler?.Invoke(sender, args);
+                        }
                     };
 
                     await targetProvider.RunQuery(job.PreRunQuery);

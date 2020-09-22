@@ -8,8 +8,11 @@ namespace Quirco.DataPumper
     public class DataPumperConfiguration
     {
         private readonly IConfiguration _configuration;
+
+        private string _overridenConnectionString;
         
-        public string ConnectionString => ConfigurationManager.ConnectionString ?? _configuration.Get<string>("Core:ConnectionString");
+        public string ConnectionString => _overridenConnectionString ?? _configuration.GetRequired<string>("Core:ConnectionString");
+
 
         public string CurrentDateQuery => _configuration.Get<string>("Core:CurrentDateQuery");
 
@@ -41,9 +44,10 @@ namespace Quirco.DataPumper
             PostRunQuery = c.Get<string>("Queries:PostRun")
         }).ToArray();
 
-        public DataPumperConfiguration(IConfiguration configuration)
+        public DataPumperConfiguration(IConfiguration configuration, string connectionString = null)
         {
             _configuration = configuration;
+            _overridenConnectionString = connectionString;
         }
     }
 

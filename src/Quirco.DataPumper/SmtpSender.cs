@@ -21,7 +21,8 @@ namespace Quirco.DataPumper
 
         public void Send(ICollection<JobLog> jobLogs)
         {
-            if (jobLogs.Count == 0) return;
+            if (jobLogs.Count == 0 || string.IsNullOrEmpty(_configuration.Recipients)) 
+                return;
 
             var smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort)
             {

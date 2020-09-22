@@ -5,26 +5,10 @@ using Microsoft.Extensions.Configuration;
 
 namespace Quirco.DataPumper
 {
-    /// <summary>
-    /// Менеджер конфигурации
-    /// </summary>
-    public static class ConfigurationManager
-    {
-        public static T GetRequired<T>(string key)
-        {
-            return Configuration.GetRequired<T>(key);
-        }
-
-        public static T Get<T>(string key, T defaultValue = default(T))
-        {
-            return Configuration.Get(key, defaultValue);
-        }
-
-        public static IConfigurationRoot Configuration { get; set; }
-
-        public static string ConnectionString { get; set; }
+    public static class ConfigurationManager {
+        public static IConfiguration Configuration { get; set; }
     }
-
+    
     public static class ConfigurationMixin
     {
         public static string Get(this IConfiguration config, string key, string defaultValue = null)

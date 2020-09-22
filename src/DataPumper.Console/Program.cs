@@ -1,5 +1,6 @@
 ﻿using System;
 using Common.Logging;
+using Quirco.DataPumper.DataModels;
 using Topshelf;
 
 namespace DataPumper.Console
@@ -13,7 +14,6 @@ namespace DataPumper.Console
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 
             Log.Info("Data Pumper is running...");
-
             HostFactory.Run(x =>
             {
                 x.Service<MainService>(
