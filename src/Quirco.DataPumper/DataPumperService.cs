@@ -1,18 +1,11 @@
-﻿using Common.Logging;
-using Common.Logging.Configuration;
-using DataPumper.Core;
-using Hangfire;
-using Microsoft.Practices.Unity;
-using Newtonsoft.Json;
-using Quirco.DataPumper.DataLayer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Diagnostics;
-using System.IO;
 using System.Linq;
-using System.Threading;
 using System.Threading.Tasks;
+using Common.Logging;
+using Quirco.DataPumper.DataModels;
 using NDataPumper = DataPumper.Core;
 
 namespace Quirco.DataPumper
@@ -25,7 +18,7 @@ namespace Quirco.DataPumper
         private readonly DataPumperConfiguration _configuration;
         private readonly string[] _tenantCodes;
 
-        public EventHandler<ProgressEventArgs> Progress;
+        public EventHandler<NDataPumper.ProgressEventArgs> Progress;
         public ILogsSender LogsSender { get; set; }
 
         public DataPumperService(NDataPumper.DataPumper dataPumper)
@@ -40,23 +33,23 @@ namespace Quirco.DataPumper
             _tenantCodes = tenantCodes;
         }
 
-        public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
+        public async Task RunJob(PumperJobItem jobItem, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
             var log = await RunJobInternal(jobItem, sourceProvider, targetProvider, fullReloading);
             LogsSender.Send(new[] { log });
         }
 
-        public async Task RunJobs(IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
+        public async Task RunJobs(NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info("Performing synchronization for all jobs...");
             var configuration = new DataPumperConfiguration();
             var jobs = configuration.Jobs;
             var logs = await ProcessInternal(jobs, sourceProvider, targetProvider, fullReloading);
-            LogsSender.Send(logs);
+            LogsSender.Send(logs.ToList());
         }
 
-        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider,
+        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider,
             bool fullReloading)
         {
             Log.Warn("Started job to sync all tables...");
@@ -72,7 +65,7 @@ namespace Quirco.DataPumper
             return jobLogs;
         }
 
-        private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
+        private async Task<JobLog> RunJobInternal(PumperJobItem job, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn($"Processing {job.Name}");
             using (var ctx = new DataPumperContext())
@@ -106,7 +99,7 @@ namespace Quirco.DataPumper
                         handler?.Invoke(sender, args);
                     };
 
-                    targetProvider.RunQuery(job.PreRunQuery);
+                    await targetProvider.RunQuery(job.PreRunQuery);
 
                     if (fullReloading)
                     {
@@ -129,9 +122,9 @@ namespace Quirco.DataPumper
                     }
 
                     var records = await _pumper.Pump(sourceProvider, targetProvider,
-                        new PumpParameters(
-                            new TableName(job.SourceTableName),
-                            new TableName(job.TargetTableName),
+                        new NDataPumper.PumpParameters(
+                            new NDataPumper.TableName(job.SourceTableName),
+                            new NDataPumper.TableName(job.TargetTableName),
                             _configuration.ActualityColumnName,
                             _configuration.HistoricColumnFrom,
                             _configuration.TenantField,
@@ -145,7 +138,7 @@ namespace Quirco.DataPumper
                     jobLog.EndDate = DateTime.Now;
                     jobLog.RecordsProcessed = records;
                     jobLog.Status = SyncStatus.Success;
-                    targetProvider.RunQuery(job.PostRunQuery);
+                    await targetProvider.RunQuery(job.PostRunQuery);
                     sw.Stop();
                 }
                 catch (Exception ex)

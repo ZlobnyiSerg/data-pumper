@@ -1,9 +1,4 @@
 ﻿using Microsoft.Extensions.Configuration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataPumper.Console
 {
@@ -27,7 +22,7 @@ namespace DataPumper.Console
         {
             get
             {
-                string tenantCodes = ConfigurationXml.Get<string>("Core:TenantCodes");
+                var tenantCodes = ConfigurationXml.Get<string>("Core:TenantCodes");
                 if (string.IsNullOrEmpty(tenantCodes)) return null;
 
                 return tenantCodes.Split(',');

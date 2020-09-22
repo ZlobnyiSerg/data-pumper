@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
@@ -13,7 +12,7 @@ namespace DataPumper.Core
 
         Task<long> InsertData(TableName tableName, IDataReader dataReader);
 
-        void RunQuery(string queryText);
+        Task RunQuery(string queryText);
 
         event EventHandler<ProgressEventArgs> Progress;
     }

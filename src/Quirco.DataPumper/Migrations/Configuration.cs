@@ -1,18 +1,17 @@
-using System;
-using System.Data.Entity;
+
 using System.Data.Entity.Migrations;
-using System.Linq;
+using Quirco.DataPumper.DataModels;
 
 namespace Quirco.DataPumper.Migrations
 {
-    internal sealed class Configuration : DbMigrationsConfiguration<DataLayer.DataPumperContext>
+    internal sealed class Configuration : DbMigrationsConfiguration<DataPumperContext>
     {
         public Configuration()
         {
             AutomaticMigrationsEnabled = true;
         }
 
-        protected override void Seed(DataLayer.DataPumperContext context)
+        protected override void Seed(DataPumperContext context)
         {
             //  This method will be called after migrating to the latest version.
 

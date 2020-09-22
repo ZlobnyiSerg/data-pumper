@@ -1,13 +1,7 @@
-﻿using Common.Logging;
+﻿using System.Data.Entity;
 using Quirco.DataPumper.Migrations;
-using System;
-using System.Collections.Generic;
-using System.Data.Entity;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
-namespace Quirco.DataPumper.DataLayer
+namespace Quirco.DataPumper.DataModels
 {
     public class DataPumperContext : DbContext
     {

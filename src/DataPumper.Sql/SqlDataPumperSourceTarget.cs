@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
-using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
@@ -14,16 +13,12 @@ namespace DataPumper.Sql
 {
     public class SqlDataPumperSourceTarget : IDataPumperSource, IDataPumperTarget, IDisposable
     {
-        private static readonly ILog _logger = LogManager.GetLogger(typeof(SqlDataPumperSourceTarget));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(SqlDataPumperSourceTarget));
 
         private SqlConnection _connection;
-        private int _timeout = 60 * 60 * 3; // 3 hours
+        private const int Timeout = 60 * 60 * 3; // 3 hours
 
-        public SqlDataPumperSourceTarget()
-        {
-        }
-
-        public const string Name = "Microsoft SQL Server";
+        private const string Name = "Microsoft SQL Server";
 
         public event EventHandler<ProgressEventArgs> Progress;
 
@@ -34,23 +29,22 @@ namespace DataPumper.Sql
 
         public async Task Initialize(string connectionString)
         {
-            if (_connection != null)
-                _connection.Dispose();
+            _connection?.Dispose();
             _connection = new SqlConnection(connectionString);
             await _connection.OpenAsync();
         }
 
         public Task<DateTime?> GetCurrentDate(string query)
         {
-            return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: _timeout);
+            return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: Timeout);
         }
 
         public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string tenantField, string[] tenantCodes)
         {
             var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", null));
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ..."));
 
-            string inStatement = GetInStatement(tenantCodes);
+            var inStatement = GetInStatement(tenantCodes);
 
             if (notOlderThan != null)
             {
@@ -59,23 +53,23 @@ namespace DataPumper.Sql
                     new
                     {
                         NotOlderThan = notOlderThan
-                    }, commandTimeout: _timeout);
+                    }, commandTimeout: Timeout);
             }
 
             return await _connection.ExecuteReaderAsync(
-                $"SELECT * FROM {tableName}" + GetQuerySuffix(tenantField, tenantCodes, inStatement, "WHERE"), commandTimeout: _timeout);
+                $"SELECT * FROM {tableName}" + GetQuerySuffix(tenantField, tenantCodes, inStatement, "WHERE"), commandTimeout: Timeout);
         }
 
         public async Task CleanupTable(CleanupTableRequest request)
         {
-            string inStatement = GetInStatement(request.InstanceFieldValues);
+            var inStatement = GetInStatement(request.InstanceFieldValues);
 
-            _logger.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
+            Log.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
             int deleted;
             if (request.NotOlderThan == null || request.FullReloading)
             {
                 deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: _timeout);
+                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: Timeout);
             }
             else
             {
@@ -84,22 +78,22 @@ namespace DataPumper.Sql
                     new
                     {
                         NotOlderThan = request.NotOlderThan.Value
-                    }, commandTimeout: _timeout);
+                    }, commandTimeout: Timeout);
             }
-            _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
+            Log.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 
         public async Task CleanupHistoryTable(CleanupTableRequest request)
         {
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
-            _logger.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.CurrentPropertyDate}");
+            Log.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.CurrentPropertyDate}");
 
-            int deleted = 0;
+            var deleted = 0;
             if (request.FullReloading)
             {
                 deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: _timeout);
+                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: Timeout);
             }
             else
             {
@@ -108,9 +102,9 @@ namespace DataPumper.Sql
                     new
                     {
                         request.CurrentPropertyDate
-                    }, commandTimeout: _timeout);
+                    }, commandTimeout: Timeout);
             }
-            _logger.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
+            Log.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 
         public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
@@ -123,12 +117,12 @@ namespace DataPumper.Sql
             using (var bulkCopy = new SqlBulkCopy(_connection)
             {
                 BatchSize = 1000000,
-                BulkCopyTimeout = _timeout,
+                BulkCopyTimeout = Timeout,
                 NotifyAfter = 10000,
                 DestinationTableName = tableName.ToString()
             })
             {
-                for (int i = 0; i < dataReader.FieldCount; i++)
+                for (var i = 0; i < dataReader.FieldCount; i++)
                 {
                     var column = dataReader.GetName(i);
                     bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
@@ -136,7 +130,7 @@ namespace DataPumper.Sql
 
                 bulkCopy.SqlRowsCopied += (sender, args) =>
                 {
-                    _logger.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
+                    Log.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
                     var handler = Progress;
                     handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", sw.Elapsed));
                 };
@@ -151,26 +145,26 @@ namespace DataPumper.Sql
 
         private async Task CheckTablesCompatibility(TableName tableName, IDataReader dataReader)
         {
-            using (var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: _timeout))
+            using (var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: Timeout))
             {
                 var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
                 var targetFields = new HashSet<string>(Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
 
                 var nonMatchingFields = sourceFields.Where(sf => !targetFields.Contains(sf)).ToList();
                 if (nonMatchingFields.Any())
-                    throw new ApplicationException($"Source table contains fields that not present in target table: " + string.Join(",", nonMatchingFields));
+                    throw new ApplicationException($"Source table contains fields that not present in target table: {string.Join(",", nonMatchingFields)}");
             }
         }
 
-        public void RunQuery(string queryText)
+        public async Task RunQuery(string queryText)
         {
             if (!string.IsNullOrEmpty(queryText))
             {
                 var sw = new Stopwatch();
                 sw.Start();
-                _logger.Info($"Running query: '{queryText}'");
-                _connection.Execute(queryText, commandTimeout: _timeout);
-                _logger.Info($"Query finished in {sw.Elapsed}");
+                Log.Info($"Running query: '{queryText}'");
+                await _connection.ExecuteAsync(queryText, commandTimeout: Timeout);
+                Log.Info($"Query finished in {sw.Elapsed}");
             }
         }
 
@@ -191,7 +185,20 @@ namespace DataPumper.Sql
 
         public void Dispose()
         {
-            _connection?.Dispose();
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+
+        private bool _disposed;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (_disposed) return;
+            if (disposing)
+            {
+                _connection?.Dispose();                    
+            }
+            _disposed = true;
         }
     }
 }

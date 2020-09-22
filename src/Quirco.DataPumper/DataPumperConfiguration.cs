@@ -2,8 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Security;
-using System.Text;
 
 namespace Quirco.DataPumper
 {
@@ -31,7 +29,7 @@ namespace Quirco.DataPumper
 
         public string PasswordFrom => ConfigurationXml.Get<string>("EmailNotifications:Sender:Password");
 
-        public List<string> Targets => ConfigurationXml.GetList<string>("EmailNotifications:Recipients", ',');
+        public string Recipients => ConfigurationXml.Get<string>("EmailNotifications:Recipients", null);
 
         public string ServerAdress => ConfigurationXml.Get<string>("EmailNotifications:SmtpServer:Adress");
 

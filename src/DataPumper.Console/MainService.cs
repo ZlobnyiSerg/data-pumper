@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Common.Logging;
 using DataPumper.Sql;
@@ -14,7 +11,7 @@ using Quirco.DataPumper;
 
 namespace DataPumper.Console
 {
-    public class MainService
+    public class MainService : IDisposable
     {
 
         public const string Queue = "datapumper";
@@ -100,7 +97,7 @@ namespace DataPumper.Console
             var dataPumperService = new DataPumperService(new Core.DataPumper(), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.SourceConnectionString);
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);            
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
@@ -111,6 +108,32 @@ namespace DataPumper.Console
         public void Stop()
         {
             _jobServer?.Dispose();
+        }
+
+        public void Dispose()
+        {            
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+
+        private bool _disposed;
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    _jobServer?.Dispose();
+                    _hangfireDashboard?.Dispose();
+                }
+                _disposed = true;
+            }
+        }
+
+        ~MainService()
+        {
+            Dispose(false);
         }
     }
 }

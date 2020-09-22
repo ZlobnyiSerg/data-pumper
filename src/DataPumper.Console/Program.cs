@@ -1,29 +1,18 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Common.Logging;
-using DataPumper.Sql;
-using Hangfire;
-using Hangfire.MemoryStorage;
-using Microsoft.Owin.Hosting;
-using Microsoft.Practices.Unity;
-using Newtonsoft.Json;
-using Quirco.DataPumper;
 using Topshelf;
 
 namespace DataPumper.Console
 {
-    class Program
+    internal class Program
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(Program)); 
 
-        static void Main(string[] args)
+        public static void Main(string[] args)
         {
             AppDomain.CurrentDomain.UnhandledException += UnhandledException;
 
-            Log.Info($"Data Pumper is running...");
+            Log.Info("Data Pumper is running...");
 
             HostFactory.Run(x =>
             {
@@ -39,8 +28,7 @@ namespace DataPumper.Console
 
         private static void UnhandledException(object sender, UnhandledExceptionEventArgs e)
         {
-            var exception = e.ExceptionObject as Exception;
-            if (exception != null)
+            if (e.ExceptionObject is Exception exception)
                 Log.Fatal("Unhandled exception in service", exception);
             else
                 Log.Fatal("Unhandled error of unknown type: " + e.ExceptionObject);

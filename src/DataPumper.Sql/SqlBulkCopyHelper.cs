@@ -1,10 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SqlClient;
-using System.Linq;
+﻿using System.Data.SqlClient;
 using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace DataPumper.Sql
 {
@@ -13,7 +8,7 @@ namespace DataPumper.Sql
     /// </summary>
     public static class SqlBulkCopyHelper
     {
-        static FieldInfo rowsCopiedField = null;
+        private static FieldInfo _rowsCopiedField;
 
         /// <summary>
         /// Gets the rows copied from the specified SqlBulkCopy object
@@ -22,12 +17,12 @@ namespace DataPumper.Sql
         /// <returns></returns>
         public static int GetRowsCopied(this SqlBulkCopy bulkCopy)
         {
-            if (rowsCopiedField == null)
+            if (_rowsCopiedField == null)
             {
-                rowsCopiedField = typeof(SqlBulkCopy).GetField("_rowsCopied", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
+                _rowsCopiedField = typeof(SqlBulkCopy).GetField("_rowsCopied", BindingFlags.NonPublic | BindingFlags.GetField | BindingFlags.Instance);
             }
 
-            return (int)rowsCopiedField.GetValue(bulkCopy);
+            return (int)_rowsCopiedField.GetValue(bulkCopy);
         }
     }
 }

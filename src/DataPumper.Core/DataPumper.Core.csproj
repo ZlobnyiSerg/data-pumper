@@ -21,6 +21,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -42,7 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataPumper.cs" />
-    <Compile Include="FieldDefinition.cs" />
     <Compile Include="IDataPumperProvider.cs" />
     <Compile Include="IDataPumperSource.cs" />
     <Compile Include="IDataPumperTarget.cs" />
@@ -50,7 +51,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PumpParameters.cs" />
     <Compile Include="TableDefinition.cs" />
-    <Compile Include="TableRow.cs" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Common.Logging">

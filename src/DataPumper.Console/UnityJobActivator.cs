@@ -6,44 +6,41 @@ namespace DataPumper.Console
 {
     internal class UnityJobActivator : JobActivator
     {
-        private IUnityContainer container;
+        private readonly IUnityContainer _container;
 
         public UnityJobActivator(IUnityContainer container)
         {
-            if (container == null)
-                throw new ArgumentNullException("container");
-
-            this.container = container;
+            _container = container ?? throw new ArgumentNullException(nameof(container));
         }
 
         /// <inheritdoc />
         public override object ActivateJob(Type jobType)
         {
-            return this.container.Resolve(jobType);
+            return _container.Resolve(jobType);
         }
 
         public override JobActivatorScope BeginScope(JobActivatorContext context)
         {
-            return new UnityScope(container.CreateChildContainer());
+            return new UnityScope(_container.CreateChildContainer());
         }
 
-        class UnityScope : JobActivatorScope
+        private class UnityScope : JobActivatorScope
         {
-            private readonly IUnityContainer container;
+            private readonly IUnityContainer _container;
 
             public UnityScope(IUnityContainer container)
             {
-                this.container = container;
+                _container = container;
             }
 
             public override object Resolve(Type type)
             {
-                return container.Resolve(type);
+                return _container.Resolve(type);
             }
 
             public override void DisposeScope()
             {
-                container.Dispose();
+                _container.Dispose();
             }
         }
     }

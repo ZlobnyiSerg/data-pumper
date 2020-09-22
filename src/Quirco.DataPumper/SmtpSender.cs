@@ -1,17 +1,15 @@
-﻿using Common.Logging;
-using Microsoft.Practices.Unity;
-using Quirco.DataPumper.DataLayer;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Mail;
 using System.Text;
-using System.Threading.Tasks;
+using Common.Logging;
+using Quirco.DataPumper.DataModels;
 
 namespace Quirco.DataPumper
 {
-    class SmtpSender : ILogsSender
+    internal class SmtpSender : ILogsSender
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
         private readonly DataPumperConfiguration _configuration;
@@ -21,56 +19,49 @@ namespace Quirco.DataPumper
             _configuration = new DataPumperConfiguration();
         }
 
-        public void Send(IEnumerable<JobLog> jobLogs)
+        public void Send(ICollection<JobLog> jobLogs)
         {
-            if (jobLogs.Count() == 0) return;
-            
-            SmtpClient smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort);
-            smtp.Credentials = new NetworkCredential(_configuration.EmailFrom, _configuration.PasswordFrom);
-            smtp.EnableSsl = true;
+            if (jobLogs.Count == 0) return;
 
-            MailMessage message = new MailMessage(_configuration.EmailFrom, _configuration.Targets.First());
-            foreach (var target in _configuration.Targets)
+            var smtp = new SmtpClient(_configuration.ServerAdress, _configuration.ServerPort)
             {
-                if (target != _configuration.Targets.First()) message.CC.Add(target);
-            }
+                Credentials = new NetworkCredential(_configuration.EmailFrom, _configuration.PasswordFrom),
+                EnableSsl = true
+            };
 
-            message.IsBodyHtml = true;
-            message.Subject = "Job Errors";
-            message.Body = @"<h2>Jobs Errors</h2>";
+            var message = new MailMessage(_configuration.EmailFrom, _configuration.Recipients)
+            {
+                IsBodyHtml = true,
+                Subject = "Job Errors",
+                Body = @"<h2>Jobs Errors</h2>"
+            };
 
+            var body = new StringBuilder();
             foreach (var jobLog in jobLogs.Where(j => j.Status == SyncStatus.Error))
             {
-                message.Body += $@"
+                body.Append($@"
                 <p>
                     <b>Time:</b> {jobLog.StartDate} - {jobLog.EndDate}
-                </p>";
-
-                message.Body += $@"
+                </p>
                 <p>
                     <b>Status:</b> {jobLog.Status}
-                </p>";
-
-                if (jobLog.Status == SyncStatus.Error)
-                message.Body += $@"
+                </p>
                 <p>
                     <b>Exception:</b> {jobLog.Message}
-                </p>";
-                 
-                message.Body += "</br>";
+                </p><hr/>");
             }
+
+            message.Body += body;
 
             try
             {
                 smtp.Send(message);
-                Log.Info($"{jobLogs.Count()} reports sent to:");
-                foreach (var mes in message.CC) Log.Info(mes.Address);
+                Log.Info($"{jobLogs.Count()} reports sent to: {_configuration.Recipients}");
             }
             catch (Exception e)
             {
                 Log.Error($"SmtpSender exception: {e.Message}");
             }
-             
         }
     }
 }

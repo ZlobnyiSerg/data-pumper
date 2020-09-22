@@ -29,6 +29,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -55,12 +57,11 @@
   <ItemGroup>
     <Compile Include="DataPumperConfiguration.cs" />
     <Compile Include="ConfigurationManager.cs" />
-    <Compile Include="DataLayer\DataPumperContext.cs" />
-    <Compile Include="DataLayer\JobLog.cs" />
-    <Compile Include="DataLayer\TableSync.cs" />
+    <Compile Include="DataModels\DataPumperContext.cs" />
+    <Compile Include="DataModels\JobLog.cs" />
+    <Compile Include="DataModels\TableSync.cs" />
     <Compile Include="DataPumperService.cs" />
     <Compile Include="ILogsSender.cs" />
-    <Compile Include="LogsExtractor.cs" />
     <Compile Include="Migrations\202007161322343_Init.cs" />
     <Compile Include="Migrations\202007161322343_Init.Designer.cs">
       <DependentUpon>202007161322343_Init.cs</DependentUpon>
