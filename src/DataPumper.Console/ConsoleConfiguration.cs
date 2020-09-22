@@ -4,26 +4,26 @@ namespace DataPumper.Console
 {
     public class ConsoleConfiguration
     {
-        private readonly IConfiguration _configuration;
+        public readonly IConfiguration ConfigurationSource;
 
-        public ConsoleConfiguration(IConfiguration configuration)
+        public ConsoleConfiguration(IConfiguration configurationSource)
         {
-            _configuration = configuration;
+            ConfigurationSource = configurationSource;
         }
 
-        public string ConnectionString => _configuration.Get<string>("Core:ConnectionString");
+        public string ConnectionString => ConfigurationSource.Get<string>("Core:ConnectionString");
 
-        public string TargetConnectionString => _configuration.Get<string>("Core:TargetConnectionString");
+        public string TargetConnectionString => ConfigurationSource.Get<string>("Core:TargetConnectionString");
 
-        public string HangFireDashboardUrl => _configuration.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");
+        public string HangFireDashboardUrl => ConfigurationSource.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");
         
-        public string ScheduleCron => _configuration.Get<string>("Core:ScheduleCron");
+        public string ScheduleCron => ConfigurationSource.Get<string>("Core:ScheduleCron");
 
         public string[] TenantCodes
         {
             get
             {
-                var tenantCodes = _configuration.Get<string>("Core:TenantCodes");
+                var tenantCodes = ConfigurationSource.Get<string>("Core:TenantCodes");
                 if (string.IsNullOrEmpty(tenantCodes)) return null;
 
                 return tenantCodes.Split(',');

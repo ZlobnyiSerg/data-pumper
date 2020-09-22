@@ -89,39 +89,9 @@ namespace DataPumper.Console
 
             if (!string.IsNullOrEmpty(_configuration.ScheduleCron))
             {
-                RecurringJob.AddOrUpdate(() => RunJobs(false), _configuration.ScheduleCron);
-                RecurringJob.AddOrUpdate(() => RunJobs(true), Cron.Never);
+                RecurringJob.AddOrUpdate<DataPumperJobs>((j) => j.RunJobs(false), _configuration.ScheduleCron);
+                RecurringJob.AddOrUpdate<DataPumperJobs>((j) => j.RunJobs(true), Cron.Never);
             }
-        }
-
-        [JobDisplayName("Run single job: {0}")]
-        [Queue(Queue)]
-        public async Task RunJob(PumperJobItem jobItem)
-        {
-            var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
-
-            var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.ConnectionString);
-
-            var targetProvider = new SqlDataPumperSourceTarget();
-            await targetProvider.Initialize(_configuration.TargetConnectionString);
-
-            await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider);
-        }
-
-        [JobDisplayName("Run all jobs")]
-        [Queue(Queue)]
-        public async Task RunJobs(bool fullReload)
-        {
-            var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
-
-            var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.ConnectionString);
-
-            var targetProvider = new SqlDataPumperSourceTarget();
-            await targetProvider.Initialize(_configuration.TargetConnectionString);
-
-            await dataPumperService.RunJobs(sourceProvider, targetProvider, fullReload);
         }
 
         public void Stop()
