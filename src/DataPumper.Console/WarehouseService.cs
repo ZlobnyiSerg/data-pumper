@@ -23,7 +23,7 @@ namespace DataPumper.Console
         private BackgroundJobServer _jobServer;
         private IDisposable _hangfireDashboard;
         private static IUnityContainer _container;
-        private ConsoleConfiguration _configuration;
+        private WarehouseServiceConfiguration _configuration;
         private IConfigurationRoot _configSource;
 
         public WarehouseService()
@@ -32,10 +32,10 @@ namespace DataPumper.Console
                 .AddXmlFile("data-pumper.config")
                 .AddXmlFile("data-pumper.local.config", true)
                 .Build();
-            _configuration = new ConsoleConfiguration(_configSource);
+            _configuration = new WarehouseServiceConfiguration(_configSource);
             ConfigurationManager.Configuration = _configSource;
 
-            using (var ctx = new DataPumperContext(_configuration.ConnectionString))
+            using (var ctx = new DataPumperContext(_configuration.SourceConnectionString))
             {
                 ctx.TableSyncs.ToList();
             }
@@ -48,7 +48,7 @@ namespace DataPumper.Console
             Bootstrapper.Initialize(_container);
 
             JobActivator.Current = new UnityJobActivator(_container);
-            JobStorage.Current = new SqlServerStorage(_configuration.ConnectionString);
+            JobStorage.Current = new SqlServerStorage(_configuration.HangfireConnectionString);
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
             {
                 Attempts = 3,
@@ -101,7 +101,7 @@ namespace DataPumper.Console
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.ConnectionString);
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
@@ -129,7 +129,7 @@ namespace DataPumper.Console
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
             var sourceProvider = new SqlDataPumperSourceTarget();
-            await sourceProvider.Initialize(_configuration.ConnectionString);
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
