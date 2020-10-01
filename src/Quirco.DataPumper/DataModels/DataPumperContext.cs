@@ -9,13 +9,13 @@ namespace Quirco.DataPumper.DataModels
 
         public DbSet<JobLog> Logs { get; set; }
 
-        public DataPumperContext() : this(ConfigurationManager.Configuration.Get("Core:ConnectionString"))
-        {
-        }
-
         public DataPumperContext(string connectionString) : base(connectionString)
         {
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataPumperContext, Configuration>());
+        }
+
+        public DataPumperContext() : this(ConfigurationManager.Configuration.GetRequired<string>("Core:SourceConnectionString"))
+        {
         }
 
         protected override void OnModelCreating(DbModelBuilder modelBuilder)
