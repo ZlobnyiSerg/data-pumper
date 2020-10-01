@@ -15,10 +15,10 @@ using Quirco.DataPumper.DataModels;
 
 namespace DataPumper.Console
 {
-    public class MainService : IDisposable
+    public class WarehouseService : IDisposable
     {
         public const string Queue = "datapumper";
-        private static readonly ILog Log = LogManager.GetLogger(typeof(MainService));
+        private static readonly ILog Log = LogManager.GetLogger(typeof(WarehouseService));
 
         private BackgroundJobServer _jobServer;
         private IDisposable _hangfireDashboard;
@@ -26,7 +26,7 @@ namespace DataPumper.Console
         private ConsoleConfiguration _configuration;
         private IConfigurationRoot _configSource;
 
-        public MainService()
+        public WarehouseService()
         {
             _configSource = new ConfigurationBuilder()
                 .AddXmlFile("data-pumper.config")
@@ -89,8 +89,8 @@ namespace DataPumper.Console
 
             if (!string.IsNullOrEmpty(_configuration.ScheduleCron))
             {
-                RecurringJob.AddOrUpdate(() => RunJobs(false), _configuration.ScheduleCron);
-                RecurringJob.AddOrUpdate(() => RunJobs(true), Cron.Never);
+                RecurringJob.AddOrUpdate(() => RunJobs(), _configuration.ScheduleCron);
+                RecurringJob.AddOrUpdate(() => RunJobsWithReload(), Cron.Never);
             }
         }
 
@@ -111,7 +111,20 @@ namespace DataPumper.Console
 
         [JobDisplayName("Run all jobs")]
         [Queue(Queue)]
-        public async Task RunJobs(bool fullReload)
+        public Task RunJobs()
+        {
+            return RunJobs(false);
+        }
+        
+        [JobDisplayName("Run all jobs with reload")]
+        [Queue(Queue)]
+        public Task RunJobsWithReload()
+        {
+            return RunJobs(true);
+        }
+        
+        
+        private async Task RunJobs(bool fullReload)
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
@@ -153,7 +166,7 @@ namespace DataPumper.Console
             }
         }
 
-        ~MainService()
+        ~WarehouseService()
         {
             Dispose(false);
         }
