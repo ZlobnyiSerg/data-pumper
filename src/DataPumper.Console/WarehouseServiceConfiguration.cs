@@ -11,7 +11,7 @@ namespace DataPumper.Console
             _configuration = configuration;
         }
 
-        public string SourceConnectionString => _configuration.Get<string>("Core:SourceConnectionString");
+        public string SourceConnectionString => _configuration.Get<string>("Core:ConnectionString");
 
         public string TargetConnectionString => _configuration.Get<string>("Core:TargetConnectionString");
 

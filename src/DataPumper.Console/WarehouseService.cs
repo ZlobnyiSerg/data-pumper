@@ -91,12 +91,19 @@ namespace DataPumper.Console
             {
                 RecurringJob.AddOrUpdate(() => RunJobs(), _configuration.ScheduleCron);
                 RecurringJob.AddOrUpdate(() => RunJobsWithReload(), Cron.Never);
+                
+                var dataPumperConfig = new DataPumperConfiguration(_configSource);
+                foreach (var job in dataPumperConfig.Jobs)
+                {
+                    RecurringJob.AddOrUpdate(job.Name, ()=> RunJob(job, false), Cron.Never);
+                    RecurringJob.AddOrUpdate(job.Name+"-full", ()=> RunJob(job, true), Cron.Never);
+                }
             }
         }
 
         [JobDisplayName("Run single job: {0}")]
         [Queue(Queue)]
-        public async Task RunJob(PumperJobItem jobItem)
+        public async Task RunJob(PumperJobItem jobItem, bool fullReload)
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
@@ -106,7 +113,7 @@ namespace DataPumper.Console
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
 
-            await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider);
+            await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider, fullReload);
         }
 
         [JobDisplayName("Run all jobs")]

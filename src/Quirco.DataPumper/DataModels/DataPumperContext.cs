@@ -14,7 +14,7 @@ namespace Quirco.DataPumper.DataModels
             Database.SetInitializer(new MigrateDatabaseToLatestVersion<DataPumperContext, Configuration>());
         }
 
-        public DataPumperContext() : this(ConfigurationManager.Configuration.GetRequired<string>("Core:SourceConnectionString"))
+        public DataPumperContext() : this(ConfigurationManager.Configuration.GetRequired<string>("Core:ConnectionString"))
         {
         }
 
