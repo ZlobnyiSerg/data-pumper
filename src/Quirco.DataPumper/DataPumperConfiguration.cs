@@ -13,7 +13,6 @@ namespace Quirco.DataPumper
         
         public string ConnectionString => _overridenConnectionString ?? _configuration.GetRequired<string>("Core:ConnectionString");
 
-
         public string CurrentDateQuery => _configuration.Get<string>("Core:CurrentDateQuery");
 
         public string ActualityColumnName => _configuration.GetRequired<string>("Core:ActualityColumnName");
@@ -73,7 +72,7 @@ namespace Quirco.DataPumper
 
         public override string ToString()
         {
-            return $"{Name} [{SourceTableName}] -> [{TargetTableName}] HistoricMode='{HistoricMode}'";
+            return $"{Name} [{SourceTableName}] -> [{TargetTableName}] Historic='{HistoricMode}'";
         }
     }
 }

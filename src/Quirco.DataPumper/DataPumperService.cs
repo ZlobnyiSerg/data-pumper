@@ -20,7 +20,7 @@ namespace Quirco.DataPumper
         private readonly string[] _tenantCodes;
 
         public EventHandler<NDataPumper.ProgressEventArgs> Progress;
-        public ILogsSender LogsSender { get; set; }
+        public ILogsSender LogsSender { get; }
 
         public DataPumperService(DataPumperConfiguration configuration)
         {

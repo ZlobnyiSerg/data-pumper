@@ -1,3 +1,5 @@
+[![Latest release](https://img.shields.io/github/v/release/ZlobnyiSerg/data-pumper)](https://github.com/ZlobnyiSerg/data-pumper/releases/latest)
+
 Data Pumper 
 ===========
 

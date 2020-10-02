@@ -16,10 +16,10 @@ namespace DataPumper.Console
             Log.Info("Data Pumper is running...");
             HostFactory.Run(x =>
             {
-                x.Service<MainService>(
+                x.Service<WarehouseService>(
                     s =>
                     {
-                        s.ConstructUsing(() => new MainService());
+                        s.ConstructUsing(() => new WarehouseService());
                         s.WhenStarted(ws => ws.Start());
                         s.WhenStopped(ws => ws.Stop());
                     });

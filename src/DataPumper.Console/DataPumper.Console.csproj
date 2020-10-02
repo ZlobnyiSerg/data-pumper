@@ -51,9 +51,8 @@
   <ItemGroup>
     <Compile Include="Bootstrapper.cs" />
     <Compile Include="ConfigurationManager.cs" />
-    <Compile Include="ConsoleConfiguration.cs" />
-    <Compile Include="DataPumperJobs.cs" />
-    <Compile Include="MainService.cs" />
+    <Compile Include="WarehouseServiceConfiguration.cs" />
+    <Compile Include="WarehouseService.cs" />
     <Compile Include="PrivateSetterResolver.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
