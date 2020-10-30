@@ -7,12 +7,14 @@ namespace DataPumper.Core
         public long Processed { get; }
         public string Message { get; }
         public TimeSpan? Elapsed { get; }
+        public TableName TableName { get; }
 
-        public ProgressEventArgs(long processed, string message, TimeSpan? elapsed = null)
+        public ProgressEventArgs(long processed, string message, TableName tableName, TimeSpan? elapsed = null)
         {
             Processed = processed;
             Message = message;
             Elapsed = elapsed;
+            TableName = tableName;
         }
     }
 }

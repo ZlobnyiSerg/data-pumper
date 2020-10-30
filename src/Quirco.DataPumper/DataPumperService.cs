@@ -5,6 +5,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
+using DataPumper.Core;
 using Microsoft.Extensions.Configuration;
 using Quirco.DataPumper.DataModels;
 using NDataPumper = DataPumper.Core;
@@ -89,17 +90,7 @@ namespace Quirco.DataPumper
                     var sw = new Stopwatch();
                     sw.Start();
 
-                    targetProvider.Progress += (sender, args) =>
-                    {
-                        using (var logContext = new DataPumperContext(_configuration.ConnectionString))
-                        {
-                            var logRecord = logContext.Logs.FirstOrDefault(l => l.Id == jobLog.Id);
-                            logRecord.RecordsProcessed = args.Processed;
-                            logContext.SaveChanges();
-                            var handler = Progress;
-                            handler?.Invoke(sender, args);
-                        }
-                    };
+                    targetProvider.Progress += UpdateJobLog;
 
                     await targetProvider.RunQuery(job.PreRunQuery);
 
@@ -154,6 +145,23 @@ namespace Quirco.DataPumper
 
                 return jobLog;
             }
+        }
+
+        private void UpdateJobLog(object sender, ProgressEventArgs args)
+        {
+            using (var logContext = new DataPumperContext(_configuration.ConnectionString))
+            {
+                var logRecord = GetJobLog(args.TableName, logContext);
+                logRecord.RecordsProcessed = args.Processed;
+                logContext.SaveChanges();
+            }
+        }
+
+        private JobLog GetJobLog(TableName tableName, DataPumperContext dataPumperContext)
+        {
+            var tableSync = dataPumperContext.TableSyncs.FirstOrDefault(ts => ts.TableName == tableName.SourceFullName);
+            var jobLog = dataPumperContext.Logs.OrderByDescending(l => l.Id).FirstOrDefault(l => l.TableSyncId == tableSync.Id);
+            return jobLog;
         }
 
         public Task<List<JobLog>> GetLogRecords(int skip, int take)

@@ -42,7 +42,7 @@ namespace DataPumper.Sql
         public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string tenantField, string[] tenantCodes)
         {
             var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ..."));
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", tableName));
 
             var inStatement = GetInStatement(tenantCodes);
 
@@ -132,7 +132,7 @@ namespace DataPumper.Sql
                 {
                     Log.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
                     var handler = Progress;
-                    handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", sw.Elapsed));
+                    handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", tableName, sw.Elapsed));
                 };
 
                 await bulkCopy.WriteToServerAsync(dataReader);

@@ -8,8 +8,11 @@ namespace DataPumper.Core
         
         public string Name { get; }
 
+        public string SourceFullName { get; }
+
         public TableName(string fullName)
         {
+            SourceFullName = fullName;
             var parts = fullName.Split('.');
             if (parts.Length == 1)
                 Name = parts.First();
