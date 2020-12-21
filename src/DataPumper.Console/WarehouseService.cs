@@ -35,7 +35,7 @@ namespace DataPumper.Console
             _configuration = new WarehouseServiceConfiguration(_configSource);
             ConfigurationManager.Configuration = _configSource;
 
-            using (var ctx = new DataPumperContext(_configuration.SourceConnectionString))
+            using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
             {
                 ctx.TableSyncs.ToList();
             }

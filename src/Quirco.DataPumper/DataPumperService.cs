@@ -69,7 +69,7 @@ namespace Quirco.DataPumper
         private async Task<JobLog> RunJobInternal(PumperJobItem job, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn($"Processing {job.Name}");
-            using (var ctx = new DataPumperContext(_configuration.ConnectionString))
+            using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
             {
                 var tableSync = await ctx.TableSyncs.FirstOrDefaultAsync(ts => ts.TableName == job.TargetTableName);
                 if (tableSync == null)
@@ -149,7 +149,7 @@ namespace Quirco.DataPumper
 
         private void UpdateJobLog(object sender, ProgressEventArgs args)
         {
-            using (var logContext = new DataPumperContext(_configuration.ConnectionString))
+            using (var logContext = new DataPumperContext(_configuration.MetadataConnectionString))
             {
                 var logRecord = GetJobLog(args.TableName, logContext);
                 logRecord.RecordsProcessed = args.Processed;
@@ -166,7 +166,7 @@ namespace Quirco.DataPumper
 
         public Task<List<JobLog>> GetLogRecords(int skip, int take)
         {
-            using (var ctx = new DataPumperContext(_configuration.ConnectionString))
+            using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
             {
                 return ctx.Logs.Skip(skip).Take(take).ToListAsync();
             }

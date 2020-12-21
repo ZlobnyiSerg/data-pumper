@@ -5,10 +5,11 @@ using Microsoft.Extensions.Configuration;
 
 namespace Quirco.DataPumper
 {
-    public static class ConfigurationManager {
+    public static class ConfigurationManager
+    {
         public static IConfiguration Configuration { get; set; }
     }
-    
+
     public static class ConfigurationMixin
     {
         public static string Get(this IConfiguration config, string key, string defaultValue = null)
@@ -20,7 +21,7 @@ namespace Quirco.DataPumper
         {
             try
             {
-                var itemList = config[key].Split(new char[] { prefix });
+                var itemList = config[key].Split(new char[] {prefix});
                 return itemList.OfType<T>().ToList();
             }
             catch (Exception ex)
@@ -42,9 +43,9 @@ namespace Quirco.DataPumper
             try
             {
                 if (typeof(T).IsEnum)
-                    return (T)Enum.Parse(typeof(T), value);
+                    return (T) Enum.Parse(typeof(T), value);
 
-                return (T)Convert.ChangeType(value, typeof(T));
+                return (T) Convert.ChangeType(value, typeof(T));
             }
             catch (Exception ex)
             {
@@ -60,8 +61,8 @@ namespace Quirco.DataPumper
                 if (string.IsNullOrEmpty(strVal))
                     return null;
                 if (typeof(T).IsEnum)
-                    return (T)Enum.Parse(typeof(T), strVal);
-                return (T)Convert.ChangeType(strVal, typeof(T));
+                    return (T) Enum.Parse(typeof(T), strVal);
+                return (T) Convert.ChangeType(strVal, typeof(T));
             }
             catch (Exception ex)
             {
@@ -69,10 +70,21 @@ namespace Quirco.DataPumper
             }
         }
 
+
         public static T GetRequired<T>(this IConfiguration config, string key)
         {
             var res = config.Get<T>(key);
             if (Equals(res, default(T)))
+                throw new ApplicationException($"Required configuration parameter '{key}' is missing");
+            return res;
+        }
+
+        public static string GetRequiredWithFallback(this IConfiguration config, string key, string fallbackKey)
+        {
+            var res = config.Get<string>(key);
+            if (string.IsNullOrEmpty(res))
+                res = config.Get<string>(fallbackKey);
+            if (res == null)
                 throw new ApplicationException($"Required configuration parameter '{key}' is missing");
             return res;
         }

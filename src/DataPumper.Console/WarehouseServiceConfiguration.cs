@@ -1,4 +1,5 @@
 ﻿using Microsoft.Extensions.Configuration;
+using Quirco.DataPumper;
 
 namespace DataPumper.Console
 {
@@ -10,6 +11,8 @@ namespace DataPumper.Console
         {
             _configuration = configuration;
         }
+        
+        public string MetadataConnectionString => _configuration.GetRequiredWithFallback("Core:MetadataConnectionString", "Core:ConnectionString");
 
         public string SourceConnectionString => _configuration.Get<string>("Core:ConnectionString");
 

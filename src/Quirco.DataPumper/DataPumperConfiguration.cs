@@ -11,7 +11,7 @@ namespace Quirco.DataPumper
 
         private string _overridenConnectionString;
         
-        public string ConnectionString => _overridenConnectionString ?? _configuration.GetRequired<string>("Core:ConnectionString");
+        public string MetadataConnectionString => _overridenConnectionString ?? _configuration.GetRequiredWithFallback("Core:MetadataConnectionString", "Core:ConnectionString");
 
         public string CurrentDateQuery => _configuration.Get<string>("Core:CurrentDateQuery");
 
