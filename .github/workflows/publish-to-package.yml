@@ -21,15 +21,14 @@ jobs:
       - name: Tag version
         run: echo ${{ steps.get_version.outputs.SOURCE_TAG }}
         
-      - uses: nuget/setup-nuget@v1.0.2
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v1.0.2
+        
+      - uses: nuget/setup-nuget@v1
         with:
           nuget-api-key: ${{ secrets.NUGET_API_KEY }}
           nuget-version: 'latest'
-          
-      - name: Setup MSBuild.exe
-        uses: warrenbuckley/Setup-MSBuild@v1
-        env:
-           working-directory: src/Quirco.DataPumper
+
       - run: msbuild -t:restore
         working-directory: src/Quirco.DataPumper
         
