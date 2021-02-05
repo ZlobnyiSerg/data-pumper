@@ -20,7 +20,7 @@ namespace DataPumper.Console
         public const string Queue = "datapumper";
         private static readonly ILog Log = LogManager.GetLogger(typeof(WarehouseService));
 
-        private BackgroundJobServer _jobServer;
+        protected BackgroundJobServer JobServer { get; private set; }
         private IDisposable _hangfireDashboard;
         private static IUnityContainer _container;
         private WarehouseServiceConfiguration _configuration;
@@ -84,7 +84,7 @@ namespace DataPumper.Console
         {
             Init();
 
-            _jobServer = new BackgroundJobServer(new BackgroundJobServerOptions
+            JobServer = new BackgroundJobServer(new BackgroundJobServerOptions
             {
                 WorkerCount = 1,
                 Queues = new[] {Queue}
@@ -149,30 +149,32 @@ namespace DataPumper.Console
 
         public void Stop()
         {
-            _jobServer?.Dispose();
+            JobServer?.Dispose();
         }
 
         public void Dispose()
         {
-            Dispose(true);
-            GC.SuppressFinalize(this);
+            if (!_disposed)
+            {
+                Dispose(true);
+            }
         }
 
-
         private bool _disposed;
-
 
         protected virtual void Dispose(bool disposing)
         {
             if (!_disposed)
             {
-                if (disposing)
-                {
-                    _jobServer?.Dispose();
-                    _hangfireDashboard?.Dispose();
-                }
+                JobServer?.Dispose();
+                _hangfireDashboard?.Dispose();
 
                 _disposed = true;
+
+                if (disposing)
+                {
+                    GC.SuppressFinalize(this);
+                }
             }
         }
 
