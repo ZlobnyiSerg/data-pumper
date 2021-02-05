@@ -11,6 +11,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Quirco.DataPumper", "src\Qu
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Console", "src\DataPumper.Console\DataPumper.Console.csproj", "{F5872821-986F-4875-9881-ADD0F8C51236}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{D0608D17-FB64-4FDC-ACA3-0C418A4425A5}"
+	ProjectSection(SolutionItems) = preProject
+		.github\workflows\build-release-console.yml = .github\workflows\build-release-console.yml
+		.github\workflows\publish-to-package.yml = .github\workflows\publish-to-package.yml
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU

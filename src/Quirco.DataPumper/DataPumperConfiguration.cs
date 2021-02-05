@@ -40,8 +40,9 @@ namespace Quirco.DataPumper
             TargetTableName = c.Get<string>("Target"),
             HistoricMode = c.Get("HistoricMode", false),
             PreRunQuery = c.Get<string>("Queries:PreRun"),
-            PostRunQuery = c.Get<string>("Queries:PostRun")
-        }).ToArray();
+            PostRunQuery = c.Get<string>("Queries:PostRun"),
+            Order = int.TryParse(c.Get("Order"), out int order) ? order : 500
+        }).OrderBy(j => j.Order).ToArray();
 
         public DataPumperConfiguration(IConfiguration configuration, string connectionString = null)
         {
@@ -69,6 +70,11 @@ namespace Quirco.DataPumper
         /// Запрос на вызов хранимой процедуры после выполнения задания
         /// </summary>
         public string PostRunQuery { get; set; }
+
+        /// <summary>
+        /// Порядок отработки заданий
+        /// </summary>
+        public int Order { get; set; }
 
         public override string ToString()
         {
