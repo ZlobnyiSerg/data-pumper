@@ -6,7 +6,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
 using DataPumper.Core;
-using Microsoft.Extensions.Configuration;
 using Quirco.DataPumper.DataModels;
 using NDataPumper = DataPumper.Core;
 
@@ -19,9 +18,7 @@ namespace Quirco.DataPumper
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DataPumperConfiguration _configuration;
         private readonly string[] _tenantCodes;
-
-        public EventHandler<NDataPumper.ProgressEventArgs> Progress;
-        public ILogsSender LogsSender { get; }
+        public ILogsSender LogsSender { get; set; }
 
         public DataPumperService(DataPumperConfiguration configuration)
         {
@@ -35,14 +32,14 @@ namespace Quirco.DataPumper
             _tenantCodes = tenantCodes;
         }
 
-        public async Task RunJob(PumperJobItem jobItem, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading = false)
+        public async Task RunJob(PumperJobItem jobItem, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info($"Performing synchronization for job '{jobItem.Name}'... ");
             var log = await RunJobInternal(jobItem, sourceProvider, targetProvider, fullReloading);
             LogsSender.Send(new[] { log });
         }
 
-        public async Task RunJobs(NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading = false)
+        public async Task RunJobs(IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading = false)
         {
             Log.Info("Running all jobs...");
             var jobs = _configuration.Jobs;
@@ -50,7 +47,7 @@ namespace Quirco.DataPumper
             LogsSender.Send(logs.ToList());
         }
 
-        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider,
+        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider,
             bool fullReloading)
         {
             Log.Warn("Started job to sync all tables...");
@@ -66,7 +63,7 @@ namespace Quirco.DataPumper
             return jobLogs;
         }
 
-        private async Task<JobLog> RunJobInternal(PumperJobItem job, NDataPumper.IDataPumperSource sourceProvider, NDataPumper.IDataPumperTarget targetProvider, bool fullReloading)
+        private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn($"Processing {job.Name}");
             using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
@@ -115,9 +112,9 @@ namespace Quirco.DataPumper
                     }
 
                     var records = await _pumper.Pump(sourceProvider, targetProvider,
-                        new NDataPumper.PumpParameters(
-                            new NDataPumper.TableName(job.SourceTableName),
-                            new NDataPumper.TableName(job.TargetTableName),
+                        new PumpParameters(
+                            new TableName(job.SourceTableName),
+                            new TableName(job.TargetTableName),
                             _configuration.ActualityColumnName,
                             _configuration.HistoricColumnFrom,
                             _configuration.TenantField,
