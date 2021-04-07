@@ -168,7 +168,11 @@ namespace Quirco.DataPumper
         {
             using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
             {
-                return ctx.Logs.Skip(skip).Take(take).ToListAsync();
+                return ctx.Logs
+                    .OrderByDescending(r=>r.StartDate)
+                    .Skip(skip)
+                    .Take(take)
+                    .ToListAsync();
             }
         } 
     }
