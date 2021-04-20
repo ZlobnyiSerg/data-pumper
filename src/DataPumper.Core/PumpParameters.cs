@@ -14,6 +14,8 @@ namespace DataPumper.Core
         public DateTime CurrentDate { get; private set; }
         public bool FullReloading { get; private set; }
         public string[] TenantCodes { get; private set; }
+        
+        public DateTime? DeleteProtectionDate { get; set; }
 
         public PumpParameters(TableName sourceTable, TableName targetTable, string actualityFieldName, string historyDateFromFieldName, DateTime onDate, DateTime currentDate)
         {

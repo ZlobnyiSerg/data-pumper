@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
 using System.Diagnostics;
+using System.Globalization;
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
@@ -49,7 +50,7 @@ namespace DataPumper.Sql
             if (notOlderThan != null)
             {
                 return await _connection.ExecuteReaderAsync(
-                    $"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan" + GetQuerySuffix(tenantField, tenantCodes, inStatement, "AND"), 
+                    $"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan AND {GetTenantFilter(tenantField, tenantCodes, inStatement)}", 
                     new
                     {
                         NotOlderThan = notOlderThan
@@ -57,24 +58,32 @@ namespace DataPumper.Sql
             }
 
             return await _connection.ExecuteReaderAsync(
-                $"SELECT * FROM {tableName}" + GetQuerySuffix(tenantField, tenantCodes, inStatement, "WHERE"), commandTimeout: Timeout);
+                $"SELECT * FROM {tableName} WHERE {GetTenantFilter(tenantField, tenantCodes, inStatement)}", commandTimeout: Timeout);
         }
 
         public async Task CleanupTable(CleanupTableRequest request)
         {
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
-            Log.Warn($"Cleaning target table '{request.TableName}', instances: ({inStatement}), actuality date >= {request.NotOlderThan}");
+            Log.Warn($"Cleaning target table '{request.TableName}'");
             int deleted;
             if (request.NotOlderThan == null || request.FullReloading)
             {
-                deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: Timeout);
+                var query = $@"DELETE FROM {request.TableName} WHERE 
+                        ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                        AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
+                deleted = await _connection.ExecuteAsync(query, commandTimeout: Timeout);
             }
             else
             {
+                var query = $@"DELETE FROM {request.TableName} WHERE
+                         {request.ActualityFieldName} >= @NotOlderThan 
+                         AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                         AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName} WHERE {request.ActualityFieldName} >= @NotOlderThan" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "AND"),
+                    query,
                     new
                     {
                         NotOlderThan = request.NotOlderThan.Value
@@ -87,18 +96,26 @@ namespace DataPumper.Sql
         {
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
-            Log.Warn($"Cleaning target table '{request.TableName}' in history mode, instances: ({inStatement}), history date from = {request.CurrentPropertyDate}");
+            Log.Warn($"Cleaning target table '{request.TableName}' in history mode");
 
             var deleted = 0;
             if (request.FullReloading)
             {
-                deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName}" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "WHERE"), commandTimeout: Timeout);
+                var query = $@"DELETE FROM {request.TableName} WHERE 
+                        ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                        AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
+                deleted = await _connection.ExecuteAsync(query, commandTimeout: Timeout);
             }
             else
             {
+                var query = $@"DELETE FROM {request.TableName} WHERE 
+                        {request.HistoryDateFromFieldName} = @CurrentPropertyDate
+                        AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                        AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(
-                    $"DELETE FROM {request.TableName} WHERE {request.HistoryDateFromFieldName} = @CurrentPropertyDate" + GetQuerySuffix(request.InstanceFieldName, request.InstanceFieldValues, inStatement, "AND"),
+                    query,
                     new
                     {
                         request.CurrentPropertyDate
@@ -175,14 +192,21 @@ namespace DataPumper.Sql
                 : string.Empty;
         }
 
-        private static string GetQuerySuffix(string tenantField, string[] tenantCodes, string inStatement, string command)
+        private static string GetTenantFilter(string tenantField, string[] tenantCodes, string inStatement)
         {
-            var querySuffix = string.Empty;
             if (tenantCodes != null && tenantCodes.Any() && tenantField != null)
-                querySuffix = $" {command} {tenantField} IN ({inStatement})";
-            return querySuffix;
+                return $"{tenantField} IN ({inStatement})";
+            return "1=1";
         }
-
+        
+        private static string GetDeleteProtectionDateFilter(CleanupTableRequest request)
+        {
+            if (request.DeleteProtectionDate != null)
+                return
+                    $"{request.ActualityFieldName} >= cast('{request.DeleteProtectionDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}' as date)";
+            return "1=1";
+        }
+        
         public void Dispose()
         {
             Dispose(true);

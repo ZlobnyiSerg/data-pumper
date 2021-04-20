@@ -122,7 +122,10 @@ namespace Quirco.DataPumper
                             job.HistoricMode,
                             currentDate,
                             fullReloading,
-                            _tenantCodes));
+                            _tenantCodes)
+                        {
+                            DeleteProtectionDate = _configuration.DeleteProtectionDate
+                        });
 
                     tableSync.ActualDate = currentDate;
                     jobLog.EndDate = DateTime.Now;

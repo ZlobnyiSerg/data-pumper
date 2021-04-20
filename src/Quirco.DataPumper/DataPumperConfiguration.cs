@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 
 namespace Quirco.DataPumper
@@ -18,6 +19,16 @@ namespace Quirco.DataPumper
         public string ActualityColumnName => _configuration.GetRequired<string>("Core:ActualityColumnName");
 
         public string TenantField => _configuration.Get<string>("Core:TenantField");
+
+        public DateTime? DeleteProtectionDate => GetDeleteProtectionDate();
+
+        private DateTime? GetDeleteProtectionDate()
+        {
+            var date = _configuration.Get<string>("Core:DeleteProtectionDate");
+            if (!string.IsNullOrEmpty(date))
+                return DateTime.ParseExact(date, "dd.MM.yyyy", CultureInfo.InvariantCulture);
+            return null;
+        }
 
         public string HistoricColumnFrom => _configuration.Get<string>("Core:HistoricColumns:From");
 

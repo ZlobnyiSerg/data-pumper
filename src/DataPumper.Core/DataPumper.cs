@@ -19,14 +19,32 @@ namespace DataPumper.Core
                 if (parameters.HistoricMode)
                 {
                     Log.Info($"Cleaning target table in history mode '{parameters.TargetTable}' (historyDateFrom {parameters.CurrentDate}) for instances: {string.Join(",", parameters.TenantCodes ?? new string[0])}...");
-                    await target.CleanupHistoryTable(new CleanupTableRequest(parameters.TargetTable, parameters.HistoryDateFromFieldName, parameters.TenantField, parameters.TenantCodes, parameters.CurrentDate, parameters.FullReloading));
+                    await target.CleanupHistoryTable(new CleanupTableRequest(
+                        parameters.TargetTable,
+                        parameters.HistoryDateFromFieldName, 
+                        parameters.TenantField, 
+                        parameters.TenantCodes,
+                        parameters.CurrentDate,
+                        parameters.FullReloading)
+                    {
+                        DeleteProtectionDate = parameters.DeleteProtectionDate
+                    });
                     Log.Info($"Cleaning '{parameters.TargetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }
                 else
                 {
                     Log.Info($"Cleaning target table '{parameters.TargetTable}' (from date {parameters.OnDate}) for instances: {string.Join(",", parameters.TenantCodes ?? new string[0])}...");
-                    await target.CleanupTable(new CleanupTableRequest(parameters.TargetTable, parameters.ActualityFieldName, parameters.OnDate, parameters.TenantField, parameters.TenantCodes, parameters.FullReloading));
+                    await target.CleanupTable(new CleanupTableRequest(
+                        parameters.TargetTable,
+                        parameters.ActualityFieldName, 
+                        parameters.OnDate,
+                        parameters.TenantField,
+                        parameters.TenantCodes,
+                        parameters.FullReloading)
+                    {
+                        DeleteProtectionDate = parameters.DeleteProtectionDate
+                    });
                     Log.Info($"Cleaning '{parameters.TargetTable}' complete in {sw.Elapsed}, transferring data...");
                     sw.Restart();
                 }

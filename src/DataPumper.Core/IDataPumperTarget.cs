@@ -34,6 +34,8 @@ namespace DataPumper.Core
         public string HistoryDateFromFieldName { get; }
 
         public bool FullReloading { get; }
+        
+        public DateTime? DeleteProtectionDate { get; set; }
 
         public CleanupTableRequest(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string instanceFieldName, string[] instanceFieldValues, bool fullReloading)
         {
