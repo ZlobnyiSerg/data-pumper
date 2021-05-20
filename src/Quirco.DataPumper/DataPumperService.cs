@@ -18,7 +18,7 @@ namespace Quirco.DataPumper
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DataPumperConfiguration _configuration;
         private readonly string[] _tenantCodes;
-        public ILogsSender LogsSender { get; set; }
+        public ILogsSender LogsSender { get; }
 
         public DataPumperService(DataPumperConfiguration configuration)
         {
@@ -98,13 +98,13 @@ namespace Quirco.DataPumper
                     }
 
                     var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
-                    var onDate = jobActualDate == null ? DateTime.Today.AddYears(-100) : jobActualDate.Value;
+                    var onDate = jobActualDate ?? DateTime.Today.AddYears(-100);
 
                     var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
 
                     if (job.HistoricMode && currentDate == tableSync.ActualDate)
                     {
-                        onDate = tableSync.PreviousActualDate == null ? DateTime.Today.AddYears(-100) : tableSync.PreviousActualDate.Value;
+                        onDate = tableSync.PreviousActualDate ?? DateTime.Today.AddYears(-100);
                     }
                     else if (job.HistoricMode)
                     {
@@ -170,6 +170,7 @@ namespace Quirco.DataPumper
             {
                 return ctx.Logs
                     .OrderByDescending(r=>r.StartDate)
+                    .AsNoTracking()
                     .Skip(skip)
                     .Take(take)
                     .ToListAsync();
