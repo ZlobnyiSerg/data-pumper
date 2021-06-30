@@ -18,7 +18,7 @@ namespace Quirco.DataPumper
         private readonly NDataPumper.DataPumper _pumper;
         private readonly DataPumperConfiguration _configuration;
         private readonly string[] _tenantCodes;
-        public ILogsSender LogsSender { get; }
+        public ILogsSender LogsSender { get; set; }
 
         public DataPumperService(DataPumperConfiguration configuration)
         {
