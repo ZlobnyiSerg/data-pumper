@@ -102,13 +102,16 @@ namespace Quirco.DataPumper
 
                     var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
 
-                    if (job.HistoricMode && currentDate == tableSync.ActualDate)
+                    if (job.HistoricMode)
                     {
-                        onDate = tableSync.PreviousActualDate ?? DateTime.Today.AddYears(-100);
-                    }
-                    else if (job.HistoricMode)
-                    {
-                        tableSync.PreviousActualDate = tableSync.ActualDate;
+                        if (currentDate == tableSync.ActualDate)
+                        {
+                            onDate = tableSync.PreviousActualDate ?? DateTime.Today.AddYears(-100);
+                        }
+                        else
+                        {
+                            tableSync.PreviousActualDate = tableSync.ActualDate;
+                        }
                     }
 
                     var records = await _pumper.Pump(sourceProvider, targetProvider,
@@ -118,7 +121,7 @@ namespace Quirco.DataPumper
                             _configuration.ActualityColumnName,
                             _configuration.HistoricColumnFrom,
                             _configuration.TenantField,
-                            onDate,
+                            onDate.AddDays(_configuration.BackwardReloadDays),
                             job.HistoricMode,
                             currentDate,
                             fullReloading,

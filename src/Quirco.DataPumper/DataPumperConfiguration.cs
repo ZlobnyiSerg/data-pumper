@@ -19,6 +19,8 @@ namespace Quirco.DataPumper
         public string ActualityColumnName => _configuration.GetRequired<string>("Core:ActualityColumnName");
 
         public string TenantField => _configuration.Get<string>("Core:TenantField");
+        
+        public int BackwardReloadDays => _configuration.Get<int>("Core:BackwardReloadDays", 1);
 
         public DateTime? DeleteProtectionDate => GetDeleteProtectionDate();
 
