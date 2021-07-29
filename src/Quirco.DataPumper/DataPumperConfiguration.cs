@@ -20,7 +20,7 @@ namespace Quirco.DataPumper
 
         public string TenantField => _configuration.Get<string>("Core:TenantField");
         
-        public int BackwardReloadDays => _configuration.Get<int>("Core:BackwardReloadDays", 1);
+        public int BackwardReloadDays => _configuration.Get("Core:BackwardReloadDays", -1);
 
         public DateTime? DeleteProtectionDate => GetDeleteProtectionDate();
 
