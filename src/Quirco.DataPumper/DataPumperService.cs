@@ -167,16 +167,18 @@ namespace Quirco.DataPumper
             return jobLog;
         }
 
-        public Task<List<JobLog>> GetLogRecords(int skip, int take)
+        public async Task<List<JobLog>> GetLogRecords(int skip, int take)
         {
             using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
             {
-                return ctx.Logs
-                    .OrderByDescending(r=>r.StartDate)
+                var logs = await ctx.Logs
+                    .OrderByDescending(r => r.StartDate)
                     .AsNoTracking()
                     .Skip(skip)
                     .Take(take)
                     .ToListAsync();
+
+                return logs;
             }
         } 
     }
