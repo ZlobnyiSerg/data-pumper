@@ -172,6 +172,7 @@ namespace Quirco.DataPumper
             using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
             {
                 var logs = await ctx.Logs
+                    .Include(l => l.TableSync)
                     .OrderByDescending(r => r.StartDate)
                     .AsNoTracking()
                     .Skip(skip)
