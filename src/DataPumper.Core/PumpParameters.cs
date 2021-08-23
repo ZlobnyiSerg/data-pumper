@@ -16,6 +16,8 @@ namespace DataPumper.Core
         public string[] TenantCodes { get; private set; }
         
         public DateTime? DeleteProtectionDate { get; set; }
+        
+        public FilterConstraint Filter { get; set; }
 
         public PumpParameters(TableName sourceTable, TableName targetTable, string actualityFieldName, string historyDateFromFieldName, DateTime onDate, DateTime currentDate)
         {

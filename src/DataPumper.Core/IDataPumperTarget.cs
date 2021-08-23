@@ -8,8 +8,6 @@ namespace DataPumper.Core
     {
         Task CleanupTable(CleanupTableRequest request);
 
-        Task CleanupHistoryTable(CleanupTableRequest request);
-
         Task<long> InsertData(TableName tableName, IDataReader dataReader);
 
         Task RunQuery(string queryText);
@@ -36,6 +34,8 @@ namespace DataPumper.Core
         public bool FullReloading { get; }
         
         public DateTime? DeleteProtectionDate { get; set; }
+        
+        public FilterConstraint Filter { get; set; }
 
         public CleanupTableRequest(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string instanceFieldName, string[] instanceFieldValues, bool fullReloading)
         {
@@ -47,10 +47,11 @@ namespace DataPumper.Core
             FullReloading = fullReloading;
         }
 
-        public CleanupTableRequest(TableName tableName, string historyDateFromFieldName, string instanceFieldName, string[] instanceFieldValues, DateTime currentPropertyDate, bool fullReloading)
+        public CleanupTableRequest(TableName tableName, string historyDateFromFieldName, string actualityFieldName, string instanceFieldName, string[] instanceFieldValues, DateTime currentPropertyDate, bool fullReloading)
         {
             TableName = tableName;
             HistoryDateFromFieldName = historyDateFromFieldName;
+            ActualityFieldName = actualityFieldName;
             CurrentPropertyDate = currentPropertyDate;
             InstanceFieldName = instanceFieldName;
             InstanceFieldValues = instanceFieldValues;

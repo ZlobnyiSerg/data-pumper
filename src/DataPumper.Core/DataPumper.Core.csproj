@@ -46,6 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DataPumper.cs" />
+    <Compile Include="DataReaderRequest.cs" />
+    <Compile Include="FilterConstraint.cs" />
     <Compile Include="IDataPumperProvider.cs" />
     <Compile Include="IDataPumperSource.cs" />
     <Compile Include="IDataPumperTarget.cs" />

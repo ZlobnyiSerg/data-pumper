@@ -40,29 +40,35 @@ namespace DataPumper.Sql
             return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: Timeout);
         }
 
-        public async Task<IDataReader> GetDataReader(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string tenantField, string[] tenantCodes)
+        public async Task<IDataReader> GetDataReader(DataReaderRequest request)
         {
             var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{tableName}' ...", tableName));
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{request.TableName}' ...", request.TableName));
 
-            var inStatement = GetInStatement(tenantCodes);
+            var inStatement = GetInStatement(request.TenantCodes);
 
-            if (notOlderThan != null)
+            if (request.NotOlderThan != null)
             {
                 return await _connection.ExecuteReaderAsync(
-                    $"SELECT * FROM {tableName} WHERE {actualityFieldName} >= @NotOlderThan AND {GetTenantFilter(tenantField, tenantCodes, inStatement)}", 
+                    $"SELECT * FROM {request.TableName} WHERE {request.ActualityDateFieldName} >= @NotOlderThan AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}",
                     new
                     {
-                        NotOlderThan = notOlderThan
+                        NotOlderThan = request.NotOlderThan
                     }, commandTimeout: Timeout);
             }
 
             return await _connection.ExecuteReaderAsync(
-                $"SELECT * FROM {tableName} WHERE {GetTenantFilter(tenantField, tenantCodes, inStatement)}", commandTimeout: Timeout);
+                $"SELECT * FROM {request.TableName} WHERE {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}", commandTimeout: Timeout);
         }
 
         public async Task CleanupTable(CleanupTableRequest request)
         {
+            if (!string.IsNullOrEmpty(request.HistoryDateFromFieldName))
+            {
+                await CleanupHistoryTable(request);
+                return;
+            }
+
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
             Log.Warn($"Cleaning target table '{request.TableName}'");
@@ -89,10 +95,11 @@ namespace DataPumper.Sql
                         NotOlderThan = request.NotOlderThan.Value
                     }, commandTimeout: Timeout);
             }
+
             Log.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 
-        public async Task CleanupHistoryTable(CleanupTableRequest request)
+        private async Task CleanupHistoryTable(CleanupTableRequest request)
         {
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
@@ -102,25 +109,17 @@ namespace DataPumper.Sql
             if (request.FullReloading)
             {
                 var query = $@"DELETE FROM {request.TableName} WHERE 
-                        ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
-                        AND ({GetDeleteProtectionDateFilter(request)})";
-                Log.Warn(query);
-                deleted = await _connection.ExecuteAsync(query, commandTimeout: Timeout);
-            }
-            else
-            {
-                var query = $@"DELETE FROM {request.TableName} WHERE 
                         {request.HistoryDateFromFieldName} = @CurrentPropertyDate
+                        AND ({GetFilterPredicate(request.Filter)})
                         AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
                 Log.Warn(query);
-                deleted = await _connection.ExecuteAsync(
-                    query,
-                    new
-                    {
-                        request.CurrentPropertyDate
-                    }, commandTimeout: Timeout);
+                deleted = await _connection.ExecuteAsync(query, new
+                {
+                    request.CurrentPropertyDate
+                }, commandTimeout: Timeout);
             }
+
             Log.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
         }
 
@@ -199,6 +198,14 @@ namespace DataPumper.Sql
             return "1=1";
         }
         
+        private string GetFilterPredicate(FilterConstraint filter)
+        {
+            if (filter == null)
+                return "1=1";
+            var inStatement = string.Join(",", filter.Values.Select(v => $"'{v}'"));
+            return $"{filter.FieldName} IN ({inStatement})";
+        }
+
         private static string GetDeleteProtectionDateFilter(CleanupTableRequest request)
         {
             if (request.DeleteProtectionDate != null)
@@ -206,7 +213,7 @@ namespace DataPumper.Sql
                     $"{request.ActualityFieldName} >= cast('{request.DeleteProtectionDate.Value.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}' as date)";
             return "1=1";
         }
-        
+
         public void Dispose()
         {
             Dispose(true);
@@ -215,13 +222,15 @@ namespace DataPumper.Sql
 
 
         private bool _disposed;
+
         protected virtual void Dispose(bool disposing)
         {
             if (_disposed) return;
             if (disposing)
             {
-                _connection?.Dispose();                    
+                _connection?.Dispose();
             }
+
             _disposed = true;
         }
     }
