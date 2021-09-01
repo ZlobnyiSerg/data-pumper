@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Diagnostics;
@@ -58,33 +59,57 @@ namespace Quirco.DataPumper
             var deleted = 0L;
             var inserted = 0L;
             Log.Warn($"Performing partial update for '{request.Filter.FieldName}' IN ({string.Join(", ", request.Filter.Values)})");
-            foreach (var job in _configuration.Jobs)
+            var jobs = await GetJobsWithField(sourceProvider, request.Filter.FieldName);
+            foreach (var job in jobs)
             {
-                var fields = await sourceProvider.GetTableFields(new TableName(job.SourceTableName));
-                if (fields.Contains(request.Filter.FieldName))
+                Log.Debug($"Updating table '{job.SourceTableName}'...");
+                var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
+                    new TableName(job.SourceTableName),
+                    new TableName(job.TargetTableName),
+                    _configuration.ActualityColumnName,
+                    _configuration.HistoricColumnFrom,
+                    _configuration.TenantField,
+                    request.ActualDate,
+                    false,
+                    request.ActualDate,
+                    false,
+                    request.TenantCodes
+                )
                 {
-                    Log.Debug($"Updating table '{job.SourceTableName}'...");
-                    var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
-                        new TableName(job.SourceTableName),
-                        new TableName(job.TargetTableName),
-                        _configuration.ActualityColumnName,
-                        _configuration.HistoricColumnFrom,
-                        _configuration.TenantField,
-                        request.ActualDate,
-                        false,
-                        request.ActualDate,
-                        false,
-                        request.TenantCodes
-                    )
-                    {
-                        Filter = request.Filter
-                    });
-                    deleted += res.Deleted;
-                    inserted += res.Inserted;
-                }
+                    Filter = request.Filter
+                });
+                deleted += res.Deleted;
+                inserted += res.Inserted;
             }
 
             return new PumpResult(inserted, deleted);
+        }
+
+
+        private readonly Dictionary<string, List<PumperJobItem>> _jobsCacheByFieldName = new();
+
+        /// <summary>
+        /// Возвращает список джобов, в исходных таблицах которых есть поле с указанным названием.
+        /// Нужно для синхронизации данных "на лету".
+        /// </summary>
+        /// <param name="sourceProvider"></param>
+        /// <param name="fieldName"></param>
+        private async Task<IEnumerable<PumperJobItem>> GetJobsWithField(IDataPumperSource sourceProvider, string fieldName)
+        {
+            if (!_jobsCacheByFieldName.TryGetValue(fieldName, out var jobs))
+            {
+                jobs = new List<PumperJobItem>();
+                foreach (var job in _configuration.Jobs)
+                {
+                    var fields = await sourceProvider.GetTableFields(new TableName(job.SourceTableName));
+                    if (fields.Contains(fieldName))
+                        jobs.Add(job);
+                }
+
+                _jobsCacheByFieldName[fieldName] = jobs;
+            }
+            
+            return jobs;
         }
 
         public async Task<IEnumerable<JobLog>> ProcessInternal(IEnumerable<PumperJobItem> jobs, IDataPumperSource sourceProvider,
