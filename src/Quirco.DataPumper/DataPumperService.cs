@@ -59,11 +59,12 @@ namespace Quirco.DataPumper
             var deleted = 0L;
             var inserted = 0L;
 
+            var processedJobs = new HashSet<string>();
             foreach (var filter in request.Filters)
             {
                 Log.Warn($"Performing partial update for '{filter.FieldName}' IN ({string.Join(", ", filter.Values)})");
                 var jobs = await GetJobsWithField(sourceProvider, filter.FieldName);
-                foreach (var job in jobs)
+                foreach (var job in jobs.Where(j=>!processedJobs.Contains(j.Name)))
                 {
                     Log.Debug($"Updating table '{job.SourceTableName}'...");
                     var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
@@ -83,6 +84,7 @@ namespace Quirco.DataPumper
                     });
                     deleted += res.Deleted;
                     inserted += res.Inserted;
+                    processedJobs.Add(job.Name);
                 }
             }
 
