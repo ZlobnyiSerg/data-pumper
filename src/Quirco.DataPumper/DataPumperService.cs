@@ -58,34 +58,37 @@ namespace Quirco.DataPumper
         {
             var deleted = 0L;
             var inserted = 0L;
-            Log.Warn($"Performing partial update for '{request.Filter.FieldName}' IN ({string.Join(", ", request.Filter.Values)})");
-            var jobs = await GetJobsWithField(sourceProvider, request.Filter.FieldName);
-            foreach (var job in jobs)
+
+            foreach (var filter in request.Filters)
             {
-                Log.Debug($"Updating table '{job.SourceTableName}'...");
-                var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
-                    new TableName(job.SourceTableName),
-                    new TableName(job.TargetTableName),
-                    _configuration.ActualityColumnName,
-                    _configuration.HistoricColumnFrom,
-                    _configuration.TenantField,
-                    request.ActualDate,
-                    false,
-                    request.ActualDate,
-                    false,
-                    request.TenantCodes
-                )
+                Log.Warn($"Performing partial update for '{filter.FieldName}' IN ({string.Join(", ", filter.Values)})");
+                var jobs = await GetJobsWithField(sourceProvider, filter.FieldName);
+                foreach (var job in jobs)
                 {
-                    Filter = request.Filter
-                });
-                deleted += res.Deleted;
-                inserted += res.Inserted;
+                    Log.Debug($"Updating table '{job.SourceTableName}'...");
+                    var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
+                        new TableName(job.SourceTableName),
+                        new TableName(job.TargetTableName),
+                        _configuration.ActualityColumnName,
+                        _configuration.HistoricColumnFrom,
+                        _configuration.TenantField,
+                        request.ActualDate,
+                        false,
+                        request.ActualDate,
+                        false,
+                        null
+                    )
+                    {
+                        Filter = filter
+                    });
+                    deleted += res.Deleted;
+                    inserted += res.Inserted;
+                }
             }
 
             return new PumpResult(inserted, deleted);
         }
-
-
+        
         private readonly Dictionary<string, List<PumperJobItem>> _jobsCacheByFieldName = new();
 
         /// <summary>

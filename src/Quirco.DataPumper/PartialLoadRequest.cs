@@ -6,16 +6,13 @@ namespace Quirco.DataPumper
     public class PartialLoadRequest
     {
         public DateTime ActualDate { get; }
-        
-        public string[] TenantCodes { get; }
-        
-        public FilterConstraint Filter { get; }
 
-        public PartialLoadRequest(DateTime actualDate, string[] tenantCodes, FilterConstraint filter)
+        public FilterConstraint[] Filters { get; }
+
+        public PartialLoadRequest(DateTime actualDate, params FilterConstraint[] filters)
         {
             ActualDate = actualDate;
-            TenantCodes = tenantCodes;
-            Filter = filter;
+            Filters = filters;
         }
     }
 }
