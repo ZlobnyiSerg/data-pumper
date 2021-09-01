@@ -50,7 +50,9 @@ namespace DataPumper.Sql
             if (request.NotOlderThan != null)
             {
                 return await _connection.ExecuteReaderAsync(
-                    $"SELECT * FROM {request.TableName} WHERE {request.ActualityDateFieldName} >= @NotOlderThan AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}",
+                    $@"SELECT * FROM {request.TableName} WHERE {request.ActualityDateFieldName} >= @NotOlderThan
+                       AND ({GetFilterPredicate(request.Filter)}) 
+                       AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}",
                     new
                     {
                         NotOlderThan = request.NotOlderThan
@@ -58,7 +60,9 @@ namespace DataPumper.Sql
             }
 
             return await _connection.ExecuteReaderAsync(
-                $"SELECT * FROM {request.TableName} WHERE {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}", commandTimeout: Timeout);
+                $@"SELECT * FROM {request.TableName} WHERE 
+                    ({GetFilterPredicate(request.Filter)})
+                    AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}", commandTimeout: Timeout);
         }
 
         public async Task<long> CleanupTable(CleanupTableRequest request)
