@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading.Tasks;
 using Common.Logging;
+using DataPumper.Core;
 using DataPumper.Sql;
 using Hangfire;
 using Hangfire.MemoryStorage;
@@ -35,10 +36,8 @@ namespace DataPumper.Console
             _configuration = new WarehouseServiceConfiguration(_configSource);
             ConfigurationManager.Configuration = _configSource;
 
-            using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
-            {
-                ctx.TableSyncs.ToList();
-            }
+            using var ctx = new DataPumperContext(_configuration.MetadataConnectionString);
+            ctx.TableSyncs.ToList();
         }
 
         private void Init()
@@ -90,6 +89,8 @@ namespace DataPumper.Console
                 Queues = new[] {Queue}
             });
 
+            RecurringJob.AddOrUpdate(() => RunPartialUpdate(), Cron.Never);
+            
             if (!string.IsNullOrEmpty(_configuration.ScheduleCron))
             {
                 RecurringJob.AddOrUpdate(() => RunJobs(), _configuration.ScheduleCron);
@@ -131,6 +132,22 @@ namespace DataPumper.Console
         public Task RunJobsWithReload()
         {
             return RunJobs(true);
+        }
+        
+        [JobDisplayName("Run partial update")]
+        [Queue(Queue)]
+        public async Task RunPartialUpdate()
+        {
+            var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
+
+            var sourceProvider = new SqlDataPumperSourceTarget();
+            await sourceProvider.Initialize(_configuration.SourceConnectionString);
+
+            var targetProvider = new SqlDataPumperSourceTarget();
+            await targetProvider.Initialize(_configuration.TargetConnectionString);
+
+            await dataPumperService.PartialLoad(sourceProvider, targetProvider,
+                new PartialLoadRequest(DateTime.Today, null, new FilterConstraint("ReservationNo", "MAIN.100001")));
         }
         
         

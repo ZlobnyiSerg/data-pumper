@@ -47,7 +47,48 @@ namespace Quirco.DataPumper
             LogsSender.Send(logs.ToList());
         }
 
-        public async Task<IEnumerable<JobLog>> ProcessInternal(PumperJobItem[] jobs, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider,
+        /// <summary>
+        /// Осуществляет частичное обновление всех таблиц, где есть колонка из filter.FieldName со значением filter.Values
+        /// </summary>
+        public async Task<PumpResult> PartialLoad(
+            IDataPumperSource sourceProvider,
+            IDataPumperTarget targetProvider,
+            PartialLoadRequest request)
+        {
+            var deleted = 0L;
+            var inserted = 0L;
+            Log.Warn($"Performing partial update for '{request.Filter.FieldName}' IN ({string.Join(", ", request.Filter.Values)})");
+            foreach (var job in _configuration.Jobs)
+            {
+                var fields = await sourceProvider.GetTableFields(new TableName(job.SourceTableName));
+                if (fields.Contains(request.Filter.FieldName))
+                {
+                    Log.Debug($"Updating table '{job.SourceTableName}'...");
+                    var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
+                        new TableName(job.SourceTableName),
+                        new TableName(job.TargetTableName),
+                        _configuration.ActualityColumnName,
+                        _configuration.HistoricColumnFrom,
+                        _configuration.TenantField,
+                        request.ActualDate,
+                        false,
+                        request.ActualDate,
+                        false,
+                        request.TenantCodes
+                    )
+                    {
+                        Filter = request.Filter
+                    });
+                    deleted += res.Deleted;
+                    inserted += res.Inserted;
+                }
+            }
+
+            return new PumpResult(inserted, deleted);
+        }
+
+        public async Task<IEnumerable<JobLog>> ProcessInternal(IEnumerable<PumperJobItem> jobs, IDataPumperSource sourceProvider,
+            IDataPumperTarget targetProvider,
             bool fullReloading)
         {
             Log.Warn("Started job to sync all tables...");
@@ -60,104 +101,106 @@ namespace Quirco.DataPumper
                 jobLogs.Add(jobLog);
             }
 
+            Log.Info("Transfer summary (table, deleted, inserted):");
+            foreach (var jobLog in jobLogs)
+            {
+                Log.Info($"{jobLog.TableSync.TableName,-30}{jobLog.RecordsDeleted,10}{jobLog.RecordsProcessed,10}");
+            }
+
             return jobLogs;
         }
 
         private async Task<JobLog> RunJobInternal(PumperJobItem job, IDataPumperSource sourceProvider, IDataPumperTarget targetProvider, bool fullReloading)
         {
             Log.Warn($"Processing {job.Name}");
-            using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
+            using var ctx = new DataPumperContext(_configuration.MetadataConnectionString);
+            var tableSync = await ctx.TableSyncs.FirstOrDefaultAsync(ts => ts.TableName == job.TargetTableName);
+            if (tableSync == null)
             {
-                var tableSync = await ctx.TableSyncs.FirstOrDefaultAsync(ts => ts.TableName == job.TargetTableName);
-                if (tableSync == null)
+                tableSync = new TableSync
                 {
-                    tableSync = new TableSync
-                    {
-                        TableName = job.TargetTableName
-                    };
-                    ctx.TableSyncs.Add(tableSync);
-                }
-
-                var jobLog = new JobLog {TableSync = tableSync};
-                ctx.Logs.Add(jobLog);
-                await ctx.SaveChangesAsync();
-
-                try
-                {
-                    var sw = new Stopwatch();
-                    sw.Start();
-
-                    targetProvider.Progress += UpdateJobLog;
-
-                    await targetProvider.RunQuery(job.PreRunQuery);
-
-                    if (fullReloading)
-                    {
-                        // При полной перезаливке обнуляем ActualDate
-                        tableSync.ActualDate = null;
-                    }
-
-                    var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
-                    var onDate = jobActualDate ?? DateTime.Today.AddYears(-100);
-
-                    var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
-
-                    if (job.HistoricMode)
-                    {
-                        if (currentDate == tableSync.ActualDate)
-                        {
-                            onDate = tableSync.PreviousActualDate ?? DateTime.Today.AddYears(-100);
-                        }
-                        else
-                        {
-                            tableSync.PreviousActualDate = tableSync.ActualDate;
-                        }
-                    }
-
-                    var records = await _pumper.Pump(sourceProvider, targetProvider,
-                        new PumpParameters(
-                            new TableName(job.SourceTableName),
-                            new TableName(job.TargetTableName),
-                            _configuration.ActualityColumnName,
-                            _configuration.HistoricColumnFrom,
-                            _configuration.TenantField,
-                            onDate.AddDays(_configuration.BackwardReloadDays),
-                            job.HistoricMode,
-                            currentDate,
-                            fullReloading,
-                            _tenantCodes)
-                        {
-                            DeleteProtectionDate = _configuration.DeleteProtectionDate
-                        });
-
-                    tableSync.ActualDate = currentDate;
-                    jobLog.EndDate = DateTime.Now;
-                    jobLog.RecordsProcessed = records;
-                    jobLog.Status = SyncStatus.Success;
-                    await targetProvider.RunQuery(job.PostRunQuery);
-                    sw.Stop();
-                }
-                catch (Exception ex)
-                {
-                    Log.Error($"Error processing job {job}", ex);
-                    jobLog.Message = ex.Message;
-                    jobLog.Status = SyncStatus.Error;
-                }
-
-                await ctx.SaveChangesAsync();
-
-                return jobLog;
+                    TableName = job.TargetTableName
+                };
+                ctx.TableSyncs.Add(tableSync);
             }
+
+            var jobLog = new JobLog { TableSync = tableSync };
+            ctx.Logs.Add(jobLog);
+            await ctx.SaveChangesAsync();
+
+            try
+            {
+                var sw = new Stopwatch();
+                sw.Start();
+
+                targetProvider.Progress += UpdateJobLog;
+
+                await targetProvider.RunQuery(job.PreRunQuery);
+
+                if (fullReloading)
+                {
+                    // При полной перезаливке обнуляем ActualDate
+                    tableSync.ActualDate = null;
+                }
+
+                var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
+                var onDate = jobActualDate ?? DateTime.Today.AddYears(-100);
+
+                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
+
+                if (job.HistoricMode)
+                {
+                    if (currentDate == tableSync.ActualDate)
+                    {
+                        onDate = tableSync.PreviousActualDate ?? DateTime.Today.AddYears(-100);
+                    }
+                    else
+                    {
+                        tableSync.PreviousActualDate = tableSync.ActualDate;
+                    }
+                }
+
+                var records = await _pumper.Pump(sourceProvider, targetProvider,
+                    new PumpParameters(
+                        new TableName(job.SourceTableName),
+                        new TableName(job.TargetTableName),
+                        _configuration.ActualityColumnName,
+                        _configuration.HistoricColumnFrom,
+                        _configuration.TenantField,
+                        onDate.AddDays(_configuration.BackwardReloadDays),
+                        job.HistoricMode,
+                        currentDate,
+                        fullReloading,
+                        _tenantCodes)
+                    {
+                        DeleteProtectionDate = _configuration.DeleteProtectionDate
+                    });
+
+                tableSync.ActualDate = currentDate;
+                jobLog.EndDate = DateTime.Now;
+                jobLog.RecordsProcessed = records.Inserted;
+                jobLog.Status = SyncStatus.Success;
+                await targetProvider.RunQuery(job.PostRunQuery);
+                sw.Stop();
+            }
+            catch (Exception ex)
+            {
+                Log.Error($"Error processing job {job}", ex);
+                jobLog.Message = ex.Message;
+                jobLog.Status = SyncStatus.Error;
+            }
+
+            await ctx.SaveChangesAsync();
+
+            return jobLog;
         }
 
         private void UpdateJobLog(object sender, ProgressEventArgs args)
         {
-            using (var logContext = new DataPumperContext(_configuration.MetadataConnectionString))
-            {
-                var logRecord = GetJobLog(args.TableName, logContext);
-                logRecord.RecordsProcessed = args.Processed;
-                logContext.SaveChanges();
-            }
+            using var logContext = new DataPumperContext(_configuration.MetadataConnectionString);
+            var logRecord = GetJobLog(args.TableName, logContext);
+            logRecord.RecordsProcessed = args.Processed;
+            logContext.SaveChanges();
         }
 
         private JobLog GetJobLog(TableName tableName, DataPumperContext dataPumperContext)
@@ -169,18 +212,16 @@ namespace Quirco.DataPumper
 
         public async Task<List<JobLog>> GetLogRecords(int skip, int take)
         {
-            using (var ctx = new DataPumperContext(_configuration.MetadataConnectionString))
-            {
-                var logs = await ctx.Logs
-                    .Include(l => l.TableSync)
-                    .OrderByDescending(r => r.StartDate)
-                    .AsNoTracking()
-                    .Skip(skip)
-                    .Take(take)
-                    .ToListAsync();
+            using var ctx = new DataPumperContext(_configuration.MetadataConnectionString);
+            var logs = await ctx.Logs
+                .Include(l => l.TableSync)
+                .OrderByDescending(r => r.StartDate)
+                .AsNoTracking()
+                .Skip(skip)
+                .Take(take)
+                .ToListAsync();
 
-                return logs;
-            }
-        } 
+            return logs;
+        }
     }
 }

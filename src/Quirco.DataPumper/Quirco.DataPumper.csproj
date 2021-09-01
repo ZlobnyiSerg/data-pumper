@@ -20,6 +20,7 @@
     <NuGetPackageImportStamp>
     </NuGetPackageImportStamp>
     <TargetsForTfmSpecificBuildOutput>$(TargetsForTfmSpecificBuildOutput);CopyProjectReferencesToPackage</TargetsForTfmSpecificBuildOutput>
+    <LangVersion>default</LangVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -68,7 +69,12 @@
     <Compile Include="Migrations\202007161322343_Init.Designer.cs">
       <DependentUpon>202007161322343_Init.cs</DependentUpon>
     </Compile>
+    <Compile Include="Migrations\202109011144518_LogDeleted.cs" />
+    <Compile Include="Migrations\202109011144518_LogDeleted.Designer.cs">
+      <DependentUpon>202109011144518_LogDeleted.cs</DependentUpon>
+    </Compile>
     <Compile Include="Migrations\Configuration.cs" />
+    <Compile Include="PartialLoadRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SmtpSender.cs" />
   </ItemGroup>
@@ -93,6 +99,9 @@
   <ItemGroup>
     <EmbeddedResource Include="Migrations\202007161322343_Init.resx">
       <DependentUpon>202007161322343_Init.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Migrations\202109011144518_LogDeleted.resx">
+      <DependentUpon>202109011144518_LogDeleted.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

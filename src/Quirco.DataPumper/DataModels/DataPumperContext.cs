@@ -15,7 +15,8 @@ namespace Quirco.DataPumper.DataModels
         }
 
         public DataPumperContext() : this(
-            ConfigurationManager.Configuration.GetRequiredWithFallback("Core:MetadataConnectionString", "Core:ConnectionString"))
+            ConfigurationManager.Configuration.Get("Core:MetadataConnectionString", 
+            ConfigurationManager.Configuration.Get("Core:ConnectionString", "DataPumperContext")))
         {
         }
 

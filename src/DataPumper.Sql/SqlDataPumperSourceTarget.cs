@@ -61,33 +61,32 @@ namespace DataPumper.Sql
                 $"SELECT * FROM {request.TableName} WHERE {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}", commandTimeout: Timeout);
         }
 
-        public async Task CleanupTable(CleanupTableRequest request)
+        public async Task<long> CleanupTable(CleanupTableRequest request)
         {
             if (!string.IsNullOrEmpty(request.HistoryDateFromFieldName))
             {
-                await CleanupHistoryTable(request);
-                return;
+                return await CleanupHistoryTable(request);
             }
 
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
-            Log.Warn($"Cleaning target table '{request.TableName}'");
             int deleted;
+            string query;
             if (request.NotOlderThan == null || request.FullReloading)
             {
-                var query = $@"DELETE FROM {request.TableName} WHERE 
+                query = $@"DELETE FROM {request.TableName} WHERE 
+                        AND ({GetFilterPredicate(request.Filter)})
                         ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
-                Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(query, commandTimeout: Timeout);
             }
             else
             {
-                var query = $@"DELETE FROM {request.TableName} WHERE
+                query = $@"DELETE FROM {request.TableName} WHERE
                          {request.ActualityFieldName} >= @NotOlderThan 
+                         AND ({GetFilterPredicate(request.Filter)})
                          AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                          AND ({GetDeleteProtectionDateFilter(request)})";
-                Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(
                     query,
                     new
@@ -96,16 +95,14 @@ namespace DataPumper.Sql
                     }, commandTimeout: Timeout);
             }
 
-            Log.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
+            Log.Warn($"Deleted {deleted} record(s) in target table:\n" + query);
+            return deleted;
         }
 
-        private async Task CleanupHistoryTable(CleanupTableRequest request)
+        private async Task<long> CleanupHistoryTable(CleanupTableRequest request)
         {
             var inStatement = GetInStatement(request.InstanceFieldValues);
 
-            Log.Warn($"Cleaning target table '{request.TableName}' in history mode");
-
-            var deleted = 0;
             if (request.FullReloading)
             {
                 var query = $@"DELETE FROM {request.TableName} WHERE 
@@ -114,13 +111,14 @@ namespace DataPumper.Sql
                         AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
                 Log.Warn(query);
-                deleted = await _connection.ExecuteAsync(query, new
+                var deleted = await _connection.ExecuteAsync(query, new
                 {
                     request.CurrentPropertyDate
                 }, commandTimeout: Timeout);
+                Log.Warn($"Deleted {deleted} record(s):\n" + query);
             }
 
-            Log.Warn($"Deleted {deleted} record(s) in target table '{request.TableName}'");
+            return 0;
         }
 
         public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
@@ -130,46 +128,48 @@ namespace DataPumper.Sql
             sw.Start();
             long processed = 0;
 
-            using (var bulkCopy = new SqlBulkCopy(_connection)
+            using var bulkCopy = new SqlBulkCopy(_connection)
             {
                 BatchSize = 1000000,
                 BulkCopyTimeout = Timeout,
                 NotifyAfter = 10000,
                 DestinationTableName = tableName.ToString()
-            })
+            };
+            for (var i = 0; i < dataReader.FieldCount; i++)
             {
-                for (var i = 0; i < dataReader.FieldCount; i++)
-                {
-                    var column = dataReader.GetName(i);
-                    bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
-                }
-
-                bulkCopy.SqlRowsCopied += (sender, args) =>
-                {
-                    Log.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
-                    var handler = Progress;
-                    handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", tableName, sw.Elapsed));
-                };
-
-                await bulkCopy.WriteToServerAsync(dataReader);
-
-                processed = bulkCopy.GetRowsCopied();
+                var column = dataReader.GetName(i);
+                bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
             }
+
+            bulkCopy.SqlRowsCopied += (sender, args) =>
+            {
+                Log.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
+                var handler = Progress;
+                handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", tableName, sw.Elapsed));
+            };
+
+            await bulkCopy.WriteToServerAsync(dataReader);
+
+            processed = bulkCopy.GetRowsCopied();
 
             return processed;
         }
 
+        public async Task<string[]> GetTableFields(TableName tableName)
+        {
+            using var dataReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: Timeout);
+            return Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToArray();
+        }
+
         private async Task CheckTablesCompatibility(TableName tableName, IDataReader dataReader)
         {
-            using (var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: Timeout))
-            {
-                var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
-                var targetFields = new HashSet<string>(Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
+            using var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: Timeout);
+            var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
+            var targetFields = new HashSet<string>(Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
 
-                var nonMatchingFields = sourceFields.Where(sf => !targetFields.Contains(sf)).ToList();
-                if (nonMatchingFields.Any())
-                    throw new ApplicationException($"Source table contains fields that not present in target table: {string.Join(",", nonMatchingFields)}");
-            }
+            var nonMatchingFields = sourceFields.Where(sf => !targetFields.Contains(sf)).ToList();
+            if (nonMatchingFields.Any())
+                throw new ApplicationException($"Source table contains fields that not present in target table: {string.Join(",", nonMatchingFields)}");
         }
 
         public async Task RunQuery(string queryText)
@@ -197,7 +197,7 @@ namespace DataPumper.Sql
                 return $"{tenantField} IN ({inStatement})";
             return "1=1";
         }
-        
+
         private string GetFilterPredicate(FilterConstraint filter)
         {
             if (filter == null)

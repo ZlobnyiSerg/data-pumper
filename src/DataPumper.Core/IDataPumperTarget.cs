@@ -6,7 +6,7 @@ namespace DataPumper.Core
 {
     public interface IDataPumperTarget : IDataPumperProvider
     {
-        Task CleanupTable(CleanupTableRequest request);
+        Task<long> CleanupTable(CleanupTableRequest request);
 
         Task<long> InsertData(TableName tableName, IDataReader dataReader);
 

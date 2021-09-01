@@ -9,18 +9,20 @@ namespace DataPumper.Core
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumper));
 
-        public async Task<long> Pump(IDataPumperSource source, IDataPumperTarget target, PumpParameters parameters)
+        public async Task<PumpResult> Pump(IDataPumperSource source, IDataPumperTarget target, PumpParameters parameters)
         {
             try
             {
                 var sw = new Stopwatch();
                 sw.Start();
 
+                var deleted = 0L;
+
                 if (parameters.HistoricMode)
                 {
                     Log.Info(
                         $"Cleaning target table in history mode '{parameters.TargetTable}' (historyDateFrom {parameters.CurrentDate}) for instances: {string.Join(",", parameters.TenantCodes ?? new string[0])}...");
-                    await target.CleanupTable(new CleanupTableRequest(
+                    deleted =await target.CleanupTable(new CleanupTableRequest(
                         parameters.TargetTable,
                         parameters.HistoryDateFromFieldName,
                         parameters.ActualityFieldName,
@@ -39,7 +41,7 @@ namespace DataPumper.Core
                 {
                     Log.Info(
                         $"Cleaning target table '{parameters.TargetTable}' (from date {parameters.OnDate}) for instances: {string.Join(",", parameters.TenantCodes ?? new string[0])}...");
-                    await target.CleanupTable(new CleanupTableRequest(
+                    deleted = await target.CleanupTable(new CleanupTableRequest(
                         parameters.TargetTable,
                         parameters.ActualityFieldName,
                         parameters.OnDate,
@@ -54,26 +56,37 @@ namespace DataPumper.Core
                     sw.Restart();
                 }
 
-                using (var reader = await source.GetDataReader(
+                using var reader = await source.GetDataReader(
                     new DataReaderRequest(parameters.SourceTable, parameters.ActualityFieldName)
                     {
                         NotOlderThan = parameters.OnDate,
                         TenantField = parameters.TenantField,
                         TenantCodes = parameters.TenantCodes,
                         Filter = parameters.Filter
-                    }))
-                {
-                    var items = await target.InsertData(parameters.TargetTable, reader);
-                    Log.Info($"Data transfer '{parameters.TargetTable}' of {items} records completed in {sw.Elapsed}");
+                    });
+                var inserted = await target.InsertData(parameters.TargetTable, reader);
+                Log.Info($"Data transfer '{parameters.TargetTable}' of {inserted} records completed in {sw.Elapsed}");
 
-                    return items;
-                }
+                return new PumpResult(inserted, deleted);
             }
             catch (Exception ex)
             {
                 Log.Error($"Error processing {parameters.SourceTable} -> {parameters.TargetTable}", ex);
                 throw;
             }
+        }
+    }
+
+    public readonly struct PumpResult
+    {
+        public long Inserted { get; }
+        
+        public long Deleted { get; }
+
+        public PumpResult(long inserted, long deleted)
+        {
+            Inserted = inserted;
+            Deleted = deleted;
         }
     }
 }

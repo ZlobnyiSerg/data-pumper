@@ -20,6 +20,8 @@ namespace Quirco.DataPumper.DataModels
         public DateTime? EndDate { get; set; }
 
         public long RecordsProcessed { get; set; }
+        
+        public long RecordsDeleted { get; set; }
 
         public string Message { get; set; }
 
