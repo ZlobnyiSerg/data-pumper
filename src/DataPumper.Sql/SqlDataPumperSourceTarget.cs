@@ -55,7 +55,7 @@ namespace DataPumper.Sql
                        AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}",
                     new
                     {
-                        NotOlderThan = request.NotOlderThan
+                        request.NotOlderThan
                     }, commandTimeout: Timeout);
             }
 
@@ -79,9 +79,10 @@ namespace DataPumper.Sql
             if (request.NotOlderThan == null || request.FullReloading)
             {
                 query = $@"DELETE FROM {request.TableName} WHERE 
-                        AND ({GetFilterPredicate(request.Filter)})
-                        ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                        ({GetFilterPredicate(request.Filter)})
+                        AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(query, commandTimeout: Timeout);
             }
             else
@@ -91,6 +92,7 @@ namespace DataPumper.Sql
                          AND ({GetFilterPredicate(request.Filter)})
                          AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                          AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(
                     query,
                     new
@@ -99,7 +101,7 @@ namespace DataPumper.Sql
                     }, commandTimeout: Timeout);
             }
 
-            Log.Warn($"Deleted {deleted} record(s) in target table:\n" + query);
+            Log.Warn($"Deleted {deleted} record(s) in target table");
             return deleted;
         }
 
@@ -119,7 +121,7 @@ namespace DataPumper.Sql
                 {
                     request.CurrentPropertyDate
                 }, commandTimeout: Timeout);
-                Log.Warn($"Deleted {deleted} record(s):\n" + query);
+                Log.Warn($"Deleted {deleted} record(s)");
             }
 
             return 0;
