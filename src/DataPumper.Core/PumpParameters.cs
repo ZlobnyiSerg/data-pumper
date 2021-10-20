@@ -4,8 +4,8 @@ namespace DataPumper.Core
 {
     public class PumpParameters
     {
-        public TableName SourceTable { get; private set; }
-        public TableName TargetTable { get; private set; }
+        public DataSource SourceDataSource { get; private set; }
+        public DataSource TargetDataSource { get; private set; }
         public string ActualityFieldName { get; private set; }
         public string HistoryDateFromFieldName { get; private set; }
         public string TenantField { get; private set; }
@@ -17,22 +17,22 @@ namespace DataPumper.Core
         
         public DateTime? DeleteProtectionDate { get; set; }
         
-        public FilterConstraint Filter { get; set; }
+        public FilterConstraint[] Filter { get; set; }
 
-        public PumpParameters(TableName sourceTable, TableName targetTable, string actualityFieldName, string historyDateFromFieldName, DateTime onDate, DateTime currentDate)
+        public PumpParameters(DataSource sourceDataSource, DataSource targetDataSource, string actualityFieldName, string historyDateFromFieldName, DateTime onDate, DateTime currentDate)
         {
-            SourceTable = sourceTable;
-            TargetTable = targetTable;
+            SourceDataSource = sourceDataSource;
+            TargetDataSource = targetDataSource;
             ActualityFieldName = actualityFieldName;
             HistoryDateFromFieldName = historyDateFromFieldName;
             OnDate = onDate;
             CurrentDate = currentDate;
         }
 
-        public PumpParameters(TableName sourceTable, TableName targetTable, string actualityFieldName, string historyDateFromFieldName, string tenantField, DateTime onDate, DateTime currentDate, string[] tenantCodes)
+        public PumpParameters(DataSource sourceDataSource, DataSource targetDataSource, string actualityFieldName, string historyDateFromFieldName, string tenantField, DateTime onDate, DateTime currentDate, string[] tenantCodes)
         {
-            SourceTable = sourceTable;
-            TargetTable = targetTable;
+            SourceDataSource = sourceDataSource;
+            TargetDataSource = targetDataSource;
             ActualityFieldName = actualityFieldName;
             HistoricMode = true;
             HistoryDateFromFieldName = historyDateFromFieldName;
@@ -42,10 +42,10 @@ namespace DataPumper.Core
             TenantCodes = tenantCodes;
         }
 
-        public PumpParameters(TableName sourceTable, TableName targetTable, string actualityFieldName, string historyDateFromFieldName, string tenantField, DateTime onDate, bool historicMode, DateTime currentDate, bool fullReloading, string[] tenantCodes)
+        public PumpParameters(DataSource sourceDataSource, DataSource targetDataSource, string actualityFieldName, string historyDateFromFieldName, string tenantField, DateTime onDate, bool historicMode, DateTime currentDate, bool fullReloading, string[] tenantCodes)
         {
-            SourceTable = sourceTable;
-            TargetTable = targetTable;
+            SourceDataSource = sourceDataSource;
+            TargetDataSource = targetDataSource;
             ActualityFieldName = actualityFieldName;
             HistoryDateFromFieldName = historyDateFromFieldName;
             TenantField = tenantField;

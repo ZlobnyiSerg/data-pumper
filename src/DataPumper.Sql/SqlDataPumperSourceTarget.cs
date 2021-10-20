@@ -43,14 +43,17 @@ namespace DataPumper.Sql
         public async Task<IDataReader> GetDataReader(DataReaderRequest request)
         {
             var handler = Progress;
-            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{request.TableName}' ...", request.TableName));
+            handler?.Invoke(this, new ProgressEventArgs(0, $"Selecting data from source table '{request.DataSource}' ...", request.DataSource));
+
+            if (request.DataSource.IsStoredProcedure)
+                return await GetStoredProcedureDataReader(request);
 
             var inStatement = GetInStatement(request.TenantCodes);
 
             if (request.NotOlderThan != null)
             {
                 return await _connection.ExecuteReaderAsync(
-                    $@"SELECT * FROM {request.TableName} WHERE {request.ActualityDateFieldName} >= @NotOlderThan
+                    $@"SELECT * FROM {request.DataSource} WHERE {request.ActualityDateFieldName} >= @NotOlderThan
                        AND ({GetFilterPredicate(request.Filter)}) 
                        AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}",
                     new
@@ -60,9 +63,31 @@ namespace DataPumper.Sql
             }
 
             return await _connection.ExecuteReaderAsync(
-                $@"SELECT * FROM {request.TableName} WHERE 
+                $@"SELECT * FROM {request.DataSource} WHERE 
                     ({GetFilterPredicate(request.Filter)})
                     AND {GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)}", commandTimeout: Timeout);
+        }
+
+        private async Task<IDataReader> GetStoredProcedureDataReader(DataReaderRequest request)
+        {
+            var command = new SqlCommand(request.DataSource.SourceFullName, _connection);
+            command.CommandType = CommandType.StoredProcedure;
+
+            if (request.Filter?.Any() == true)
+            {
+                foreach (var filter in request.Filter)
+                {
+                    command.Parameters.Add(new SqlParameter(filter.FieldName, string.Join(",", filter.Values)));
+                }
+            }
+
+            if (request.NotOlderThan != null)
+                command.Parameters.AddWithValue("DateStart", request.NotOlderThan);
+
+            if (request.TenantCodes != null && request.TenantCodes.Any())
+                command.Parameters.AddWithValue("PropertyCode", string.Join(",", request.TenantCodes));
+
+            return await command.ExecuteReaderAsync();
         }
 
         public async Task<long> CleanupTable(CleanupTableRequest request)
@@ -78,7 +103,7 @@ namespace DataPumper.Sql
             string query;
             if (request.NotOlderThan == null || request.FullReloading)
             {
-                query = $@"DELETE FROM {request.TableName} WHERE 
+                query = $@"DELETE FROM {request.DataSource} WHERE 
                         ({GetFilterPredicate(request.Filter)})
                         AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
@@ -87,7 +112,7 @@ namespace DataPumper.Sql
             }
             else
             {
-                query = $@"DELETE FROM {request.TableName} WHERE
+                query = $@"DELETE FROM {request.DataSource} WHERE
                          {request.ActualityFieldName} >= @NotOlderThan 
                          AND ({GetFilterPredicate(request.Filter)})
                          AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
@@ -111,7 +136,7 @@ namespace DataPumper.Sql
 
             if (request.FullReloading)
             {
-                var query = $@"DELETE FROM {request.TableName} WHERE 
+                var query = $@"DELETE FROM {request.DataSource} WHERE 
                         {request.HistoryDateFromFieldName} = @CurrentPropertyDate
                         AND ({GetFilterPredicate(request.Filter)})
                         AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
@@ -127,9 +152,9 @@ namespace DataPumper.Sql
             return 0;
         }
 
-        public async Task<long> InsertData(TableName tableName, IDataReader dataReader)
+        public async Task<long> InsertData(DataSource dataSource, IDataReader dataReader)
         {
-            await CheckTablesCompatibility(tableName, dataReader);
+            await CheckTablesCompatibility(dataSource, dataReader);
             var sw = new Stopwatch();
             sw.Start();
             long processed = 0;
@@ -139,7 +164,7 @@ namespace DataPumper.Sql
                 BatchSize = 1000000,
                 BulkCopyTimeout = Timeout,
                 NotifyAfter = 10000,
-                DestinationTableName = tableName.ToString()
+                DestinationTableName = dataSource.ToString()
             };
             for (var i = 0; i < dataReader.FieldCount; i++)
             {
@@ -149,9 +174,9 @@ namespace DataPumper.Sql
 
             bulkCopy.SqlRowsCopied += (sender, args) =>
             {
-                Log.Info($"Records processed: {args.RowsCopied:#########}, table name {tableName}");
+                Log.Info($"Records processed: {args.RowsCopied:#########}, table name {dataSource}");
                 var handler = Progress;
-                handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", tableName, sw.Elapsed));
+                handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", dataSource, sw.Elapsed));
             };
 
             await bulkCopy.WriteToServerAsync(dataReader);
@@ -161,15 +186,15 @@ namespace DataPumper.Sql
             return processed;
         }
 
-        public async Task<string[]> GetTableFields(TableName tableName)
+        public async Task<string[]> GetTableFields(DataSource dataSource)
         {
-            using var dataReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: Timeout);
+            using var dataReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {dataSource}", commandTimeout: Timeout);
             return Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToArray();
         }
 
-        private async Task CheckTablesCompatibility(TableName tableName, IDataReader dataReader)
+        private async Task CheckTablesCompatibility(DataSource dataSource, IDataReader dataReader)
         {
-            using var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {tableName}", commandTimeout: Timeout);
+            using var targetReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {dataSource}", commandTimeout: Timeout);
             var sourceFields = Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToList();
             var targetFields = new HashSet<string>(Enumerable.Range(0, targetReader.FieldCount).Select(targetReader.GetName));
 
@@ -178,7 +203,7 @@ namespace DataPumper.Sql
                 throw new ApplicationException($"Source table contains fields that not present in target table: {string.Join(",", nonMatchingFields)}");
         }
 
-        public async Task RunQuery(string queryText)
+        public async Task ExecuteRawQuery(string queryText)
         {
             if (!string.IsNullOrEmpty(queryText))
             {
@@ -204,12 +229,11 @@ namespace DataPumper.Sql
             return "1=1";
         }
 
-        private string GetFilterPredicate(FilterConstraint filter)
+        private string GetFilterPredicate(FilterConstraint[] filter)
         {
             if (filter == null)
                 return "1=1";
-            var inStatement = string.Join(",", filter.Values.Select(v => $"'{v}'"));
-            return $"{filter.FieldName} IN ({inStatement})";
+            return string.Join(" AND ", filter.Select(f => $"{f.FieldName} IN ({string.Join(",", f.Values.Select(v => $"'{v}'"))})"));
         }
 
         private static string GetDeleteProtectionDateFilter(CleanupTableRequest request)

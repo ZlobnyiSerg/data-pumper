@@ -2,17 +2,20 @@ using System.Linq;
 
 namespace DataPumper.Core
 {
-    public class TableName
+    public class DataSource
     {
         public string Schema { get; }
         
         public string Name { get; }
 
         public string SourceFullName { get; }
+        
+        public bool IsStoredProcedure { get; }
 
-        public TableName(string fullName)
+        public DataSource(string fullName, bool isStoredProcedure = false)
         {
             SourceFullName = fullName;
+            IsStoredProcedure = isStoredProcedure;
             var parts = fullName.Split('.');
             if (parts.Length == 1)
                 Name = parts.First();

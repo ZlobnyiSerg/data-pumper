@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data.Entity;
 using System.Diagnostics;
@@ -64,12 +63,12 @@ namespace Quirco.DataPumper
             {
                 Log.Warn($"Performing partial update for '{filter.FieldName}' IN ({string.Join(", ", filter.Values)})");
                 var jobs = await GetJobsWithField(sourceProvider, filter.FieldName);
-                foreach (var job in jobs.Where(j=>!processedJobs.Contains(j.Name)))
+                foreach (var job in jobs.Where(j => !processedJobs.Contains(j.Name)))
                 {
                     Log.Debug($"Updating table '{job.SourceTableName}'...");
                     var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
-                        new TableName(job.SourceTableName),
-                        new TableName(job.TargetTableName),
+                        new DataSource(job.SourceTableName, job.StoredProcedure),
+                        new DataSource(job.TargetTableName),
                         _configuration.ActualityColumnName,
                         _configuration.HistoricColumnFrom,
                         _configuration.TenantField,
@@ -80,7 +79,7 @@ namespace Quirco.DataPumper
                         null
                     )
                     {
-                        Filter = filter
+                        Filter = new[] { filter }
                     });
                     deleted += res.Deleted;
                     inserted += res.Inserted;
@@ -90,7 +89,7 @@ namespace Quirco.DataPumper
 
             return new PumpResult(inserted, deleted);
         }
-        
+
         private readonly Dictionary<string, List<PumperJobItem>> _jobsCacheByFieldName = new();
 
         /// <summary>
@@ -106,14 +105,14 @@ namespace Quirco.DataPumper
                 jobs = new List<PumperJobItem>();
                 foreach (var job in _configuration.Jobs)
                 {
-                    var fields = await sourceProvider.GetTableFields(new TableName(job.SourceTableName));
+                    var fields = await sourceProvider.GetTableFields(new DataSource(job.SourceTableName, job.StoredProcedure));
                     if (fields.Contains(fieldName))
                         jobs.Add(job);
                 }
 
                 _jobsCacheByFieldName[fieldName] = jobs;
             }
-            
+
             return jobs;
         }
 
@@ -165,7 +164,7 @@ namespace Quirco.DataPumper
 
                 targetProvider.Progress += UpdateJobLog;
 
-                await targetProvider.RunQuery(job.PreRunQuery);
+                await targetProvider.ExecuteRawQuery(job.PreRunQuery);
 
                 if (fullReloading)
                 {
@@ -192,8 +191,8 @@ namespace Quirco.DataPumper
 
                 var records = await _pumper.Pump(sourceProvider, targetProvider,
                     new PumpParameters(
-                        new TableName(job.SourceTableName),
-                        new TableName(job.TargetTableName),
+                        new DataSource(job.SourceTableName, job.StoredProcedure),
+                        new DataSource(job.TargetTableName),
                         _configuration.ActualityColumnName,
                         _configuration.HistoricColumnFrom,
                         _configuration.TenantField,
@@ -210,7 +209,7 @@ namespace Quirco.DataPumper
                 jobLog.EndDate = DateTime.Now;
                 jobLog.RecordsProcessed = records.Inserted;
                 jobLog.Status = SyncStatus.Success;
-                await targetProvider.RunQuery(job.PostRunQuery);
+                await targetProvider.ExecuteRawQuery(job.PostRunQuery);
                 sw.Stop();
             }
             catch (Exception ex)
@@ -228,14 +227,14 @@ namespace Quirco.DataPumper
         private void UpdateJobLog(object sender, ProgressEventArgs args)
         {
             using var logContext = new DataPumperContext(_configuration.MetadataConnectionString);
-            var logRecord = GetJobLog(args.TableName, logContext);
+            var logRecord = GetJobLog(args.DataSource, logContext);
             logRecord.RecordsProcessed = args.Processed;
             logContext.SaveChanges();
         }
 
-        private JobLog GetJobLog(TableName tableName, DataPumperContext dataPumperContext)
+        private JobLog GetJobLog(DataSource dataSource, DataPumperContext dataPumperContext)
         {
-            var tableSync = dataPumperContext.TableSyncs.FirstOrDefault(ts => ts.TableName == tableName.SourceFullName);
+            var tableSync = dataPumperContext.TableSyncs.FirstOrDefault(ts => ts.TableName == dataSource.SourceFullName);
             var jobLog = dataPumperContext.Logs.OrderByDescending(l => l.Id).FirstOrDefault(l => l.TableSyncId == tableSync.Id);
             return jobLog;
         }

@@ -4,17 +4,17 @@ namespace DataPumper.Core
 {
     public class DataReaderRequest
     {
-        public TableName TableName { get; }
+        public DataSource DataSource { get; }
         public string ActualityDateFieldName { get; }
         public DateTime? NotOlderThan { get; set; }
         public string TenantField { get; set; }
         public string[] TenantCodes { get; set; }
         
-        public FilterConstraint Filter { get; set; }
+        public FilterConstraint[] Filter { get; set; }
 
-        public DataReaderRequest(TableName tableName, string actualityDateFieldName)
+        public DataReaderRequest(DataSource dataSource, string actualityDateFieldName)
         {
-            TableName = tableName;
+            DataSource = dataSource;
             ActualityDateFieldName = actualityDateFieldName;
         }
     }

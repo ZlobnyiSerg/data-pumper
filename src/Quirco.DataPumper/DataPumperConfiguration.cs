@@ -54,7 +54,8 @@ namespace Quirco.DataPumper
             HistoricMode = c.Get("HistoricMode", false),
             PreRunQuery = c.Get<string>("Queries:PreRun"),
             PostRunQuery = c.Get<string>("Queries:PostRun"),
-            Order = int.TryParse(c.Get("Order"), out int order) ? order : 500
+            Order = int.TryParse(c.Get("Order"), out int order) ? order : 500,
+            StoredProcedure = c.Get<bool>("StoredProcedure")
         }).OrderBy(j => j.Order).ToArray();
 
         public DataPumperConfiguration(IConfiguration configuration, string connectionString = null)
@@ -88,6 +89,10 @@ namespace Quirco.DataPumper
         /// Порядок отработки заданий
         /// </summary>
         public int Order { get; set; }
+        
+        public bool StoredProcedure { get; set; }
+        
+        public string SomeTest { get; set; }
 
         public override string ToString()
         {

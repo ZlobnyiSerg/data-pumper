@@ -8,16 +8,16 @@ namespace DataPumper.Core
     {
         Task<long> CleanupTable(CleanupTableRequest request);
 
-        Task<long> InsertData(TableName tableName, IDataReader dataReader);
+        Task<long> InsertData(DataSource dataSource, IDataReader dataReader);
 
-        Task RunQuery(string queryText);
+        Task ExecuteRawQuery(string queryText);
 
         event EventHandler<ProgressEventArgs> Progress;
     }
 
     public class CleanupTableRequest
     {
-        public TableName TableName { get; } 
+        public DataSource DataSource { get; } 
 
         public string ActualityFieldName { get; } 
 
@@ -35,11 +35,11 @@ namespace DataPumper.Core
         
         public DateTime? DeleteProtectionDate { get; set; }
         
-        public FilterConstraint Filter { get; set; }
+        public FilterConstraint[] Filter { get; set; }
 
-        public CleanupTableRequest(TableName tableName, string actualityFieldName, DateTime? notOlderThan, string instanceFieldName, string[] instanceFieldValues, bool fullReloading)
+        public CleanupTableRequest(DataSource dataSource, string actualityFieldName, DateTime? notOlderThan, string instanceFieldName, string[] instanceFieldValues, bool fullReloading)
         {
-            TableName = tableName;
+            DataSource = dataSource;
             ActualityFieldName = actualityFieldName;
             NotOlderThan = notOlderThan;
             InstanceFieldName = instanceFieldName;
@@ -47,9 +47,9 @@ namespace DataPumper.Core
             FullReloading = fullReloading;
         }
 
-        public CleanupTableRequest(TableName tableName, string historyDateFromFieldName, string actualityFieldName, string instanceFieldName, string[] instanceFieldValues, DateTime currentPropertyDate, bool fullReloading)
+        public CleanupTableRequest(DataSource dataSource, string historyDateFromFieldName, string actualityFieldName, string instanceFieldName, string[] instanceFieldValues, DateTime currentPropertyDate, bool fullReloading)
         {
-            TableName = tableName;
+            DataSource = dataSource;
             HistoryDateFromFieldName = historyDateFromFieldName;
             ActualityFieldName = actualityFieldName;
             CurrentPropertyDate = currentPropertyDate;

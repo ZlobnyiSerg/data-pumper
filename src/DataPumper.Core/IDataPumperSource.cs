@@ -18,8 +18,8 @@ namespace DataPumper.Core
         /// <summary>
         /// Возващает все колонки, присутсвующие в таблице
         /// </summary>
-        /// <param name="tableName">Название таблицы</param>
+        /// <param name="dataSource">Название таблицы</param>
         /// <returns>Массив колонок</returns>
-        Task<string[]> GetTableFields(TableName tableName);
+        Task<string[]> GetTableFields(DataSource dataSource);
     }
 }

@@ -7,7 +7,6 @@ namespace DataPumper.Console
     {
         public void Configuration(IAppBuilder app)
         {
-            // Map Dashboard to the `http://<your-app>/hangfire` URL.
             app.UseHangfireDashboard("");
         }
     }
