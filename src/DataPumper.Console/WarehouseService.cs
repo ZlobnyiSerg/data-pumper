@@ -138,16 +138,11 @@ namespace DataPumper.Console
         [Queue(Queue)]
         public async Task RunPartialUpdate()
         {
-            var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
-
             var sourceProvider = new SqlDataPumperSourceTarget();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = new SqlDataPumperSourceTarget();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
-
-            await dataPumperService.PartialLoad(sourceProvider, targetProvider,
-                new PartialLoadRequest(DateTime.Today, null, new FilterConstraint("ReservationNo", "MAIN.100001")));
         }
         
         

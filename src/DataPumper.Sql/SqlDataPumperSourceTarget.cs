@@ -14,6 +14,8 @@ namespace DataPumper.Sql
 {
     public class SqlDataPumperSourceTarget : IDataPumperSource, IDataPumperTarget, IDisposable
     {
+        public readonly DateTime ClosedIntervalDate = new DateTime(2200, 1, 1);
+        
         private static readonly ILog Log = LogManager.GetLogger(typeof(SqlDataPumperSourceTarget));
 
         private SqlConnection _connection;
@@ -90,22 +92,22 @@ namespace DataPumper.Sql
             return await command.ExecuteReaderAsync();
         }
 
+        /// <summary>
+        /// Cleans up table in regular (non-historical) mode
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>Number of rows deleted</returns>
         public async Task<long> CleanupTable(CleanupTableRequest request)
         {
-            if (!string.IsNullOrEmpty(request.HistoryDateFromFieldName))
-            {
-                return await CleanupHistoryTable(request);
-            }
-
-            var inStatement = GetInStatement(request.InstanceFieldValues);
+            var inStatement = GetInStatement(request.TenantCodes);
 
             int deleted;
             string query;
-            if (request.NotOlderThan == null || request.FullReloading)
+            if (request.NotOlderThan == null)
             {
                 query = $@"DELETE FROM {request.DataSource} WHERE 
                         ({GetFilterPredicate(request.Filter)})
-                        AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                        AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
                 Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(query, commandTimeout: Timeout);
@@ -115,7 +117,7 @@ namespace DataPumper.Sql
                 query = $@"DELETE FROM {request.DataSource} WHERE
                          {request.ActualityFieldName} >= @NotOlderThan 
                          AND ({GetFilterPredicate(request.Filter)})
-                         AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                         AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})
                          AND ({GetDeleteProtectionDateFilter(request)})";
                 Log.Warn(query);
                 deleted = await _connection.ExecuteAsync(
@@ -125,36 +127,51 @@ namespace DataPumper.Sql
                         NotOlderThan = request.NotOlderThan.Value
                     }, commandTimeout: Timeout);
             }
-
-            Log.Warn($"Deleted {deleted} record(s) in target table");
             return deleted;
         }
 
-        private async Task<long> CleanupHistoryTable(CleanupTableRequest request)
+        /// <summary>
+        /// Cleans up table in historical mode
+        /// </summary>
+        /// <param name="request"></param>
+        /// <returns>Number of rows deleted</returns>
+        public async Task<long> CleanupHistoryTable(CleanupTableRequest request)
         {
-            var inStatement = GetInStatement(request.InstanceFieldValues);
+            var inStatement = GetInStatement(request.TenantCodes);
 
-            if (request.FullReloading)
+            if (request.NotOlderThan == null) // Полная переливка
             {
                 var query = $@"DELETE FROM {request.DataSource} WHERE 
-                        {request.HistoryDateFromFieldName} = @CurrentPropertyDate
+                        HistoryDateFrom = @CurrentPropertyDate
                         AND ({GetFilterPredicate(request.Filter)})
-                        AND ({GetTenantFilter(request.InstanceFieldName, request.InstanceFieldValues, inStatement)})
+                        AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
                 Log.Warn(query);
-                var deleted = await _connection.ExecuteAsync(query, new
+                return await _connection.ExecuteAsync(query, new
                 {
                     request.CurrentPropertyDate
                 }, commandTimeout: Timeout);
-                Log.Warn($"Deleted {deleted} record(s)");
             }
-
-            return 0;
+            else
+            {
+                var query = $@"DELETE FROM {request.DataSource} WHERE 
+                        {request.ActualityFieldName} >= @NotOlderThan 
+                        AND HistoryDateFrom = @CurrentPropertyDate
+                        AND ({GetFilterPredicate(request.Filter)})
+                        AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})
+                        AND ({GetDeleteProtectionDateFilter(request)})";
+                Log.Warn(query);
+                return await _connection.ExecuteAsync(query, new
+                {
+                    request.NotOlderThan,
+                    request.CurrentPropertyDate
+                }, commandTimeout: Timeout);
+            }
         }
 
-        public async Task<long> InsertData(DataSource dataSource, IDataReader dataReader)
+        public async Task<long> InsertData(DataSource targetDataSource, IDataReader sourceDataReader)
         {
-            await CheckTablesCompatibility(dataSource, dataReader);
+            await CheckTablesCompatibility(targetDataSource, sourceDataReader);
             var sw = new Stopwatch();
             sw.Start();
             long processed = 0;
@@ -164,27 +181,50 @@ namespace DataPumper.Sql
                 BatchSize = 1000000,
                 BulkCopyTimeout = Timeout,
                 NotifyAfter = 10000,
-                DestinationTableName = dataSource.ToString()
+                DestinationTableName = targetDataSource.ToString()
             };
-            for (var i = 0; i < dataReader.FieldCount; i++)
+            for (var i = 0; i < sourceDataReader.FieldCount; i++)
             {
-                var column = dataReader.GetName(i);
+                var column = sourceDataReader.GetName(i);
                 bulkCopy.ColumnMappings.Add(new SqlBulkCopyColumnMapping(column, column));
             }
 
             bulkCopy.SqlRowsCopied += (sender, args) =>
             {
-                Log.Info($"Records processed: {args.RowsCopied:#########}, table name {dataSource}");
+                Log.Info($"Records processed: {args.RowsCopied:#########}, table name {targetDataSource}");
                 var handler = Progress;
-                handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", dataSource, sw.Elapsed));
+                handler?.Invoke(this, new ProgressEventArgs(args.RowsCopied, "Copying data...", targetDataSource, sw.Elapsed));
             };
 
-            await bulkCopy.WriteToServerAsync(dataReader);
+            await bulkCopy.WriteToServerAsync(sourceDataReader);
 
             processed = bulkCopy.GetRowsCopied();
 
             return processed;
         }
+
+        public async Task<int> CloseHistoricPeriods(CleanupTableRequest request)
+        {
+            var inStatement = GetInStatement(request.TenantCodes);
+
+            Log.Info($"Closing open intervals in {request.DataSource}...");
+            var query = $@"UPDATE {request.DataSource} SET HistoryDateTo = @CloseDate WHERE
+                           HistoryDateFrom = {request.ActualityFieldName} 
+                           AND (@OnDate is null or {request.ActualityFieldName} < @OnDate)
+                           AND ({GetFilterPredicate(request.Filter)})
+                           AND ({GetFilterPredicate(request.Filter)})
+                           AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})";
+            Log.Warn(query);
+            
+            var res = await _connection.ExecuteAsync(query, new
+            {
+                CloseDate = ClosedIntervalDate,
+                OnDate = request.NotOlderThan
+            }, commandTimeout: Timeout);
+            Log.Info($"Update affected {res} record(s)");
+            return res;
+        }
+        
 
         public async Task<string[]> GetTableFields(DataSource dataSource)
         {
@@ -209,7 +249,7 @@ namespace DataPumper.Sql
             {
                 var sw = new Stopwatch();
                 sw.Start();
-                Log.Info($"Running query: '{queryText}'");
+                Log.Warn($"Running query:\n{queryText}");
                 await _connection.ExecuteAsync(queryText, commandTimeout: Timeout);
                 Log.Info($"Query finished in {sw.Elapsed}");
             }

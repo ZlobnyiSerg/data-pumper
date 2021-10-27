@@ -14,15 +14,13 @@ namespace Quirco.DataPumper
     public class DataPumperService
     {
         private static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperService));
-
-        private readonly NDataPumper.DataPumper _pumper;
+        
         private readonly DataPumperConfiguration _configuration;
         private readonly string[] _tenantCodes;
         public ILogsSender LogsSender { get; set; }
 
         public DataPumperService(DataPumperConfiguration configuration)
         {
-            _pumper = new NDataPumper.DataPumper();
             _configuration = configuration;
             LogsSender = new SmtpSender(configuration);
         }
@@ -45,75 +43,6 @@ namespace Quirco.DataPumper
             var jobs = _configuration.Jobs;
             var logs = await ProcessInternal(jobs, sourceProvider, targetProvider, fullReloading);
             LogsSender.Send(logs.ToList());
-        }
-
-        /// <summary>
-        /// Осуществляет частичное обновление всех таблиц, где есть колонка из filter.FieldName со значением filter.Values
-        /// </summary>
-        public async Task<PumpResult> PartialLoad(
-            IDataPumperSource sourceProvider,
-            IDataPumperTarget targetProvider,
-            PartialLoadRequest request)
-        {
-            var deleted = 0L;
-            var inserted = 0L;
-
-            var processedJobs = new HashSet<string>();
-            foreach (var filter in request.Filters)
-            {
-                Log.Warn($"Performing partial update for '{filter.FieldName}' IN ({string.Join(", ", filter.Values)})");
-                var jobs = await GetJobsWithField(sourceProvider, filter.FieldName);
-                foreach (var job in jobs.Where(j => !processedJobs.Contains(j.Name)))
-                {
-                    Log.Debug($"Updating table '{job.SourceTableName}'...");
-                    var res = await _pumper.Pump(sourceProvider, targetProvider, new PumpParameters(
-                        new DataSource(job.SourceTableName, job.StoredProcedure),
-                        new DataSource(job.TargetTableName),
-                        _configuration.ActualityColumnName,
-                        _configuration.HistoricColumnFrom,
-                        _configuration.TenantField,
-                        request.ActualDate,
-                        false,
-                        request.ActualDate,
-                        false,
-                        null
-                    )
-                    {
-                        Filter = new[] { filter }
-                    });
-                    deleted += res.Deleted;
-                    inserted += res.Inserted;
-                    processedJobs.Add(job.Name);
-                }
-            }
-
-            return new PumpResult(inserted, deleted);
-        }
-
-        private readonly Dictionary<string, List<PumperJobItem>> _jobsCacheByFieldName = new();
-
-        /// <summary>
-        /// Возвращает список джобов, в исходных таблицах которых есть поле с указанным названием.
-        /// Нужно для синхронизации данных "на лету".
-        /// </summary>
-        /// <param name="sourceProvider"></param>
-        /// <param name="fieldName"></param>
-        private async Task<IEnumerable<PumperJobItem>> GetJobsWithField(IDataPumperSource sourceProvider, string fieldName)
-        {
-            if (!_jobsCacheByFieldName.TryGetValue(fieldName, out var jobs))
-            {
-                jobs = new List<PumperJobItem>();
-                foreach (var job in _configuration.Jobs)
-                {
-                    var fields = await sourceProvider.GetTableFields(new DataSource(job.SourceTableName, job.StoredProcedure));
-                    if (fields.Contains(fieldName))
-                        jobs.Add(job);
-                }
-
-                _jobsCacheByFieldName[fieldName] = jobs;
-            }
-
-            return jobs;
         }
 
         public async Task<IEnumerable<JobLog>> ProcessInternal(IEnumerable<PumperJobItem> jobs, IDataPumperSource sourceProvider,
@@ -175,31 +104,19 @@ namespace Quirco.DataPumper
                 var jobActualDate = tableSync.ActualDate; // Если переливка не выполнялась, то будет Null
                 var onDate = jobActualDate ?? DateTime.Today.AddYears(-100);
 
-                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Now.Date;
+                var currentDate = await sourceProvider.GetCurrentDate(_configuration.CurrentDateQuery) ?? DateTime.Today;
 
-                if (job.HistoricMode)
-                {
-                    if (currentDate == tableSync.ActualDate)
-                    {
-                        onDate = tableSync.PreviousActualDate ?? DateTime.Today.AddYears(-100);
-                    }
-                    else
-                    {
-                        tableSync.PreviousActualDate = tableSync.ActualDate;
-                    }
-                }
+                IDataPumper pumper = job.HistoricMode ? new HistoricDataPumper() : new NDataPumper.DataPumper();
 
-                var records = await _pumper.Pump(sourceProvider, targetProvider,
+                var records = await pumper.Pump(sourceProvider, targetProvider,
                     new PumpParameters(
                         new DataSource(job.SourceTableName, job.StoredProcedure),
                         new DataSource(job.TargetTableName),
                         _configuration.ActualityColumnName,
-                        _configuration.HistoricColumnFrom,
-                        _configuration.TenantField,
                         onDate.AddDays(_configuration.BackwardReloadDays),
-                        job.HistoricMode,
                         currentDate,
                         fullReloading,
+                        _configuration.TenantField,
                         _tenantCodes)
                     {
                         DeleteProtectionDate = _configuration.DeleteProtectionDate
@@ -208,6 +125,7 @@ namespace Quirco.DataPumper
                 tableSync.ActualDate = currentDate;
                 jobLog.EndDate = DateTime.Now;
                 jobLog.RecordsProcessed = records.Inserted;
+                jobLog.RecordsDeleted = records.Deleted;
                 jobLog.Status = SyncStatus.Success;
                 await targetProvider.ExecuteRawQuery(job.PostRunQuery);
                 sw.Stop();
