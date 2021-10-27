@@ -45,8 +45,8 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     new DataSource("Occupations"),
                     "ActualityDate",
-                    DateTime.Today,
-                    DateTime.Today));
+                    new DateTime(2001, 01, 01),
+                    new DateTime(2001, 01, 01)));
 
             // Assert
             result.Inserted.Should().Be(1);
@@ -81,8 +81,8 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     new DataSource("Occupations"),
                     "ActualityDate",
-                    DateTime.Today,
-                    DateTime.Today));
+                    new DateTime(2001, 01, 01),
+                    new DateTime(2001, 01, 01)));
 
             // Assert
             result.Inserted.Should().Be(1);
