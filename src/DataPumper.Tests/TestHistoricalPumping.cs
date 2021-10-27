@@ -114,10 +114,10 @@ namespace DataPumper.Tests
                             new TargetHistoricalOccupation("05.05.21", "02.05.21", "04.05.2021", 30),
                             new TargetHistoricalOccupation("06.05.21", "02.05.21", "04.05.2021", 20),
                             
-                            new TargetHistoricalOccupation("03.05.21", "05.05.21", "01.01.2200", 60),
-                            new TargetHistoricalOccupation("04.05.21", "05.05.21", "01.01.2200", 55),
-                            new TargetHistoricalOccupation("05.05.21", "05.05.21", "05.05.2021", 30),
-                            new TargetHistoricalOccupation("06.05.21", "05.05.21", "05.05.2021", 20)
+                            new TargetHistoricalOccupation("03.05.21", "05.05.21", "01.01.2200", 65),
+                            new TargetHistoricalOccupation("04.05.21", "05.05.21", "01.01.2200", 80),
+                            new TargetHistoricalOccupation("05.05.21", "05.05.21", "05.05.2021", 65),
+                            new TargetHistoricalOccupation("06.05.21", "05.05.21", "05.05.2021", 25)
                         }
                     }
                 }
