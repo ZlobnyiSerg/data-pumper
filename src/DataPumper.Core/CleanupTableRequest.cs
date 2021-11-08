@@ -14,7 +14,7 @@ namespace DataPumper.Core
         /// <summary>
         /// Используется для частичтого обновления данных, начиная с указанной даты. Если параметр пуст, будет осуществлена полная переливка
         /// </summary>
-        public DateTime? NotOlderThan { get; }
+        public DateTime? LastLoadDate { get; }
         
         public string? TenantField { get; }
 
@@ -29,14 +29,14 @@ namespace DataPumper.Core
         public CleanupTableRequest(
             DataSource dataSource, 
             string actualityFieldName,
-            DateTime? notOlderThan,
+            DateTime? lastLoadDate,
             DateTime currentPropertyDate,
             string? tenantField = null, 
             string[]? tenantCodes = null
         )
         {
             DataSource = dataSource;
-            NotOlderThan = notOlderThan;
+            LastLoadDate = lastLoadDate;
             ActualityFieldName = actualityFieldName;
             CurrentPropertyDate = currentPropertyDate;
             TenantField = tenantField;

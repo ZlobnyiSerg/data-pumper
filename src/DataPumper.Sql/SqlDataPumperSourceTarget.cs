@@ -103,7 +103,7 @@ namespace DataPumper.Sql
 
             int deleted;
             string query;
-            if (request.NotOlderThan == null)
+            if (request.LastLoadDate == null)
             {
                 query = $@"DELETE FROM {request.DataSource} WHERE 
                         ({GetFilterPredicate(request.Filter)})
@@ -124,7 +124,7 @@ namespace DataPumper.Sql
                     query,
                     new
                     {
-                        NotOlderThan = request.NotOlderThan.Value
+                        NotOlderThan = request.LastLoadDate.Value
                     }, commandTimeout: Timeout);
             }
             return deleted;
@@ -139,7 +139,7 @@ namespace DataPumper.Sql
         {
             var inStatement = GetInStatement(request.TenantCodes);
 
-            if (request.NotOlderThan == null) // Полная переливка
+            if (request.LastLoadDate == null) // Полная переливка
             {
                 var query = $@"DELETE FROM {request.DataSource} WHERE 
                         HistoryDateFrom = @CurrentPropertyDate
@@ -163,7 +163,7 @@ namespace DataPumper.Sql
                 Log.Warn(query);
                 return await _connection.ExecuteAsync(query, new
                 {
-                    request.NotOlderThan,
+                    NotOlderThan = request.LastLoadDate,
                     request.CurrentPropertyDate
                 }, commandTimeout: Timeout);
             }
@@ -209,42 +209,42 @@ namespace DataPumper.Sql
 
             Log.Info($"Closing open intervals in {request.DataSource}...");
             var query = $@"UPDATE {request.DataSource} SET HistoryDateTo = @ClosedDate WHERE
-                           HistoryDateFrom = {request.ActualityFieldName} 
-                           AND {request.ActualityFieldName} < @OnDate
+                           (HistoryDateFrom = @CurrentPropertyDate OR HistoryDateFrom = {request.ActualityFieldName}) 
+                           AND {request.ActualityFieldName} > @LastLoadDate 
+                           AND {request.ActualityFieldName} < @CurrentPropertyDate
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})";
             Log.Warn(query);
-            Log.Warn($"@ClosedDate={ClosedIntervalDate}; @OnDate={request.NotOlderThan}");
+            Log.Warn($"@ClosedDate={ClosedIntervalDate}; @LastLoadDate={request.LastLoadDate}; @CurrentPropertyDate={request.CurrentPropertyDate}");
             var res = await _connection.ExecuteAsync(query, new
             {
                 ClosedDate = ClosedIntervalDate,
-                OnDate = request.NotOlderThan
+                request.CurrentPropertyDate,
+                request.LastLoadDate
             }, commandTimeout: Timeout);
             Log.Info($"Update affected {res} record(s)");
 
-            if (request.NotOlderThan != null && request.CurrentPropertyDate != request.NotOlderThan?.AddDays(-1))
+            if (request.LastLoadDate != null && request.CurrentPropertyDate != request.LastLoadDate)
             {
                 Log.Info($"Updated history dates on skipped days in {request.DataSource}...");
-                query = $@"UPDATE {request.DataSource} SET HistoryDateTo = @CurrentDatePrevDay WHERE
-                           HistoryDateTo = @OnDate 
+                query = $@"UPDATE {request.DataSource} SET HistoryDateTo = @CurrentDatePrevDay 
+                           WHERE HistoryDateTo = @LastLoadDate 
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})";
                 Log.Warn(query);
-                Log.Warn($"@CurrentDatePrevDay={request.CurrentPropertyDate.AddDays(-1)}; @OnDate={request.NotOlderThan?.AddDays(-1)}");
+                Log.Warn($"@CurrentDatePrevDay={request.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={request.LastLoadDate}");
                 var res2 = await _connection.ExecuteAsync(query, new
                 {
                     CurrentDatePrevDay = request.CurrentPropertyDate.AddDays(-1),
-                    OnDate = request.NotOlderThan?.AddDays(-1)
+                    request.LastLoadDate
                 }, commandTimeout: Timeout);
                 Log.Info($"Update closed {res2} outdated record(s)");
             }
-
             return res;
         }
         
-
         public async Task<string[]> GetTableFields(DataSource dataSource)
         {
             using var dataReader = await _connection.ExecuteReaderAsync($"SELECT TOP 0 * FROM {dataSource}", commandTimeout: Timeout);
