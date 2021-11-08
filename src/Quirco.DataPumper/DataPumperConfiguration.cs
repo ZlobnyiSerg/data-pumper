@@ -32,10 +32,6 @@ namespace Quirco.DataPumper
             return null;
         }
 
-        public string HistoricColumnFrom => _configuration.Get<string>("Core:HistoricColumns:From");
-
-        public string HistoricColumnTo => _configuration.Get<string>("Core:HistoricColumns:To");
-
         public string EmailFrom => _configuration.Get<string>("EmailNotifications:Sender:Email");
 
         public string PasswordFrom => _configuration.Get<string>("EmailNotifications:Sender:Password");
@@ -91,8 +87,6 @@ namespace Quirco.DataPumper
         public int Order { get; set; }
         
         public bool StoredProcedure { get; set; }
-        
-        public string SomeTest { get; set; }
 
         public override string ToString()
         {

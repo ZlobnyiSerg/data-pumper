@@ -4,7 +4,7 @@ namespace DataPumper.Core
 {
     public class DataSource
     {
-        public string Schema { get; }
+        public string? Schema { get; }
         
         public string Name { get; }
 

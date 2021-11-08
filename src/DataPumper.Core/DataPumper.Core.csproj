@@ -13,6 +13,7 @@
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
     <LangVersion>default</LangVersion>
+    <Nullable>enable</Nullable>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,6 +39,7 @@
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Transactions" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Data.DataSetExtensions" />
     <Reference Include="Microsoft.CSharp" />
@@ -46,15 +48,19 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CleanupTableRequest.cs" />
     <Compile Include="DataPumper.cs" />
     <Compile Include="DataReaderRequest.cs" />
     <Compile Include="FilterConstraint.cs" />
+    <Compile Include="HistoricDataPumper.cs" />
+    <Compile Include="IDataPumper.cs" />
     <Compile Include="IDataPumperProvider.cs" />
     <Compile Include="IDataPumperSource.cs" />
     <Compile Include="IDataPumperTarget.cs" />
     <Compile Include="ProgressEventArgs.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PumpParameters.cs" />
+    <Compile Include="PumpResult.cs" />
     <Compile Include="TableDefinition.cs" />
   </ItemGroup>
   <ItemGroup>
