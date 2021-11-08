@@ -197,8 +197,8 @@ namespace DataPumper.Tests
                             new SourceOccupation("02.05.21", "05.05.21", ClosedDate, 60),
                             new SourceOccupation("03.05.21", "05.05.21", ClosedDate, 65),
                             new SourceOccupation("04.05.21", "05.05.21", ClosedDate, 80),
-                            new SourceOccupation("05.05.21", "05.05.21", "05.05.2021", 65),
-                            new SourceOccupation("06.05.21", "05.05.21", "05.05.2021", 25)
+                            new SourceOccupation("05.05.21", "05.05.21", "05.05.2021", 67),
+                            new SourceOccupation("06.05.21", "05.05.21", "05.05.2021", 27)
                         },
                         ExpectedData =
                         {
@@ -219,8 +219,8 @@ namespace DataPumper.Tests
                             new TargetHistoricalOccupation("02.05.21", "05.05.21", ClosedDate, 60),
                             new TargetHistoricalOccupation("03.05.21", "05.05.21", ClosedDate, 65),
                             new TargetHistoricalOccupation("04.05.21", "05.05.21", ClosedDate, 80),
-                            new TargetHistoricalOccupation("05.05.21", "05.05.21", "05.05.2021", 65),
-                            new TargetHistoricalOccupation("06.05.21", "05.05.21", "05.05.2021", 25)
+                            new TargetHistoricalOccupation("05.05.21", "05.05.21", "05.05.2021", 67),
+                            new TargetHistoricalOccupation("06.05.21", "05.05.21", "05.05.2021", 27)
                         }
                     }
                 }
