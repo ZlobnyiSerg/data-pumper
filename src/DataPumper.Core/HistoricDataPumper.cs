@@ -14,7 +14,6 @@ namespace DataPumper.Core
         {
             try 
             {
-                using var transaction = new TransactionScope(TransactionScopeOption.Required, TransactionScopeAsyncFlowOption.Enabled);
                 var sw = new Stopwatch();
                 sw.Start();
 
@@ -51,7 +50,6 @@ namespace DataPumper.Core
                 var updated = await target.CloseHistoricPeriods(cleanupTableRequest);
                 Log.Info($"Updated {updated} historic record(s)");
 
-                transaction.Complete();
                 return new PumpResult(inserted, deleted);
             }
             catch (Exception ex)

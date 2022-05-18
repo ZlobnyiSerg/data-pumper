@@ -7,7 +7,7 @@ using DataPumper.Core;
 using DataPumper.Sql;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
-using NDataPumper = DataPumper.Core.DataPumper;
+using NDataPumper = DataPumper.Core.HistoricDataPumper;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -62,7 +62,7 @@ namespace DataPumper.Tests
             _targetContext.Occupations.Should().HaveCount(1);
         }
 
-        [Fact]
+        [Fact(DisplayName = "Переливка дважды в тот же день обновляет данные")]
         public async Task TestSameDayPumping()
         {
             // Arrange
