@@ -70,6 +70,10 @@
     </None>
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DataPumper.PostgreSql\DataPumper.PostgreSql.csproj">
+      <Project>{d3f02f7b-aed8-499c-b79e-e4138ee16754}</Project>
+      <Name>DataPumper.PostgreSql</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DataPumper.Core\DataPumper.Core.csproj">
       <Project>{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}</Project>
       <Name>DataPumper.Core</Name>
@@ -110,6 +114,9 @@
     </PackageReference>
     <PackageReference Include="NLog">
       <Version>4.4.12</Version>
+    </PackageReference>
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe">
+      <Version>4.5.2</Version>
     </PackageReference>
     <PackageReference Include="Topshelf">
       <Version>4.0.4</Version>

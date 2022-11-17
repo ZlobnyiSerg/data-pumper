@@ -16,6 +16,8 @@ namespace DataPumper.Console
 
         public string SourceConnectionString => _configuration.Get<string>("Core:ConnectionString");
 
+        public string TargetProvider => _configuration.Get<string>("Core:TargetProvider");
+
         public string TargetConnectionString => _configuration.Get<string>("Core:TargetConnectionString");
 
         public string HangFireDashboardUrl => _configuration.Get<string>("Core:HangFireDashboardUrl", "http://localhost:9019");

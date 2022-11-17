@@ -3,23 +3,33 @@ using DataPumper.Sql;
 using Microsoft.Practices.Unity;
 using Quirco.DataPumper;
 using System.Collections.Generic;
+using DataPumper.PostgreSql;
 
 namespace DataPumper.Console
 {
     public class Bootstrapper
     {
-        public static void Initialize(IUnityContainer container)
+        public static void Initialize(IUnityContainer container, WarehouseServiceConfiguration config)
         {
             container.RegisterType<DataPumperService>();
             container.RegisterType<Core.DataPumper>();
 
             // IDataPumperSource
             container.RegisterType<IEnumerable<IDataPumperSource>, IDataPumperSource[]>();
-            container.RegisterType<IDataPumperSource, SqlDataPumperSourceTarget>(nameof(SqlDataPumperSourceTarget));
+            container.RegisterType<IDataPumperSource, SqlDataPumperSourceTarget>();
 
             // IDataPumperTarget
             container.RegisterType<IEnumerable<IDataPumperTarget>, IDataPumperTarget[]>();
-            container.RegisterType<IDataPumperTarget, SqlDataPumperSourceTarget>(nameof(SqlDataPumperSourceTarget));
+
+            switch (config.TargetProvider)
+            {
+                case "PostgreSQL":
+                    container.RegisterType<IDataPumperTarget, PostgreSqlDataPumperTarget>();
+                    break;
+                case "SqlServer":
+                    container.RegisterType<IDataPumperTarget, SqlDataPumperSourceTarget>();
+                    break;
+            }
         }
     }
 }

@@ -44,7 +44,7 @@ namespace DataPumper.Console
         {
             _container = new UnityContainer();
 
-            Bootstrapper.Initialize(_container);
+            Bootstrapper.Initialize(_container, _configuration);
 
             JobActivator.Current = new UnityJobActivator(_container);
             JobStorage.Current = new SqlServerStorage(_configuration.HangfireConnectionString, new SqlServerStorageOptions
@@ -111,10 +111,10 @@ namespace DataPumper.Console
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
-            var sourceProvider = new SqlDataPumperSourceTarget();
+            var sourceProvider = _container.Resolve<IDataPumperSource>();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
-            var targetProvider = new SqlDataPumperSourceTarget();
+            var targetProvider = _container.Resolve<IDataPumperTarget>();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
 
             await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider, fullReload);
@@ -138,10 +138,10 @@ namespace DataPumper.Console
         [Queue(Queue)]
         public async Task RunPartialUpdate()
         {
-            var sourceProvider = new SqlDataPumperSourceTarget();
+            var sourceProvider = _container.Resolve<IDataPumperSource>();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
-            var targetProvider = new SqlDataPumperSourceTarget();
+            var targetProvider = _container.Resolve<IDataPumperTarget>();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
         }
         
@@ -150,10 +150,10 @@ namespace DataPumper.Console
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
-            var sourceProvider = new SqlDataPumperSourceTarget();
+            var sourceProvider = _container.Resolve<IDataPumperSource>();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
-            var targetProvider = new SqlDataPumperSourceTarget();
+            var targetProvider = _container.Resolve<IDataPumperTarget>();
             await targetProvider.Initialize(_configuration.TargetConnectionString);
 
             await dataPumperService.RunJobs(sourceProvider, targetProvider, fullReload);
