@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30011.22
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Core", "src\DataPumper.Core\DataPumper.Core.csproj", "{4EBC109B-BB0D-4E3E-9024-8A1180EC9C47}"
 EndProject
@@ -17,7 +17,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Workflows", "Workflows", "{
 		.github\workflows\publish-to-package.yml = .github\workflows\publish-to-package.yml
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.Tests", "src\DataPumper.Tests\DataPumper.Tests.csproj", "{E4FD0A7D-E751-43D4-AB24-125D75A0EFEE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Tests", "src\DataPumper.Tests\DataPumper.Tests.csproj", "{E4FD0A7D-E751-43D4-AB24-125D75A0EFEE}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.PostgreSql", "src\DataPumper.PostgreSql\DataPumper.PostgreSql.csproj", "{D3F02F7B-AED8-499C-B79E-E4138EE16754}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -45,6 +47,10 @@ Global
 		{E4FD0A7D-E751-43D4-AB24-125D75A0EFEE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E4FD0A7D-E751-43D4-AB24-125D75A0EFEE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E4FD0A7D-E751-43D4-AB24-125D75A0EFEE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

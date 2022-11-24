@@ -64,7 +64,7 @@
       <Version>1.60.6</Version>
     </PackageReference>
     <PackageReference Include="System.Data.SqlClient">
-      <Version>4.8.1</Version>
+      <Version>4.8.5</Version>
     </PackageReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
