@@ -20,16 +20,8 @@ namespace DataPumper.Console
 
             // IDataPumperTarget
             container.RegisterType<IEnumerable<IDataPumperTarget>, IDataPumperTarget[]>();
-
-            switch (config.TargetProvider)
-            {
-                case "PostgreSQL":
-                    container.RegisterType<IDataPumperTarget, PostgreSqlDataPumperTarget>();
-                    break;
-                case "SqlServer":
-                    container.RegisterType<IDataPumperTarget, SqlDataPumperSourceTarget>();
-                    break;
-            }
+            container.RegisterType<IDataPumperTarget, PostgreSqlDataPumperTarget>("PostgreSQL");
+            container.RegisterType<IDataPumperTarget, SqlDataPumperSourceTarget>("SqlServer");
         }
     }
 }

@@ -114,7 +114,7 @@ namespace DataPumper.Console
             var sourceProvider = _container.Resolve<IDataPumperSource>();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
-            var targetProvider = _container.Resolve<IDataPumperTarget>();
+            var targetProvider = _container.Resolve<IDataPumperTarget>(_configuration.TargetProvider);
             await targetProvider.Initialize(_configuration.TargetConnectionString);
 
             await dataPumperService.RunJob(jobItem, sourceProvider, targetProvider, fullReload);
@@ -141,7 +141,7 @@ namespace DataPumper.Console
             var sourceProvider = _container.Resolve<IDataPumperSource>();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
-            var targetProvider = _container.Resolve<IDataPumperTarget>();
+            var targetProvider = _container.Resolve<IDataPumperTarget>(_configuration.TargetProvider);
             await targetProvider.Initialize(_configuration.TargetConnectionString);
         }
         
@@ -153,7 +153,7 @@ namespace DataPumper.Console
             var sourceProvider = _container.Resolve<IDataPumperSource>();
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
-            var targetProvider = _container.Resolve<IDataPumperTarget>();
+            var targetProvider = _container.Resolve<IDataPumperTarget>(_configuration.TargetProvider);
             await targetProvider.Initialize(_configuration.TargetConnectionString);
 
             await dataPumperService.RunJobs(sourceProvider, targetProvider, fullReload);
