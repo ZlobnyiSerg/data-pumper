@@ -89,11 +89,13 @@
       <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
       <IncludeAssets>DataPumper.Core.dll</IncludeAssets>
     </ProjectReference>
+    <ProjectReference Include="..\DataPumper.PostgreSql\DataPumper.PostgreSql.csproj">
+      <Project>{d3f02f7b-aed8-499c-b79e-e4138ee16754}</Project>
+      <Name>DataPumper.PostgreSql</Name>
+    </ProjectReference>
     <ProjectReference Include="..\DataPumper.Sql\DataPumper.Sql.csproj">
       <Project>{3a12de89-4a19-4974-be08-300375e094a7}</Project>
       <Name>DataPumper.Sql</Name>
-      <ReferenceOutputAssembly>true</ReferenceOutputAssembly>
-      <IncludeAssets>DataPumper.Sql.dll</IncludeAssets>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
