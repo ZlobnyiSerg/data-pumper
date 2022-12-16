@@ -45,8 +45,8 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
 
         var query =
             $"""
-            DELETE FROM {reqAdapter.DataSource} WHERE
-            {AndClause(whereClauses)}
+            DELETE FROM {reqAdapter.DataSource}
+            {AndClause(whereClauses, "WHERE")}
             """;
 
         Log.Warn(query);
@@ -195,9 +195,12 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
         return AndClause(clauses.AsEnumerable());
     }
 
-    private static string AndClause(IEnumerable<string> clauses)
+    private static string AndClause(IEnumerable<string> clauses, string prefix = null)
     {
-        return string.Join($"{Environment.NewLine}AND ", clauses.Where(x => !string.IsNullOrEmpty(x)));
+        var clause = string.Join($"{Environment.NewLine}AND ", clauses.Where(x => !string.IsNullOrEmpty(x)));
+        if (string.IsNullOrWhiteSpace(prefix) || string.IsNullOrWhiteSpace(clause)) return clause;
+
+        return $"{prefix} {clause}";
     }
 
     public void Dispose()

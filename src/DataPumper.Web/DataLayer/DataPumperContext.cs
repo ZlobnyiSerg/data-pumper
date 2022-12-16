@@ -40,20 +40,8 @@ namespace DataPumper.Web.DataLayer
 
         public void Seed()
         {
-            if (!TableSyncJobs.Any())
+            if (!Settings.Any())
             {
-                TableSyncJobs.AddRange(new TableSyncJob
-                {
-                    SourceProvider = SqlDataPumperSourceTarget.Name,
-                    SourceConnectionString =
-                        "Server=(local);Database=Logus.HMS;Integrated Security=true;MultipleActiveResultSets=true;Application Name=DataPumper",
-                    SourceTableName = "lr.VTransactions",
-                    TargetProvider = SqlDataPumperSourceTarget.Name,
-                    TargetConnectionString =
-                        "Server=(local);Database=Logus.Reporting;Integrated Security=true;MultipleActiveResultSets=true;Application Name=DataPumper",
-                    TargetTableName = "lr.Transactions"
-                });
-                
                 Settings.AddRange(new Setting
                 {
                     Key = Setting.CurrentDateTable,
