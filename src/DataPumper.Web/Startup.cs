@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using DataPumper.Core;
+using DataPumper.PostgreSql;
 using DataPumper.Sql;
 using DataPumper.Web.DataLayer;
 using Microsoft.AspNetCore.Builder;
@@ -37,6 +38,7 @@ namespace DataPumper.Web
 
             services.AddTransient<IDataPumperSource, SqlDataPumperSourceTarget>();
             services.AddTransient<IDataPumperTarget, SqlDataPumperSourceTarget>();
+            services.AddTransient<IDataPumperTarget, PostgreSqlDataPumperTarget>();
             
             services.AddTransient<Core.DataPumper>();
             services.AddTransient<DataPumpService>();

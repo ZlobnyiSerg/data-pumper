@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataPumper.Core;
 using DataPumper.Web.DataLayer;
 using Hangfire;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace DataPumper.Web.Services
@@ -73,6 +73,11 @@ namespace DataPumper.Web.Services
                 await source.Initialize(job.SourceConnectionString);
                 await target.Initialize(job.TargetConnectionString);
 
+                var onDate = job.Date;
+                var currentDate = await source.GetCurrentDate("SELECT min(PropertyCurrentDate) FROM lr.VProperties") ?? DateTime.Today;
+
+                var request = new PumpParameters(new DataSource(job.SourceTableName), new DataSource(job.TargetTableName), "ActualDate", onDate, currentDate);
+
                 var sw = new Stopwatch();
                 sw.Start();
 
@@ -85,21 +90,15 @@ namespace DataPumper.Web.Services
                     var handler = Progress;
                     handler?.Invoke(sender, args);
                 };
-                
-                var curDateTable = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateTable, token))?.Value;
-                var records = await _pumper.Pump(source, target, 
-                    new TableName(job.SourceTableName), 
-                    new TableName(job.TargetTableName), 
-                    "ActualDate", 
-                    new TableName(curDateTable), fullReload ? DateTime.Today.AddYears(-100) : job.Date);
-                var currentDate = await GetCurrentDate(source) ?? DateTime.Now;
-                
+
+                var result = await _pumper.Pump(source, target, request);
+
                 job.Date = currentDate;
                 _logger.LogInformation($"New job date is now '{job.Date}'");
 
                 log.Elapsed = sw.Elapsed;
                 log.EndDate = DateTime.Now;
-                log.RecordsProcessed = records;
+                log.RecordsProcessed = result.Inserted;
                 log.Status = SyncStatus.Success;
                 await _context.SaveChangesAsync(token);
             }
@@ -112,15 +111,6 @@ namespace DataPumper.Web.Services
                 log.Message = ex.Message;
                 await _context.SaveChangesAsync(token);
             }
-        }
-
-        private async Task<DateTime?> GetCurrentDate(IDataPumperSource source)
-        {
-            var curDateTable = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateTable))?.Value;
-            var curDateField = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateField))?.Value;
-            if (string.IsNullOrEmpty(curDateTable) || string.IsNullOrEmpty(curDateField))
-                return null;
-            return await source.GetCurrentDate(new TableName(curDateTable), curDateField);
         }
     }
 }
