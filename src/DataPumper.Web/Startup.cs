@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
 using DataPumper.Core;
@@ -14,6 +15,7 @@ using Microsoft.Extensions.Hosting;
 using DataPumper.Web.Services;
 using Hangfire;
 using Hangfire.MemoryStorage;
+using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
 
 namespace DataPumper.Web
@@ -34,7 +36,11 @@ namespace DataPumper.Web
             services.AddRazorPages();
             services.AddServerSideBlazor();
 
-            services.AddDbContext<DataPumperContext>(opts => { opts.UseSqlite(@"Data Source=DataPumper.db;"); });
+            var contextDirectory = "context";
+            Directory.CreateDirectory(contextDirectory);
+            var builder = new SqliteConnectionStringBuilder();
+            builder.DataSource = Path.Combine(contextDirectory, "DataPumper.db");
+            services.AddDbContext<DataPumperContext>(opts => { opts.UseSqlite(builder.ToString()); });
 
             services.AddTransient<IDataPumperSource, SqlDataPumperSourceTarget>();
             services.AddTransient<IDataPumperTarget, SqlDataPumperSourceTarget>();
