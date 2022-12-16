@@ -21,8 +21,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Tests", "src\Dat
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DataPumper.PostgreSql", "src\DataPumper.PostgreSql\DataPumper.PostgreSql.csproj", "{D3F02F7B-AED8-499C-B79E-E4138EE16754}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -53,10 +51,6 @@ Global
 		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D3F02F7B-AED8-499C-B79E-E4138EE16754}.Release|Any CPU.Build.0 = Release|Any CPU
-		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
