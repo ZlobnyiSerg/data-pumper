@@ -14,6 +14,9 @@ namespace DataPumper.Web.Services
 {
     public class DataPumpService
     {
+        public const string JobId = "main-job";
+        public const string FullReloadJobId = "full-reload-job";
+
         private readonly Core.DataPumper _pumper;
         private readonly DataPumperContext _context;
         private readonly ILogger<DataPumpService> _logger;
