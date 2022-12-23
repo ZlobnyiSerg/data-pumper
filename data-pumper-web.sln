@@ -1,0 +1,43 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.3.32929.385
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Web", "src\DataPumper.Web\DataPumper.Web.csproj", "{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Core.Net", "src\DataPumper.Core\DataPumper.Core.Net.csproj", "{299D611F-3C27-49D5-B84D-C62FF02B901F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.PostgreSql.Net", "src\DataPumper.PostgreSql\DataPumper.PostgreSql.Net.csproj", "{377E166D-6E87-4CB1-B269-0C3230914A96}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "DataPumper.Sql.Net", "src\DataPumper.Sql\DataPumper.Sql.Net.csproj", "{FC9DA61D-820D-4515-9726-9796B30580F7}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AC5A2BC4-3F07-4F7A-9E7E-41D6E007ABD4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{299D611F-3C27-49D5-B84D-C62FF02B901F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{299D611F-3C27-49D5-B84D-C62FF02B901F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{299D611F-3C27-49D5-B84D-C62FF02B901F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{299D611F-3C27-49D5-B84D-C62FF02B901F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{377E166D-6E87-4CB1-B269-0C3230914A96}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{377E166D-6E87-4CB1-B269-0C3230914A96}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{377E166D-6E87-4CB1-B269-0C3230914A96}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{377E166D-6E87-4CB1-B269-0C3230914A96}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FC9DA61D-820D-4515-9726-9796B30580F7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FC9DA61D-820D-4515-9726-9796B30580F7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FC9DA61D-820D-4515-9726-9796B30580F7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FC9DA61D-820D-4515-9726-9796B30580F7}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {A52A0248-CF07-433A-83B0-06746E7549F1}
+	EndGlobalSection
+EndGlobal

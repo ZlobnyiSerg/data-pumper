@@ -1,0 +1,14 @@
+version: '3'
+
+volumes:
+  context: { }
+
+services:
+  datapumper:
+    build:
+      context: ./
+      dockerfile: ./src/DataPumper.Web/Dockerfile
+    volumes:
+      - context:/app/context
+    ports:
+      - "80:80" 
