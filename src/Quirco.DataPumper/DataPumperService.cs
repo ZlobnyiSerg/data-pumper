@@ -115,6 +115,8 @@ namespace Quirco.DataPumper
                         _configuration.ActualityColumnName,
                         onDate.AddDays(_configuration.BackwardReloadDays),
                         currentDate,
+                        _configuration.HistoricColumnsFrom,
+                        _configuration.HistoricColumnsTo,
                         fullReloading,
                         _configuration.TenantField,
                         _tenantCodes)

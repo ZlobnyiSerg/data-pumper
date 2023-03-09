@@ -54,7 +54,9 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     "ActualityDate",
                     new DateTime(2001, 01, 01),
-                    new DateTime(2001, 01, 01)));
+                    new DateTime(2001, 01, 01),
+                    nameof(TargetHistoricalOccupation.HistoryDateFrom),
+                    nameof(TargetHistoricalOccupation.HistoryDateTo)));
 
             // Assert
             result.Inserted.Should().Be(1);
@@ -82,7 +84,9 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     "ActualityDate",
                     new DateTime(2001, 01, 01),
-                    new DateTime(2001, 01, 01)));
+                    new DateTime(2001, 01, 01),
+                    nameof(TargetHistoricalOccupation.HistoryDateFrom),
+                    nameof(TargetHistoricalOccupation.HistoryDateTo)));
             // Pump again
             result = await new NDataPumper().Pump(source, target,
                 new PumpParameters(
@@ -90,7 +94,9 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     "ActualityDate",
                     new DateTime(2001, 01, 01),
-                    new DateTime(2001, 01, 01)));
+                    new DateTime(2001, 01, 01),
+                    nameof(TargetHistoricalOccupation.HistoryDateFrom),
+                    nameof(TargetHistoricalOccupation.HistoryDateTo)));
 
             // Assert
             result.Inserted.Should().Be(1);
@@ -313,7 +319,9 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     "ActualityDate",
                     lastPumpDate,
-                    pump.PropertyDate));
+                    pump.PropertyDate,
+                    nameof(TargetHistoricalOccupation.HistoryDateFrom),
+                    nameof(TargetHistoricalOccupation.HistoryDateTo)));
 
                 lastPumpDate = pump.PropertyDate;
 

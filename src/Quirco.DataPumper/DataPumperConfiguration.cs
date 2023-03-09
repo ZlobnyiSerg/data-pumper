@@ -19,6 +19,10 @@ namespace Quirco.DataPumper
         public string ActualityColumnName => _configuration.GetRequired<string>("Core:ActualityColumnName");
 
         public string TenantField => _configuration.Get<string>("Core:TenantField");
+
+        public string HistoricColumnsFrom => _configuration.Get<string>("Core:HistoricColumns:From", "HistoryDateFrom");
+
+        public string HistoricColumnsTo => _configuration.Get<string>("Core:HistoricColumns:To", "HistoryDateTo");
         
         public int BackwardReloadDays => _configuration.Get("Core:BackwardReloadDays", -1);
 

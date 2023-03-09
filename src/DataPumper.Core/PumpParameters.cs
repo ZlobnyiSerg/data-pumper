@@ -4,14 +4,16 @@ namespace DataPumper.Core
 {
     public class PumpParameters
     {
-        public DataSource SourceDataSource { get; private set; }
-        public DataSource TargetDataSource { get; private set; }
-        public string ActualityFieldName { get; private set; }
-        public string? TenantField { get; private set; }
-        public DateTime? OnDate { get; private set; }
-        public DateTime CurrentDate { get; private set; }
-        public bool FullReloading { get; private set; }
-        public string[]? TenantCodes { get; private set; }
+        public DataSource SourceDataSource { get; }
+        public DataSource TargetDataSource { get; }
+        public string ActualityFieldName { get; }
+        public string? TenantField { get; }
+        public string HistoricColumnsFrom { get; }
+        public string HistoricColumnsTo { get; }
+        public DateTime? OnDate { get; }
+        public DateTime CurrentDate { get; }
+        public bool FullReloading { get; }
+        public string[]? TenantCodes { get; }
         
         public DateTime? DeleteProtectionDate { get; set; }
         
@@ -23,6 +25,8 @@ namespace DataPumper.Core
             string actualityFieldName,
             DateTime? onDate,
             DateTime currentDate,
+            string historicColumnsFrom,
+            string historicColumnsTo,
             bool fullReloading = false,
             string? tenantField = null,
             string[]? tenantCodes = null)
@@ -33,6 +37,8 @@ namespace DataPumper.Core
             TenantField = tenantField;
             OnDate = onDate;
             CurrentDate = currentDate;
+            HistoricColumnsFrom = historicColumnsFrom;
+            HistoricColumnsTo = historicColumnsTo;
             FullReloading = fullReloading;
             TenantCodes = tenantCodes;
         }

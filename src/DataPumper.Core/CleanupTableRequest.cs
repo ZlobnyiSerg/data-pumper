@@ -20,6 +20,10 @@ namespace DataPumper.Core
 
         public string[]? TenantCodes { get; }
 
+        public string? HistoricColumnsFrom { get; }
+
+        public string? HistoricColumnsTo { get; }
+
         public DateTime CurrentPropertyDate { get; }
 
         public DateTime? DeleteProtectionDate { get; set; }
@@ -32,7 +36,9 @@ namespace DataPumper.Core
             DateTime? lastLoadDate,
             DateTime currentPropertyDate,
             string? tenantField = null, 
-            string[]? tenantCodes = null
+            string[]? tenantCodes = null,
+            string? historicColumnsFrom = null,
+            string? historicColumnsTo = null
         )
         {
             DataSource = dataSource;
@@ -41,6 +47,8 @@ namespace DataPumper.Core
             CurrentPropertyDate = currentPropertyDate;
             TenantField = tenantField;
             TenantCodes = tenantCodes;
+            HistoricColumnsFrom = historicColumnsFrom;
+            HistoricColumnsTo = historicColumnsTo;
         }
     }
 }

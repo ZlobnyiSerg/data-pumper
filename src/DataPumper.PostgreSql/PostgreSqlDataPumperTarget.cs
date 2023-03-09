@@ -77,7 +77,7 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
         var query = 
             $"""
             DELETE FROM {reqAdapter.DataSource} WHERE
-            "HistoryDateFrom" = @CurrentPropertyDate
+            {reqAdapter.HistoricColumnsFrom} = @CurrentPropertyDate
             {filter}
             """;
 
@@ -99,8 +99,8 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
         Log.Info($"Closing open intervals in {reqAdapter.DataSource}...");
         var query = 
             $"""
-            UPDATE {reqAdapter.DataSource} SET "HistoryDateTo" = @ClosedDate WHERE
-            ("HistoryDateFrom" = @CurrentPropertyDate OR "HistoryDateFrom" = {reqAdapter.ActualityFieldName}) 
+            UPDATE {reqAdapter.DataSource} SET {reqAdapter.HistoricColumnsTo} = @ClosedDate WHERE
+            ({reqAdapter.HistoricColumnsFrom} = @CurrentPropertyDate OR {reqAdapter.HistoricColumnsFrom} = {reqAdapter.ActualityFieldName}) 
             AND {reqAdapter.ActualityFieldName} > @LastLoadDate 
             AND {reqAdapter.ActualityFieldName} < @CurrentPropertyDate
             {filter}
@@ -120,8 +120,8 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
             Log.Info($"Updated history dates on skipped days in {reqAdapter.DataSource}...");
             query = 
                 $"""
-                UPDATE {reqAdapter.DataSource} SET "HistoryDateTo" = @CurrentDatePrevDay 
-                WHERE "HistoryDateTo" = @LastLoadDate
+                UPDATE {reqAdapter.DataSource} SET {reqAdapter.HistoricColumnsTo} = @CurrentDatePrevDay 
+                WHERE {reqAdapter.HistoricColumnsTo}= @LastLoadDate
                 {filter}
                 """;
             Log.Warn(query);

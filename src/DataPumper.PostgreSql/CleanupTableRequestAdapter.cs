@@ -23,6 +23,10 @@ internal class CleanupTableRequestAdapter
 
     public DateTime CurrentPropertyDate => _request.CurrentPropertyDate;
 
+    public string HistoricColumnsFrom => _request.HistoricColumnsFrom?.Enquote();
+
+    public string HistoricColumnsTo => _request.HistoricColumnsTo?.Enquote();
+
     public string FilterPredicate
     {
         get
