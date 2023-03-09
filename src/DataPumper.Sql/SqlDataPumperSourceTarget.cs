@@ -142,7 +142,7 @@ namespace DataPumper.Sql
             if (request.LastLoadDate == null) // Полная переливка
             {
                 var query = $@"DELETE FROM {request.DataSource} WHERE 
-                        HistoryDateFrom = @CurrentPropertyDate
+                        {request.HistoricColumnsFrom} = @CurrentPropertyDate
                         AND ({GetFilterPredicate(request.Filter)})
                         AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
@@ -156,7 +156,7 @@ namespace DataPumper.Sql
             {
                 var query = $@"DELETE FROM {request.DataSource} WHERE 
                         {request.ActualityFieldName} >= @NotOlderThan 
-                        AND HistoryDateFrom = @CurrentPropertyDate
+                        AND {request.HistoricColumnsFrom} = @CurrentPropertyDate
                         AND ({GetFilterPredicate(request.Filter)})
                         AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})
                         AND ({GetDeleteProtectionDateFilter(request)})";
@@ -208,8 +208,8 @@ namespace DataPumper.Sql
             var inStatement = GetInStatement(request.TenantCodes);
 
             Log.Info($"Closing open intervals in {request.DataSource}...");
-            var query = $@"UPDATE {request.DataSource} SET HistoryDateTo = @ClosedDate WHERE
-                           (HistoryDateFrom = @CurrentPropertyDate OR HistoryDateFrom = {request.ActualityFieldName}) 
+            var query = $@"UPDATE {request.DataSource} SET {request.HistoricColumnsTo} = @ClosedDate WHERE
+                           ({request.HistoricColumnsFrom} = @CurrentPropertyDate OR {request.HistoricColumnsFrom} = {request.ActualityFieldName}) 
                            AND {request.ActualityFieldName} > @LastLoadDate 
                            AND {request.ActualityFieldName} < @CurrentPropertyDate
                            AND ({GetFilterPredicate(request.Filter)})
@@ -228,8 +228,8 @@ namespace DataPumper.Sql
             if (request.LastLoadDate != null && request.CurrentPropertyDate != request.LastLoadDate)
             {
                 Log.Info($"Updated history dates on skipped days in {request.DataSource}...");
-                query = $@"UPDATE {request.DataSource} SET HistoryDateTo = @CurrentDatePrevDay 
-                           WHERE HistoryDateTo = @LastLoadDate 
+                query = $@"UPDATE {request.DataSource} SET {request.HistoricColumnsTo} = @CurrentDatePrevDay 
+                           WHERE {request.HistoricColumnsTo} = @LastLoadDate 
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})";

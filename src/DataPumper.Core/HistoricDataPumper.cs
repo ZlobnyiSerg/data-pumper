@@ -25,7 +25,9 @@ namespace DataPumper.Core
                     parameters.OnDate,
                     parameters.CurrentDate,
                     parameters.TenantField,
-                    parameters.TenantCodes
+                    parameters.TenantCodes,
+                    parameters.HistoricColumnsFrom,
+                    parameters.HistoricColumnsTo
                 )
                 {
                     DeleteProtectionDate = parameters.DeleteProtectionDate,

@@ -79,7 +79,8 @@ namespace DataPumper.Web.Services
                 var onDate = job.Date;
                 var currentDate = await source.GetCurrentDate("SELECT min(PropertyCurrentDate) FROM lr.VProperties") ?? DateTime.Today;
 
-                var request = new PumpParameters(new DataSource(job.SourceTableName), new DataSource(job.TargetTableName), "ActualDate", onDate, currentDate);
+                var request = new PumpParameters(new DataSource(job.SourceTableName), new DataSource(job.TargetTableName), "ActualDate", onDate, currentDate,
+                    "HistoryDateFrom", "HistoryDateTo");
 
                 var sw = new Stopwatch();
                 sw.Start();
