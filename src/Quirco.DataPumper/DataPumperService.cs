@@ -114,6 +114,7 @@ namespace Quirco.DataPumper
                         new DataSource(job.TargetTableName),
                         _configuration.ActualityColumnName,
                         onDate.AddDays(_configuration.BackwardReloadDays),
+                        jobActualDate,
                         currentDate,
                         _configuration.HistoricColumnsFrom,
                         _configuration.HistoricColumnsTo,

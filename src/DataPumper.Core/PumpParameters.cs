@@ -11,6 +11,7 @@ namespace DataPumper.Core
         public string HistoricColumnsFrom { get; }
         public string HistoricColumnsTo { get; }
         public DateTime? OnDate { get; }
+        public DateTime? LastLoadDate { get; }
         public DateTime CurrentDate { get; }
         public bool FullReloading { get; }
         public string[]? TenantCodes { get; }
@@ -24,6 +25,7 @@ namespace DataPumper.Core
             DataSource targetDataSource,
             string actualityFieldName,
             DateTime? onDate,
+            DateTime? lastLoadDate,
             DateTime currentDate,
             string historicColumnsFrom,
             string historicColumnsTo,
@@ -36,6 +38,7 @@ namespace DataPumper.Core
             ActualityFieldName = actualityFieldName;
             TenantField = tenantField;
             OnDate = onDate;
+            LastLoadDate = lastLoadDate;
             CurrentDate = currentDate;
             HistoricColumnsFrom = historicColumnsFrom;
             HistoricColumnsTo = historicColumnsTo;

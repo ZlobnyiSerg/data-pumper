@@ -40,7 +40,7 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
             reqAdapter.DeleteProtectionDateFilter
         };
 
-        if (reqAdapter.LastLoadDate.HasValue)
+        if (reqAdapter.ActualityDateStart.HasValue)
             whereClauses.Add($"{reqAdapter.ActualityFieldName} >= @NotOlderThan");
 
         var query =
@@ -52,7 +52,7 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
         Log.Warn(query);
 
         var deleted = await _connection.ExecuteAsync(query,
-            new { NotOlderThan = reqAdapter.LastLoadDate },
+            new { NotOlderThan = reqAdapter.ActualityDateStart },
             commandTimeout: Timeout);
         return deleted;
     }
@@ -68,7 +68,7 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
             reqAdapter.DeleteProtectionDateFilter,
         };
 
-        if (reqAdapter.LastLoadDate.HasValue)
+        if (reqAdapter.ActualityDateStart.HasValue)
             whereClauses.Add($"{reqAdapter.ActualityFieldName} >= @NotOlderThan");
 
         var filter = AndClause(whereClauses);
@@ -84,7 +84,7 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
         Log.Warn(query);
 
         var deleted = await _connection.ExecuteAsync(query,
-            new { reqAdapter.CurrentPropertyDate, NotOlderThan = reqAdapter.LastLoadDate },
+            new { reqAdapter.CurrentPropertyDate, NotOlderThan = reqAdapter.ActualityDateStart },
             commandTimeout: Timeout);
         return deleted;
     }
@@ -101,17 +101,17 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
             $"""
             UPDATE {reqAdapter.DataSource} SET {reqAdapter.HistoricColumnsTo} = @ClosedDate WHERE
             ({reqAdapter.HistoricColumnsFrom} = @CurrentPropertyDate OR {reqAdapter.HistoricColumnsFrom} = {reqAdapter.ActualityFieldName}) 
-            AND {reqAdapter.ActualityFieldName} > @LastLoadDate 
+            AND {reqAdapter.ActualityFieldName} > @ActualityDateStart 
             AND {reqAdapter.ActualityFieldName} < @CurrentPropertyDate
             {filter}
             """;
         Log.Warn(query);
-        Log.Warn($"@ClosedDate={ClosedIntervalDate}; @LastLoadDate={reqAdapter.LastLoadDate}; @CurrentPropertyDate={reqAdapter.CurrentPropertyDate}");
+        Log.Warn($"@ClosedDate={ClosedIntervalDate}; @ActualityDateStart={reqAdapter.ActualityDateStart}; @CurrentPropertyDate={reqAdapter.CurrentPropertyDate}");
         var res = await _connection.ExecuteAsync(query, new
         {
             ClosedDate = ClosedIntervalDate,
             reqAdapter.CurrentPropertyDate,
-            reqAdapter.LastLoadDate
+            reqAdapter.ActualityDateStart
         }, commandTimeout: Timeout);
         Log.Info($"Update affected {res} record(s)");
 
@@ -129,8 +129,7 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
                 $"@CurrentDatePrevDay={reqAdapter.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={reqAdapter.LastLoadDate}");
             var res2 = await _connection.ExecuteAsync(query, new
             {
-                CurrentDatePrevDay = reqAdapter.CurrentPropertyDate.AddDays(-1),
-                reqAdapter.LastLoadDate
+                CurrentDatePrevDay = reqAdapter.CurrentPropertyDate.AddDays(-1), reqAdapter.LastLoadDate
             }, commandTimeout: Timeout);
             Log.Info($"Update closed {res2} outdated record(s)");
         }
