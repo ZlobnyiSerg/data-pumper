@@ -55,6 +55,7 @@ namespace DataPumper.Tests
                     "ActualityDate",
                     new DateTime(2001, 01, 01),
                     new DateTime(2001, 01, 01),
+                    new DateTime(2001, 01, 01),
                     nameof(TargetHistoricalOccupation.HistoryDateFrom),
                     nameof(TargetHistoricalOccupation.HistoryDateTo)));
 
@@ -85,6 +86,7 @@ namespace DataPumper.Tests
                     "ActualityDate",
                     new DateTime(2001, 01, 01),
                     new DateTime(2001, 01, 01),
+                    new DateTime(2001, 01, 01),
                     nameof(TargetHistoricalOccupation.HistoryDateFrom),
                     nameof(TargetHistoricalOccupation.HistoryDateTo)));
             // Pump again
@@ -93,6 +95,7 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     new DataSource("Occupations"),
                     "ActualityDate",
+                    new DateTime(2001, 01, 01),
                     new DateTime(2001, 01, 01),
                     new DateTime(2001, 01, 01),
                     nameof(TargetHistoricalOccupation.HistoryDateFrom),
@@ -318,6 +321,7 @@ namespace DataPumper.Tests
                     new DataSource("Occupations"),
                     new DataSource("Occupations"),
                     "ActualityDate",
+                    lastPumpDate,
                     lastPumpDate,
                     pump.PropertyDate,
                     nameof(TargetHistoricalOccupation.HistoryDateFrom),

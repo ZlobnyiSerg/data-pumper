@@ -103,7 +103,7 @@ namespace DataPumper.Sql
 
             int deleted;
             string query;
-            if (request.LastLoadDate == null)
+            if (request.ActualityDateStart == null)
             {
                 query = $@"DELETE FROM {request.DataSource} WHERE 
                         ({GetFilterPredicate(request.Filter)})
@@ -124,7 +124,7 @@ namespace DataPumper.Sql
                     query,
                     new
                     {
-                        NotOlderThan = request.LastLoadDate.Value
+                        NotOlderThan = request.ActualityDateStart.Value
                     }, commandTimeout: Timeout);
             }
             return deleted;
@@ -139,7 +139,7 @@ namespace DataPumper.Sql
         {
             var inStatement = GetInStatement(request.TenantCodes);
 
-            if (request.LastLoadDate == null) // Полная переливка
+            if (request.ActualityDateStart == null) // Полная переливка
             {
                 var query = $@"DELETE FROM {request.DataSource} WHERE 
                         {request.HistoricColumnsFrom} = @CurrentPropertyDate
@@ -163,7 +163,7 @@ namespace DataPumper.Sql
                 Log.Warn(query);
                 return await _connection.ExecuteAsync(query, new
                 {
-                    NotOlderThan = request.LastLoadDate,
+                    NotOlderThan = request.ActualityDateStart,
                     request.CurrentPropertyDate
                 }, commandTimeout: Timeout);
             }
@@ -210,18 +210,18 @@ namespace DataPumper.Sql
             Log.Info($"Closing open intervals in {request.DataSource}...");
             var query = $@"UPDATE {request.DataSource} SET {request.HistoricColumnsTo} = @ClosedDate WHERE
                            ({request.HistoricColumnsFrom} = @CurrentPropertyDate OR {request.HistoricColumnsFrom} = {request.ActualityFieldName}) 
-                           AND {request.ActualityFieldName} > @LastLoadDate 
+                           AND {request.ActualityFieldName} > @ActualityDateStart 
                            AND {request.ActualityFieldName} < @CurrentPropertyDate
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})";
             Log.Warn(query);
-            Log.Warn($"@ClosedDate={ClosedIntervalDate}; @LastLoadDate={request.LastLoadDate}; @CurrentPropertyDate={request.CurrentPropertyDate}");
+            Log.Warn($"@ClosedDate={ClosedIntervalDate}; @ActualityDateStart={request.ActualityDateStart}; @CurrentPropertyDate={request.CurrentPropertyDate}");
             var res = await _connection.ExecuteAsync(query, new
             {
                 ClosedDate = ClosedIntervalDate,
                 request.CurrentPropertyDate,
-                request.LastLoadDate
+                request.ActualityDateStart
             }, commandTimeout: Timeout);
             Log.Info($"Update affected {res} record(s)");
 
@@ -237,8 +237,7 @@ namespace DataPumper.Sql
                 Log.Warn($"@CurrentDatePrevDay={request.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={request.LastLoadDate}");
                 var res2 = await _connection.ExecuteAsync(query, new
                 {
-                    CurrentDatePrevDay = request.CurrentPropertyDate.AddDays(-1),
-                    request.LastLoadDate
+                    CurrentDatePrevDay = request.CurrentPropertyDate.AddDays(-1), request.LastLoadDate
                 }, commandTimeout: Timeout);
                 Log.Info($"Update closed {res2} outdated record(s)");
             }

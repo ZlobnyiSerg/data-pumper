@@ -19,6 +19,8 @@ internal class CleanupTableRequestAdapter
 
     public string ActualityFieldName => _request.ActualityFieldName?.Enquote();
 
+    public DateTime? ActualityDateStart => _request.ActualityDateStart;
+
     public DateTime? LastLoadDate => _request.LastLoadDate;
 
     public DateTime CurrentPropertyDate => _request.CurrentPropertyDate;
