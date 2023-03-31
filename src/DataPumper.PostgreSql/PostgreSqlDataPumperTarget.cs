@@ -121,15 +121,15 @@ public class PostgreSqlDataPumperTarget : IDataPumperTarget, IDisposable
             query = 
                 $"""
                 UPDATE {reqAdapter.DataSource} SET {reqAdapter.HistoricColumnsTo} = @CurrentDatePrevDay 
-                WHERE {reqAdapter.HistoricColumnsTo}= @LastLoadDate
+                WHERE {reqAdapter.HistoricColumnsFrom}= @LastLoadDate AND {reqAdapter.ActualityFieldName} >= @ActualityDateStart
                 {filter}
                 """;
             Log.Warn(query);
             Log.Warn(
-                $"@CurrentDatePrevDay={reqAdapter.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={reqAdapter.LastLoadDate}");
+                $"@CurrentDatePrevDay={reqAdapter.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={reqAdapter.LastLoadDate}; @ActualityDateStart={reqAdapter.ActualityDateStart}");
             var res2 = await _connection.ExecuteAsync(query, new
             {
-                CurrentDatePrevDay = reqAdapter.CurrentPropertyDate.AddDays(-1), reqAdapter.LastLoadDate
+                CurrentDatePrevDay = reqAdapter.CurrentPropertyDate.AddDays(-1), reqAdapter.LastLoadDate, reqAdapter.ActualityDateStart
             }, commandTimeout: Timeout);
             Log.Info($"Update closed {res2} outdated record(s)");
         }

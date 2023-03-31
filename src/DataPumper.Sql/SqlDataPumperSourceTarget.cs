@@ -229,15 +229,15 @@ namespace DataPumper.Sql
             {
                 Log.Info($"Updated history dates on skipped days in {request.DataSource}...");
                 query = $@"UPDATE {request.DataSource} SET {request.HistoricColumnsTo} = @CurrentDatePrevDay 
-                           WHERE {request.HistoricColumnsTo} = @LastLoadDate 
+                           WHERE {request.HistoricColumnsFrom} = @LastLoadDate AND {request.ActualityFieldName} >= @ActualityDateStart
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetFilterPredicate(request.Filter)})
                            AND ({GetTenantFilter(request.TenantField, request.TenantCodes, inStatement)})";
                 Log.Warn(query);
-                Log.Warn($"@CurrentDatePrevDay={request.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={request.LastLoadDate}");
+                Log.Warn($"@CurrentDatePrevDay={request.CurrentPropertyDate.AddDays(-1)}; @LastLoadDate={request.LastLoadDate}; @ActualityDateStart={request.ActualityDateStart}");
                 var res2 = await _connection.ExecuteAsync(query, new
                 {
-                    CurrentDatePrevDay = request.CurrentPropertyDate.AddDays(-1), request.LastLoadDate
+                    CurrentDatePrevDay = request.CurrentPropertyDate.AddDays(-1), request.LastLoadDate, request.ActualityDateStart
                 }, commandTimeout: Timeout);
                 Log.Info($"Update closed {res2} outdated record(s)");
             }
