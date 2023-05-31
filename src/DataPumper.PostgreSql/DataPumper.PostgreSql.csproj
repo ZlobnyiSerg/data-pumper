@@ -45,11 +45,12 @@
     <Compile Include="CleanupTableRequestAdapter.cs" />
     <Compile Include="DataSourceAdapter.cs" />
     <Compile Include="Helpers.cs" />
+    <Compile Include="PostgreSqlDataPumperSource.cs" />
     <Compile Include="PostgreSqlDataPumperTarget.cs" />
     <Compile Include="PostgreSqlTableWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
-    <ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\DataPumper.Core\DataPumper.Core.csproj">
       <Project>{4ebc109b-bb0d-4e3e-9024-8a1180ec9c47}</Project>
       <Name>DataPumper.Core</Name>

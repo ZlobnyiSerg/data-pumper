@@ -30,5 +30,10 @@ namespace DataPumper.Core
         {
             return !string.IsNullOrEmpty(Schema) ? $"[{Schema}].[{Name}]" : $"[{Name}]";
         }
+
+        public string ToStringUniversal()
+        {
+            return !string.IsNullOrEmpty(Schema) ? $"{Schema}.{Name}" : Name;
+        }
     }
 }

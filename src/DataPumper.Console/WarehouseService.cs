@@ -111,7 +111,7 @@ namespace DataPumper.Console
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
-            var sourceProvider = _container.Resolve<IDataPumperSource>();
+            var sourceProvider = _container.Resolve<IDataPumperSource>(_configuration.SourceProvider);
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = _container.Resolve<IDataPumperTarget>(_configuration.TargetProvider);
@@ -138,7 +138,7 @@ namespace DataPumper.Console
         [Queue(Queue)]
         public async Task RunPartialUpdate()
         {
-            var sourceProvider = _container.Resolve<IDataPumperSource>();
+            var sourceProvider = _container.Resolve<IDataPumperSource>(_configuration.SourceProvider);
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = _container.Resolve<IDataPumperTarget>(_configuration.TargetProvider);
@@ -150,7 +150,7 @@ namespace DataPumper.Console
         {
             var dataPumperService = new DataPumperService(new DataPumperConfiguration(_configSource), _configuration.TenantCodes);
 
-            var sourceProvider = _container.Resolve<IDataPumperSource>();
+            var sourceProvider = _container.Resolve<IDataPumperSource>(_configuration.SourceProvider);
             await sourceProvider.Initialize(_configuration.SourceConnectionString);
 
             var targetProvider = _container.Resolve<IDataPumperTarget>(_configuration.TargetProvider);
