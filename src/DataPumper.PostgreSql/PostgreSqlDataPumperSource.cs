@@ -9,7 +9,7 @@ public class PostgreSqlDataPumperSource : DataPumperSource
 {
     protected override Compiler Compiler => new PostgresCompiler();
 
-    protected override string Name => "PostgreSQL Server";
+    protected override string Name => "PostgreSQL";
 
     public override async Task Initialize(string connectionString)
     {

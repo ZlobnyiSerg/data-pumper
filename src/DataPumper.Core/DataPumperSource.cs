@@ -34,6 +34,14 @@ public abstract class DataPumperSource : IDataPumperSource
         return Connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: Timeout);
     }
 
+    public Task<DateTime?> GetCurrentDate(DataSource table, string columnName)
+    {
+        var query = new Query(table.ToStringUniversal())
+            .Select(columnName).Take(1);
+
+        return ExecuteQueryScalar<DateTime?>(query);
+    }
+
     public Task<IDataReader> GetDataReader(DataReaderRequest request)
     {
         var handler = Progress;
@@ -58,7 +66,7 @@ public abstract class DataPumperSource : IDataPumperSource
             query = query.WhereIn(filter.FieldName, filter.Values);
         }
 
-        return ExecuteQuery(query);
+        return ExecuteQueryReader(query);
     }
 
     private async Task<IDataReader> GetStoredProcedureDataReader(DataReaderRequest request)
@@ -93,17 +101,30 @@ public abstract class DataPumperSource : IDataPumperSource
     public async Task<string[]> GetTableFields(DataSource dataSource)
     {
         var query = new Query(dataSource.ToStringUniversal()).Take(1);
-        using var dataReader = await ExecuteQuery(query);
+        using var dataReader = await ExecuteQueryReader(query);
         return Enumerable.Range(0, dataReader.FieldCount).Select(dataReader.GetName).ToArray();
     }
 
-    private async Task<IDataReader> ExecuteQuery(Query query)
+    private async Task<IDataReader> ExecuteQueryReader(Query query)
     {
         var sqlResult = Compiler.Compile(query);
         Log.Warn(sqlResult.ToString());
 
         var command = GetCommand(sqlResult);
         return await command.ExecuteReaderAsync();
+    }
+
+    private async Task<T?> ExecuteQueryScalar<T>(Query query)
+    {
+        var sqlResult = Compiler.Compile(query);
+        Log.Warn(sqlResult.ToString());
+
+        var command = GetCommand(sqlResult);
+        var result = await command.ExecuteScalarAsync();
+
+        if (Convert.IsDBNull(result)) return default;
+        if (result is T) return (T)result;
+        return (T)Convert.ChangeType(result, typeof(T));
     }
 
     private DbCommand GetCommand(SqlResult sqlResult)

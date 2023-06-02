@@ -32,6 +32,7 @@ namespace DataPumper.Web
 
             builder.Services.AddTransient<IDataPumperSource, SqlDataPumperSourceTarget>();
             builder.Services.AddTransient<IDataPumperTarget, SqlDataPumperSourceTarget>();
+            builder.Services.AddTransient<IDataPumperSource, PostgreSqlDataPumperSource>();
             builder.Services.AddTransient<IDataPumperTarget, PostgreSqlDataPumperTarget>();
             
             builder.Services.AddTransient<Core.DataPumper>();

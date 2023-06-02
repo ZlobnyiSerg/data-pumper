@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
-using System.Diagnostics.Tracing;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using DataPumper.Core;
 using DataPumper.Web.DataLayer;
 using Hangfire;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
 namespace DataPumper.Web.Services
@@ -78,7 +78,7 @@ namespace DataPumper.Web.Services
 
                 var onDate = job.Date;
                 var lastLoadDate = onDate;
-                var currentDate = await source.GetCurrentDate("SELECT min(PropertyCurrentDate) FROM lr.VProperties") ?? DateTime.Today;
+                var currentDate = await GetCurrentDate(source) ?? DateTime.Today;
 
                 var request = new PumpParameters(new DataSource(job.SourceTableName), new DataSource(job.TargetTableName),
                     "ActualDate", onDate, lastLoadDate, currentDate,
@@ -117,6 +117,15 @@ namespace DataPumper.Web.Services
                 log.Message = ex.Message;
                 await _context.SaveChangesAsync(token);
             }
+        }
+
+        private async Task<DateTime?> GetCurrentDate(IDataPumperSource source)
+        {
+            var curDateTable = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateTable))?.Value;
+            var curDateField = (await _context.Settings.FirstOrDefaultAsync(s => s.Key == Setting.CurrentDateField))?.Value;
+            if (string.IsNullOrEmpty(curDateTable) || string.IsNullOrEmpty(curDateField))
+                return null;
+            return await source.GetCurrentDate(new DataSource(curDateTable), curDateField);
         }
     }
 }
