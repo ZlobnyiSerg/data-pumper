@@ -58,6 +58,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DataModels\DataPumperDbConfiguration.cs" />
     <Compile Include="DataPumperConfiguration.cs" />
     <Compile Include="ConfigurationManager.cs" />
     <Compile Include="DataModels\DataPumperContext.cs" />
@@ -118,7 +119,10 @@
       <Version>3.3.1</Version>
     </PackageReference>
     <PackageReference Include="EntityFramework">
-      <Version>6.2.0</Version>
+      <Version>6.4.4</Version>
+    </PackageReference>
+    <PackageReference Include="EntityFramework6.Npgsql">
+      <Version>6.4.3</Version>
     </PackageReference>
     <PackageReference Include="Hangfire">
       <Version>1.7.11</Version>

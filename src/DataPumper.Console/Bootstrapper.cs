@@ -1,6 +1,9 @@
 ﻿using DataPumper.Core;
 using DataPumper.PostgreSql;
 using DataPumper.Sql;
+using Hangfire;
+using Hangfire.PostgreSql;
+using Hangfire.SqlServer;
 using Microsoft.Practices.Unity;
 using Quirco.DataPumper;
 using System;
@@ -35,6 +38,11 @@ namespace DataPumper.Console
             container.RegisterType<IEnumerable<IDataPumperTarget>, IDataPumperTarget[]>();
             container.RegisterType<IDataPumperTarget, PostgreSqlDataPumperTarget>(PostgresProvider);
             container.RegisterType<IDataPumperTarget, SqlDataPumperSourceTarget>(SqlProvider);
+
+            container.RegisterType<JobStorage>(SqlProvider, new InjectionFactory(c =>
+                new SqlServerStorage(config.HangfireConnectionString)));
+            container.RegisterType<JobStorage>(PostgresProvider, new InjectionFactory(c =>
+                new PostgreSqlStorage(config.HangfireConnectionString)));
         }
     }
 }

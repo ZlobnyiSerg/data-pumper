@@ -47,10 +47,7 @@ namespace DataPumper.Console
             Bootstrapper.Initialize(_container, _configuration);
 
             JobActivator.Current = new UnityJobActivator(_container);
-            JobStorage.Current = new SqlServerStorage(_configuration.HangfireConnectionString, new SqlServerStorageOptions
-            {
-                InvisibilityTimeout = TimeSpan.FromHours(3)
-            });
+            JobStorage.Current = _container.Resolve<JobStorage>(_configuration.SourceProvider);
             GlobalJobFilters.Filters.Add(new AutomaticRetryAttribute
             {
                 Attempts = 3,
