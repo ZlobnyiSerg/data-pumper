@@ -11,7 +11,7 @@ using SqlKata.Compilers;
 
 namespace DataPumper.Core;
 
-public abstract class DataPumperSource : IDataPumperSource
+public abstract class DataPumperSource : IDataPumperSource, IDisposable
 {
     protected static readonly ILog Log = LogManager.GetLogger(typeof(DataPumperSource));
     protected DbConnection? Connection { get; set; }
@@ -144,5 +144,10 @@ public abstract class DataPumperSource : IDataPumperSource
         command.CommandTimeout = Timeout;
 
         return command;
+    }
+
+    public virtual void Dispose()
+    {
+        Connection?.Dispose();
     }
 }
