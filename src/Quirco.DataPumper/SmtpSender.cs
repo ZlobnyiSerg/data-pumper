@@ -21,6 +21,9 @@ namespace Quirco.DataPumper
 
         public void Send(ICollection<JobLog> jobLogs)
         {
+            if (!jobLogs.Any(l=>l.Status == SyncStatus.Error))
+                return;
+            
             if (jobLogs.Count == 0 || string.IsNullOrEmpty(_configuration.Recipients)) 
                 return;
 
@@ -41,15 +44,16 @@ namespace Quirco.DataPumper
             foreach (var jobLog in jobLogs.Where(j => j.Status == SyncStatus.Error))
             {
                 body.Append($@"
-                <p>
-                    <b>Time:</b> {jobLog.StartDate} - {jobLog.EndDate}
-                </p>
-                <p>
-                    <b>Status:</b> {jobLog.Status}
-                </p>
-                <p>
-                    <b>Exception:</b> {jobLog.Message}
-                </p><hr/>");
+<p>
+    <h5>{jobLog.TableSync.TableName}</h5>
+    <ul>
+        <li><b>Processed / deleted:</b> {jobLog.RecordsProcessed} / {jobLog.RecordsDeleted}</li>
+        <li><b>Time:</b> {jobLog.StartDate} - {jobLog.EndDate}</li>
+        <li><b>Status:</b> {jobLog.Status}</li>
+        <li><b>Exception:</b> {jobLog.Message}</li>
+    </ul>
+</p>
+ <hr/>");
             }
 
             message.Body += body;
@@ -57,7 +61,7 @@ namespace Quirco.DataPumper
             try
             {
                 smtp.Send(message);
-                Log.Info($"{jobLogs.Count()} reports sent to: {_configuration.Recipients}");
+                Log.Info($"{jobLogs.Count} reports sent to: {_configuration.Recipients}");
             }
             catch (Exception e)
             {
