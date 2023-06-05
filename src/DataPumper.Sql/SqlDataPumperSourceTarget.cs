@@ -42,6 +42,11 @@ namespace DataPumper.Sql
             return _connection.ExecuteScalarAsync<DateTime?>(query, commandTimeout: Timeout);
         }
 
+        public Task<DateTime?> GetCurrentDate(DataSource table, string columnName)
+        {
+            return GetCurrentDate($"SELECT Min({columnName}) FROM {table}");
+        }
+
         public async Task<IDataReader> GetDataReader(DataReaderRequest request)
         {
             var handler = Progress;

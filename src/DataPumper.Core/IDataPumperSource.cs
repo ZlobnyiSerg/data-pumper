@@ -7,6 +7,8 @@ namespace DataPumper.Core
     public interface IDataPumperSource : IDataPumperProvider
     {
         Task<DateTime?> GetCurrentDate(string query);
+
+        Task<DateTime?> GetCurrentDate(DataSource table, string columnName);
         
         /// <summary>
         /// Возвращает источник для чтения данных
