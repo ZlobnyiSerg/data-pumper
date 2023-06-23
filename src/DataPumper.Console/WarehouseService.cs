@@ -1,18 +1,15 @@
-﻿using System;
-using System.Linq;
-using System.Threading.Tasks;
-using Common.Logging;
+﻿using Common.Logging;
 using DataPumper.Core;
-using DataPumper.Sql;
 using Hangfire;
-using Hangfire.MemoryStorage;
-using Hangfire.SqlServer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Owin.Hosting;
 using Microsoft.Practices.Unity;
 using Newtonsoft.Json;
 using Quirco.DataPumper;
 using Quirco.DataPumper.DataModels;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace DataPumper.Console
 {
@@ -20,6 +17,8 @@ namespace DataPumper.Console
     {
         public const string Queue = "datapumper";
         private static readonly ILog Log = LogManager.GetLogger(typeof(WarehouseService));
+
+        private TimeZoneInfo CronTimeZoneInfo => TimeZoneInfo.Local;
 
         protected BackgroundJobServer JobServer { get; private set; }
         private IDisposable _hangfireDashboard;
@@ -90,7 +89,7 @@ namespace DataPumper.Console
             
             if (!string.IsNullOrEmpty(_configuration.ScheduleCron))
             {
-                RecurringJob.AddOrUpdate(() => RunJobs(), _configuration.ScheduleCron);
+                RecurringJob.AddOrUpdate(() => RunJobs(), _configuration.ScheduleCron, CronTimeZoneInfo);
                 RecurringJob.AddOrUpdate(() => RunJobsWithReload(), Cron.Never);
                 
                 var dataPumperConfig = new DataPumperConfiguration(_configSource);
