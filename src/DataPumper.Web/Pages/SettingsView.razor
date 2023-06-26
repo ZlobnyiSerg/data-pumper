@@ -40,6 +40,8 @@
 
 
 @code {
+    private TimeZoneInfo TimeZoneInfo => TimeZoneInfo.Local;
+
     SettingsModel Settings { get; set; }
     private Setting _currentDateTableSetting;
     private Setting _currentDateFieldSetting;
@@ -88,7 +90,7 @@
         _currentDateTableSetting.Value = Settings.CurrentDateTable;
         _currentDateFieldSetting.Value = Settings.CurrentDateField;
         _cron.Value = Settings.Cron;
-        RecurringJob.AddOrUpdate<DataPumpService>(DataPumpService.JobId, s=>s.Process(false), Settings.Cron);
+        RecurringJob.AddOrUpdate<DataPumpService>(DataPumpService.JobId, s=>s.Process(false), Settings.Cron, TimeZoneInfo);
         await Context.SaveChangesAsync();
         Message = "Changes were saved successfully";
     }
